@@ -10,7 +10,13 @@ import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
 import MaskIcon from "../icons/mask.svg";
 import PluginIcon from "../icons/plugin.svg";
-import NewFolderIcon from '../icons/new-folder.svg';
+
+import IconAddWhite from '../icons/svg/icon-add-white.svg';
+import IconAddPrimary from '../icons/svg/icon-add-primary.svg';
+import IconSetWhite from '../icons/svg/icon-set-white.svg';
+import IconSetPrimary from '../icons/svg/icon-set-primary.svg';
+import IconDelWhite from '../icons/svg/icon-del-white.svg';
+import IconDelPrimary from '../icons/svg/icon-del-primary.svg';
 
 import Locale from "../locales";
 
@@ -135,27 +141,28 @@ export function SideBar(props: { className?: string }) {
                 <>
                   {/* 设置 */}
                   <Link className={styles['tools-item']}
-                    to={Path.Settings}>设置</Link>
+                    to={Path.Settings}>
+                    <IconSetWhite />
+                  </Link>
                   {/* 清空 */}
                   <span className={styles['tools-item']}
                     onClick={() => {
                       if (confirm(Locale.Home.DeleteChat)) {
                         chatStore.deleteSession(chatStore.currentSessionIndex);
                       }
-                    }}>清空</span>
+                    }}>
+                    <IconDelWhite />
+                  </span>
                   {/* 新建文件夹 */}
-                  {/* <span className={styles['tools-item']}>新建</span> */}
-                  <NewFolderIcon />
-                  {/* <IconButton
-                    icon={<NewFolderIcon />}
-                    onClick={() => {
-                      console.info('test')
-                    }}
-                  /> */}
+                  <span className={styles['tools-item']}>
+                    <IconAddWhite />
+                  </span>
                 </>
               ) : (
                 // PC端
-                <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}>新建</span>
+                <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}>
+                  <IconAddPrimary />
+                </span>
               )
             }
           </div>
@@ -172,7 +179,7 @@ export function SideBar(props: { className?: string }) {
               // } else {
               //   navigate(Path.NewChat);
               // }
-            }}>{shouldNarrow ? undefined : Locale.Home.NewChat}</span>
+            }}><IconAddWhite />&nbsp;{shouldNarrow ? undefined : Locale.Home.NewChat}</span>
         </div>
         {/* <div className={styles["sidebar-sub-title"]}>
           Build your own AI assistant.
@@ -217,14 +224,18 @@ export function SideBar(props: { className?: string }) {
             <div className={styles["sidebar-actions"] + ' ' + styles["sidebar-tools"]}>
               {/* 设置 */}
               <Link className={styles['tools-item']}
-                to={Path.Settings}>设置</Link>
+                to={Path.Settings}>
+                <IconSetWhite />
+              </Link>
               {/* 清空 */}
               <span className={styles['tools-item']}
                 onClick={() => {
                   if (confirm(Locale.Home.DeleteChat)) {
                     chatStore.deleteSession(chatStore.currentSessionIndex);
                   }
-                }}>清空</span>
+                }}>
+                <IconDelWhite />
+              </span>
             </div>
           </div>
         ) : null
