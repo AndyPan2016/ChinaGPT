@@ -10,6 +10,7 @@ import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
 import MaskIcon from "../icons/mask.svg";
 import PluginIcon from "../icons/plugin.svg";
+import NewFolderIcon from '../icons/new-folder.svg';
 
 import Locale from "../locales";
 
@@ -143,7 +144,14 @@ export function SideBar(props: { className?: string }) {
                       }
                     }}>清空</span>
                   {/* 新建文件夹 */}
-                  <span className={styles['tools-item']}>新建</span>
+                  {/* <span className={styles['tools-item']}>新建</span> */}
+                  <NewFolderIcon />
+                  {/* <IconButton
+                    icon={<NewFolderIcon />}
+                    onClick={() => {
+                      console.info('test')
+                    }}
+                  /> */}
                 </>
               ) : (
                 // PC端
