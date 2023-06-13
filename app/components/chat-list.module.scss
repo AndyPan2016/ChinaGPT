@@ -1,0 +1,106 @@
+
+
+.dd-context-wrap {
+    background-color: #2684FF;
+    box-sizing: border-box;
+    padding: 16px;
+    min-height: 100vh;
+
+    /* flexbox */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+.context-container,
+.nested-container {
+    background-color: #B3D4FF;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    padding-bottom: 0;
+    user-select: none;
+    transition: background-color 0.1s ease;
+
+    &:focus {
+        outline: 2px solid #8777D9;
+        outline-offset: 2px;
+    }
+    &.draggingover {
+        background-color: #DEEBFF;
+    }
+}
+.nested-container {
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+.list-title {
+    padding: 8px;
+    transition: background-color ease 0.2s;
+    flex-grow: 1;
+    user-select: none;
+    position: relative;
+
+    &:focus {
+        outline: 2px solid #998DD9;
+        outline-offset: 2px;
+    }
+}
+
+.quote-item-wrap {
+    border-radius: 2px;
+    border: 2px solid transparent;
+    border-color: transparent;
+    background-color: #FFF;
+    box-shadow: none;
+    box-sizing: border-box;
+    padding: 8px;
+    min-height: 40px;
+    margin-bottom: 8px;
+    user-select: none;
+    /* anchor overrides */
+    color: #091E42;
+
+    &.is-dragging {
+        border-color: rgba(9, 30, 66, 0.71);
+        box-shadow: 2px 2px 1px #A5ADBA;
+    }
+
+    &:hover,
+    &:active {
+        color: #091E42;
+        text-decoration: none;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: rgba(9, 30, 66, 0.71);
+        box-shadow: none;
+    }
+
+    /* flexbox */
+    display: flex;
+}
+.quote-content {
+    /* flex child */
+    flex-grow: 1;
+
+    /*
+        Needed to wrap text in ie11
+        https://stackoverflow.com/questions/35111090/why-ie11-doesnt-wrap-the-text-in-flexbox
+    */
+    flex-basis: 100%;
+
+    /* flex parent */
+    display: flex;
+    flex-direction: column;
+}
+.block-quote {
+    &::before {
+        content: open-quote;
+    }
+
+    &::after {
+        content: close-quote;
+    }
+}
