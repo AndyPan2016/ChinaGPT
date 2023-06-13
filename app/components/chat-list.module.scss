@@ -11,6 +11,9 @@
     justify-content: center;
     align-items: flex-start;
 }
+.column {
+    margin: 0 16px;
+}
 .context-container,
 .nested-container {
     background-color: #B3D4FF;
@@ -103,4 +106,41 @@
     &::after {
         content: close-quote;
     }
+}
+
+.div-wrapper {
+    background-color: #EBECF0;
+    display: flex;
+    flex-direction: column;
+    opacity: 'inherit';
+    padding: 8px;
+    border: 8px;
+    padding-bottom: 0;
+    transition: background-color 0.2s ease, opacity 0.1s ease;
+    user-select: none;
+    width: 250px;
+    &.is-dragging-over {
+        background-color: #FFEBE6;
+    }
+    &.is-dragging-from {
+        background-color: #E6FCFF;
+    }
+    &.is-drop-disabled {
+        opacity: .5;
+    }
+}
+.scroll-container {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 150px;
+}
+.drop-zone {
+    /* stop the list collapsing when empty */
+  min-height: 150px;
+
+  /*
+    not relying on the items for a margin-bottom
+    as it will collapse when the list is empty
+  */
+  padding-bottom: 8px;
 }

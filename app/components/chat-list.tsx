@@ -325,18 +325,23 @@ function reorder<TItem>(
   return result;
 }
 
-export function ChatList() {
+export function ChatList2() {
   const initialList = {
     id: "first-level",
     title: "top level",
     children: [
       ...quotes.slice(0, 2),
       {
-        id: "second-level",
+        id: "second-level1",
         title: "second level",
         children: quotes.slice(3, 5),
       },
-      ...quotes.slice(6, 9),
+      {
+        id: "second-level2",
+        title: "second level",
+        children: quotes.slice(6, 8),
+      },
+      ...quotes.slice(9, 9),
     ],
   };
 
@@ -408,7 +413,6 @@ export function QuoteList(props: { list: any; level?: number }) {
         droppableId={props.list.id}
         type={props.list.id}
         key={props.list.id}
-        isCombineEnabled={false}
       >
         {(dropProvided, dropSnapshot) => (
           <div
@@ -481,5 +485,218 @@ export function QuoteItem(props: { quote: any; index: number }) {
         </a>
       )}
     </Draggable>
+  );
+}
+
+const reorderQuoteMap = (props: any) => {
+  const { quoteMap, source, destination } = props;
+  const current = [...quoteMap[source.droppableId]];
+  const next = [...quoteMap[destination.droppableId]];
+  const target = current[source.index];
+
+  // moving to same list
+  if (source.droppableId === destination.droppableId) {
+    const reordered = reorder(current, source.index, destination.index);
+    const result = {
+      ...quoteMap,
+      [source.droppableId]: reordered,
+    };
+    return result;
+  }
+
+  // moving to different list
+
+  // remove from original
+  current.splice(source.index, 1);
+  // insert into next
+  next.splice(destination.index, 0, target);
+
+  const result = {
+    ...quoteMap,
+    [source.droppableId]: current,
+    [destination.droppableId]: next,
+  };
+
+  return result;
+};
+
+export function QuoteItem1(props: any) {
+  const { quote, isDragging, isGroupedOver, provided, style, isClone, index } =
+    props;
+  return (
+    <a
+      className={listStyles["quote-item-wrap"]}
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      {...provided.draggableProps.style}
+      data-is-dragging={isDragging}
+      data-testid={quote.id}
+      data-index={index}
+      aria-label={`${quote.author.name} quote ${quote.content}`}
+    >
+      <div className={listStyles["quote-content"]}>
+        <div className={listStyles["block-quote"]}>{quote.content}</div>
+      </div>
+    </a>
+  );
+}
+
+export function InnerList(props: any) {
+  const { quotes, dropProvided } = props;
+  const title = props.title ? (
+    <h4 className={listStyles["list-title"]}>{props.title}</h4>
+  ) : null;
+
+  return (
+    <div>
+      {title}
+      <div className={listStyles["drop-zone"]} ref={dropProvided.innerRef}>
+        <InnerQuoteList quotes={quotes} />
+        {dropProvided.placeholder}
+      </div>
+    </div>
+  );
+}
+
+export function InnerQuoteList(props: any) {
+  return (
+    <>
+      {props.quotes.map((quote: any, index: number) => (
+        <Draggable key={quote.id} draggableId={quote.id} index={index}>
+          {(dragProvided, dragSnapshot) => (
+            <QuoteItem1
+              key={quote.id}
+              quote={quote}
+              isDragging={dragSnapshot.isDragging}
+              isGroupedOver={Boolean(dragSnapshot.combineTargetFor)}
+              provided={dragProvided}
+            />
+          )}
+        </Draggable>
+      ))}
+    </>
+  );
+}
+
+export function QuoteList1(props: {
+  ignoreContainerClipping;
+  internalScroll;
+  scrollContainerStyle;
+  isDropDisabled;
+  isCombineEnabled;
+  listId;
+  listType;
+  style;
+  quotes;
+  title;
+  useClone;
+}) {
+  return (
+    <Droppable
+      droppableId={props.listId || "LIST"}
+      type={props.listType}
+      ignoreContainerClipping={props.ignoreContainerClipping}
+      isDropDisabled={props.isDropDisabled}
+      isCombineEnabled={props.isCombineEnabled}
+      renderClone={
+        props.useClone
+          ? (provided, snapshot, descriptor) => (
+              <QuoteItem1
+                quote={props.quotes[descriptor.source.index]}
+                provided={provided}
+                isDragging={snapshot.isDragging}
+                isClone
+              />
+            )
+          : undefined
+      }
+    >
+      {(dropProvided, dropSnapshot) => (
+        <div
+          className={
+            listStyles["div-wrapper"] +
+            (dropSnapshot.isDraggingOver
+              ? " " + listStyles["is-dragging-over"]
+              : "") +
+            (Boolean(props.isDropDisabled)
+              ? " " + listStyles["is-drop-disabled"]
+              : "") +
+            (Boolean(dropSnapshot.draggingFromThisWith)
+              ? " " + listStyles["is-dragging-from"]
+              : "")
+          }
+          style={props.style}
+          {...dropProvided.droppableProps}
+        >
+          {props.internalScroll ? (
+            <div
+              className={listStyles["scroll-container"]}
+              style={props.scrollContainerStyle}
+            >
+              <InnerList
+                quotes={props.quotes}
+                title={props.title}
+                dropProvided={dropProvided}
+              />
+            </div>
+          ) : (
+            <InnerList
+              quotes={props.quotes}
+              title={props.title}
+              dropProvided={dropProvided}
+            />
+          )}
+        </div>
+      )}
+    </Droppable>
+  );
+}
+export function ChatList() {
+  const initialList = {
+    delta: [...quotes.slice(0, 2)],
+    epsilon: [...quotes.slice(3, 6)],
+  };
+  const [list, setList] = useState<any>(initialList);
+
+  const onDragEnd = (result): void => {
+    // dropped nowhere
+    if (!result.destination) {
+      return;
+    }
+
+    const source = result.source;
+    const destination = result.destination;
+
+    setList(
+      reorderQuoteMap({
+        quoteMap: list,
+        source,
+        destination,
+      }),
+    );
+  };
+
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className={listStyles["dd-context-wrap"]}>
+        <div className={listStyles["column"]}>
+          <QuoteList1
+            title="delta"
+            listId="delta"
+            listType="card"
+            isDropDisabled={false}
+            quotes={list.delta}
+          />
+          <QuoteList1
+            title="epsilon"
+            listId="epsilon"
+            listType="card"
+            isDropDisabled={false}
+            quotes={list.epsilon}
+          />
+        </div>
+      </div>
+    </DragDropContext>
   );
 }
