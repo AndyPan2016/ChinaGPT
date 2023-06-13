@@ -9,7 +9,7 @@ import {
   OnDragEndResponder,
 } from "@hello-pangea/dnd";
 
-import { useChatStore } from "../store";
+import { useChatFolderStore, ChatFolder, ChatSession } from "../store";
 
 import Locale from "../locales";
 import { Link, useNavigate } from "react-router-dom";
@@ -94,19 +94,20 @@ export function ChatItem(props: {
 
 // 会话列表文件夹
 export function ChatListFolder(props: {
+  folder: ChatFolder[],
   children?: React.ReactNode
 }) {
   
-  const [folder, setFolder] = useState<Array<any>>([
-    { name: '文件夹1', id: 'folder0', open: false },
-    { name: '文件夹2', id: 'folder1', open: false },
-    { name: '文件夹3', id: 'folder2', open: false }
-  ])
+  // const [folder, setFolder] = useState<Array<any>>([
+  //   { name: '文件夹1', id: 'folder0', open: false },
+  //   { name: '文件夹2', id: 'folder1', open: false },
+  //   { name: '文件夹3', id: 'folder2', open: false }
+  // ])
 
   return (
     <>
       {
-        folder.map((fit: any, fidx: number) => {
+        props.folder.map((fit: any, fidx: number) => {
           return (
             <Draggable draggableId={fit.id} index={fidx} key={fidx}>
               {
@@ -133,15 +134,16 @@ export function ChatListFolder(props: {
 
 // 会话列表
 export function ChatList(props: { narrow?: boolean }) {
-  const [sessions, selectedIndex, selectSession, moveSession] = useChatStore(
+  const [folder, currentIndex, selectChat, moveChat, moveFolder] = useChatFolderStore(
     (state) => [
-      state.sessions,
-      state.currentSessionIndex,
-      state.selectSession,
-      state.moveSession,
+      state.folder,
+      state.currentIndex,
+      state.selectChat,
+      state.moveChat,
+      state.moveFolder
     ],
   );
-  const chatStore = useChatStore();
+  const chatStore = useChatFolderStore();
   const navigate = useNavigate();
 
   const onDragEnd: OnDragEndResponder = (result) => {
@@ -157,7 +159,7 @@ export function ChatList(props: { narrow?: boolean }) {
       return;
     }
 
-    moveSession(source.index, destination.index);
+    moveChat([source.index], [destination.index]);
   };
 
 
@@ -174,11 +176,12 @@ export function ChatList(props: { narrow?: boolean }) {
       return;
     }
 
-    moveSession(source.index, destination.index);
+    moveFolder(source.index, destination.index);
   }
 
   return (
     <DragDropContext onDragEnd={onDragEndFolder}>
+      {/* folder */}
       <Droppable droppableId="chat-list">
         {
           (provided) => (
@@ -186,46 +189,68 @@ export function ChatList(props: { narrow?: boolean }) {
               className={styles["chat-list"]}
               ref={provided.innerRef}
               {...provided.droppableProps}>
-              <ChatListFolder>
-                <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="chat-list-child">
-                    {
-                      (provided) => (
-                        <div
-                          className={styles["chat-list"]}
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}>
-                          {
-                            sessions.map((item, i) => (
-                              <ChatItem
-                                title={item.topic}
-                                time={new Date(item.lastUpdate).toLocaleString()}
-                                count={item.messages.length}
-                                key={item.id}
-                                id={item.id}
-                                index={i}
-                                selected={i === selectedIndex}
-                                onClick={() => {
-                                  navigate(Path.Chat);
-                                  selectSession(i);
-                                }}
-                                onDelete={() => {
-                                  if (!props.narrow || confirm(Locale.Home.DeleteChat)) {
-                                    chatStore.deleteSession(i);
-                                  }
-                                }}
-                                narrow={props.narrow}
-                                mask={item.mask}
-                              />
-                            ))
-                          }
-                        </div>
-                      )
-                    }
-                    
-                  </Droppable>
-                </DragDropContext>
-              </ChatListFolder>
+              {
+                folder.map((fit: ChatFolder, fidx: number) => {
+                  return (
+                    <Draggable
+                      draggableId={fit.id + ''}
+                      index={fidx}
+                      key={fidx}>
+                      {
+                        (provided) => {
+                          return (
+                            <div
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}>
+                              <div
+                                ref={provided.innerRef}>{fit.name}</div>
+                                {/* chat */}
+                                <DragDropContext onDragEnd={onDragEnd}>
+                                  <Droppable droppableId="chat-list-child">
+                                    {
+                                      (provided) => (
+                                        <div
+                                          className={styles["chat-list"]}
+                                          ref={provided.innerRef}
+                                          {...provided.droppableProps}>
+                                          {
+                                            fit.chat?.map((cit: ChatSession, cidx: number) => (
+                                              <ChatItem
+                                                title={cit.topic}
+                                                time={new Date(cit.lastUpdate).toLocaleString()}
+                                                count={cit.messages.length}
+                                                key={cit.id}
+                                                id={cit.id}
+                                                index={cidx}
+                                                selected={fidx == currentIndex[0] && cidx === currentIndex[1]}
+                                                onClick={() => {
+                                                  navigate(Path.Chat);
+                                                  selectChat(fidx, cidx);
+                                                }}
+                                                onDelete={() => {
+                                                  if (!props.narrow || confirm(Locale.Home.DeleteChat)) {
+                                                    chatStore.deleteChat(fidx, cidx);
+                                                  }
+                                                }}
+                                                narrow={props.narrow}
+                                                mask={cit.mask}
+                                              />
+                                            ))
+                                          }
+                                        </div>
+                                      )
+                                    }
+                                    
+                                  </Droppable>
+                                </DragDropContext>
+                            </div>
+                          )
+                        }
+                      }
+                    </Draggable>
+                  )
+                })
+              }
               {provided.placeholder}
             </div>
           )

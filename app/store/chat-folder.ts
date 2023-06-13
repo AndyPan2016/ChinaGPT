@@ -620,9 +620,11 @@ export interface ChatFolderStore {
     onNewMessage: (message: ChatMessage) => void;
     onUserInput: (content: string) => Promise<void>;
     // 新建chat
-    newChat: (mask: any) => void;
+    newChat: (mask?: any) => void;
     // 新建folder
     newFolder: (folder: any) => void;
+    // 移动Folder
+    moveFolder: (from: number, to: number) => void;
     // 清除folder的chat
     clearFolderChat: (index: number) => void;
     // 清空Folder
@@ -655,14 +657,14 @@ export const useChatFolderStore = create<ChatFolderStore>()(
             globalFolderId: 0,
             globalChatId: 0,
             folder: [
-              () => {
-                  let id = get().globalFolderId
-                  set({ globalFolderId: id + 1 })
-                  return createEmptyFolder({
-                      id,
-                      folderId: 'folder-' + id
-                  })
-              }
+              // () => {
+              //     let id = get().globalFolderId
+              //     set({ globalFolderId: id + 1 })
+              //     return createEmptyFolder({
+              //         id,
+              //         folderId: 'folder-' + id
+              //     })
+              // }
             ],
             // folderCount: 0,
             // 删除chat项
@@ -1066,7 +1068,7 @@ export const useChatFolderStore = create<ChatFolderStore>()(
               });
             },
             // 新建chat
-            newChat (mask: any) {
+            newChat (mask?: any) {
                 const chat = createEmptySession();
 
                 set(() => ({ globalChatId: get().globalChatId + 1, globalFolderId: get().globalFolderId + 1 }));
@@ -1099,6 +1101,30 @@ export const useChatFolderStore = create<ChatFolderStore>()(
                 ...folder
               })
               set((state) => ({ folder: [newFolder].concat(state.folder) }))
+            },
+            moveFolder (from: number, to: number) {
+              set((state) => {
+                const { folder, currentIndex: oldIndex } = state;
+      
+                // move the folder
+                const newFolder = [...folder];
+                const folderFrom = newFolder[from];
+                newFolder.splice(from, 1);
+                newFolder.splice(to, 0, folderFrom);
+      
+                // modify current session id
+                let newIndex = oldIndex[0] === from ? to : oldIndex[0];
+                if (oldIndex[0] > from && oldIndex[0] <= to) {
+                  newIndex -= 1;
+                } else if (oldIndex[0] < from && oldIndex[0] >= to) {
+                  newIndex += 1;
+                }
+      
+                return {
+                  currentIndex: [newIndex, oldIndex[1]],
+                  folder: newFolder
+                };
+              });
             },
             // 清除folder的chat
             clearFolderChat (index: number) {

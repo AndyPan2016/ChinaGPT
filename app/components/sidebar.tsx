@@ -20,7 +20,7 @@ import IconDelPrimary from '../icons/svg/icon-del-primary.svg';
 
 import Locale from "../locales";
 
-import { useAppConfig, useChatStore } from "../store";
+import { useAppConfig, useChatFolderStore } from "../store";
 
 import {
   MAX_SIDEBAR_WIDTH,
@@ -40,25 +40,25 @@ const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
 });
 
 function useHotKey() {
-  const chatStore = useChatStore();
+  // const chatStore = useChatFolderStore();
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.altKey || e.ctrlKey) {
-        const n = chatStore.sessions.length;
-        const limit = (x: number) => (x + n) % n;
-        const i = chatStore.currentSessionIndex;
-        if (e.key === "ArrowUp") {
-          chatStore.selectSession(limit(i - 1));
-        } else if (e.key === "ArrowDown") {
-          chatStore.selectSession(limit(i + 1));
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const onKeyDown = (e: KeyboardEvent) => {
+  //     if (e.metaKey || e.altKey || e.ctrlKey) {
+  //       const n = chatStore.sessions.length;
+  //       const limit = (x: number) => (x + n) % n;
+  //       const i = chatStore.currentSessionIndex;
+  //       if (e.key === "ArrowUp") {
+  //         chatStore.selectSession(limit(i - 1));
+  //       } else if (e.key === "ArrowDown") {
+  //         chatStore.selectSession(limit(i + 1));
+  //       }
+  //     }
+  //   };
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  });
+  //   window.addEventListener("keydown", onKeyDown);
+  //   return () => window.removeEventListener("keydown", onKeyDown);
+  // });
 }
 
 function useDragSideBar() {
@@ -110,7 +110,7 @@ function useDragSideBar() {
 }
 
 export function SideBar(props: { className?: string }) {
-  const chatStore = useChatStore();
+  const chatStore = useChatFolderStore();
 
   // drag side bar
   const { onDragMouseDown, shouldNarrow } = useDragSideBar();
@@ -118,7 +118,7 @@ export function SideBar(props: { className?: string }) {
   const config = useAppConfig();
   const isMobileScreen = useMobileScreen();
 
-  useHotKey();
+  // useHotKey();
 
   return (
     <div
@@ -148,7 +148,7 @@ export function SideBar(props: { className?: string }) {
                   <span className={styles['tools-item']}
                     onClick={() => {
                       if (confirm(Locale.Home.DeleteChat)) {
-                        chatStore.deleteSession(chatStore.currentSessionIndex);
+                        chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
                       }
                     }}>
                     <IconDelWhite />
@@ -171,7 +171,7 @@ export function SideBar(props: { className?: string }) {
           <span className={styles['sidebar-btn-text']}
             onClick={() => {
               // 新建会话，直接开始
-              chatStore.newSession();
+              chatStore.newChat();
               navigate(Path.Chat);
               // if (config.dontShowMaskSplashScreen) {
               //   chatStore.newSession();
@@ -231,7 +231,7 @@ export function SideBar(props: { className?: string }) {
               <span className={styles['tools-item']}
                 onClick={() => {
                   if (confirm(Locale.Home.DeleteChat)) {
-                    chatStore.deleteSession(chatStore.currentSessionIndex);
+                    chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
                   }
                 }}>
                 <IconDelWhite />

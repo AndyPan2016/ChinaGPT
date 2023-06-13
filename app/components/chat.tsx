@@ -26,6 +26,7 @@ import {
   ChatMessage,
   SubmitKey,
   useChatStore,
+  useChatFolderStore,
   BOT_HELLO,
   createMessage,
   useAccessStore,
