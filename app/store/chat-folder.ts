@@ -70,12 +70,12 @@ export const BOT_HELLO: ChatMessage = createMessage({
 
 /**
  * 创建一个空的消息
- * @returns 
+ * @returns
  */
 function createEmptySession(): ChatSession {
   return {
     id: Date.now() + Math.random(),
-    topic: DEFAULT_TOPIC,
+    topic: DEFAULT_TOPIC + Math.random(),
     memoryPrompt: "",
     messages: [],
     stat: {
@@ -572,587 +572,598 @@ export const useChatStore = create<ChatStore>()(
 
 // 文件夹类型
 export interface ChatFolder {
-    // 类型(folder.文件夹 chat.chat项)
-    type?: string;
-    // id
-    id?: number | string;
-    // 文件夹名称
-    name?: string;
-    // 文件夹ID
-    folderId?: string;
-    // chat数量
-    chatCount?: number;
-    // 是否展开
-    expand?: boolean;
-    // chat
-    chat?: Array<ChatSession>;
+  // 类型(folder.文件夹 chat.chat项)
+  type?: string;
+  // id
+  id?: number | string;
+  // 文件夹名称
+  name?: string;
+  // 文件夹ID
+  folderId?: string;
+  // chat数量
+  chatCount?: number;
+  // 是否展开
+  expand?: boolean;
+  // chat
+  chat?: Array<ChatSession>;
 }
 
 export interface ChatFolderStore {
-    // 当前选中的[folder, chat]index
-    currentIndex: Array<number>;
-    // 全局FolderId
-    globalFolderId: number;
-    // 全局ChatId
-    globalChatId: number;
-    // 文件夹内容
-    folder: ChatFolder[];
-    // 文件个数
-    folderCount?: number;
-    // 删除chat
-    deleteChat: (folderIdx: number, chatIdx: number) => void;
-    // 选中
-    selectChat: (folderIdx: number, chatIdx: number) => void;
-    // 移动
-    moveChat: (from: Array<number>, to: Array<number>) => void;
-    // 当前chat
-    currentChat: () => any;
-    // 更新当前chat
-    updateCurrentChat: (updater: any) => void;
-    getMemoryPrompt: () => ChatMessage;
-    getMessagesWithMemory: () => any;
-    // 更新chat message
-    updateMessage: (index: Array<number>, updater: (message?: ChatMessage) => void) => void;
-    summarizeChat: () => void;
-    updateStat: (message: ChatMessage) => void;
-    // 重置chat信息
-    resetChat: () => void;
-    onNewMessage: (message: ChatMessage) => void;
-    onUserInput: (content: string) => Promise<void>;
-    // 新建chat
-    newChat: (mask?: any) => void;
-    // 新建folder
-    newFolder: (folder: any) => void;
-    // 移动Folder
-    moveFolder: (from: number, to: number) => void;
-    // 清除folder的chat
-    clearFolderChat: (index: number) => void;
-    // 清空Folder
-    clearFolder: () => void;
-    // 清除所有
-    clearAllData: () => void
+  // 当前选中的[folder, chat]index
+  currentIndex: Array<number>;
+  // 当前选中的[folder, chat]id
+  currentId: Array<any>;
+  // 全局FolderId
+  globalFolderId: number;
+  // 全局ChatId
+  globalChatId: number;
+  // 文件夹内容
+  folder: ChatFolder[];
+  // 文件个数
+  folderCount?: number;
+  // 删除chat
+  deleteChat: (folderIdx: number, chatIdx: number) => void;
+  // 选中
+  selectChat: (folderIdx: number, chatIdx: number) => void;
+  // 移动
+  moveChat: (from: Array<number>, to: Array<number>) => void;
+  // 当前chat
+  currentChat: () => any;
+  // 更新当前chat
+  updateCurrentChat: (updater: any) => void;
+  getMemoryPrompt: () => ChatMessage;
+  getMessagesWithMemory: () => any;
+  // 更新chat message
+  updateMessage: (
+    index: Array<number>,
+    updater: (message?: ChatMessage) => void,
+  ) => void;
+  summarizeChat: () => void;
+  updateStat: (message: ChatMessage) => void;
+  // 重置chat信息
+  resetChat: () => void;
+  onNewMessage: (message: ChatMessage) => void;
+  onUserInput: (content: string) => Promise<void>;
+  // 新建chat
+  newChat: (mask?: any) => void;
+  // 新建folder
+  newFolder: (folder: any) => void;
+  // 移动Folder
+  moveFolder: (from: number, to: number) => void;
+  // 清除folder的chat
+  clearFolderChat: (index: number) => void;
+  // 清空Folder
+  clearFolder: () => void;
+  // 清除所有
+  clearAllData: () => void;
 }
 
 const createEmptyFolder = (folder?: ChatFolder) => {
-    let emptyFolder: ChatFolder = {
-        // 类型
-        type: 'folder',
-        // 文件夹名称
-        name: '新分类',
-        // chat数量
-        chatCount: 0,
-        // 是否展开
-        expand: false,
-        // chat
-        chat: [createEmptySession()],
-        ...folder
-    }
-    return emptyFolder
-}
+  let emptyFolder: ChatFolder = {
+    // 类型
+    type: "folder",
+    // 文件夹名称
+    name: "新分类",
+    // chat数量
+    chatCount: 0,
+    // 是否展开
+    expand: false,
+    // chat
+    chat: [createEmptySession()],
+    ...folder,
+  };
+  return emptyFolder;
+};
 
 export const useChatFolderStore = create<ChatFolderStore>()(
-    persist(
-        (set, get) => ({
-            currentIndex: [0, 0],
-            globalFolderId: 0,
-            globalChatId: 0,
-            folder: [
-              // () => {
-              //     let id = get().globalFolderId
-              //     set({ globalFolderId: id + 1 })
-              //     return createEmptyFolder({
-              //         id,
-              //         folderId: 'folder-' + id
-              //     })
-              // }
-            ],
-            // folderCount: 0,
-            // 删除chat项
-            deleteChat (folderIdx: number, chatIdx: number) {
-                let folder = get().folder
-                let folderChat = folder[folderIdx].chat || []
+  persist(
+    (set, get) => ({
+      currentIndex: [0, 0],
+      currentId: ["folder1", "chat1"],
+      globalFolderId: 0,
+      globalChatId: 0,
+      folder: [
+        // () => {
+        //     let id = get().globalFolderId
+        //     set({ globalFolderId: id + 1 })
+        //     return createEmptyFolder({
+        //         id,
+        //         folderId: 'folder-' + id
+        //     })
+        // }
+      ],
+      // folderCount: 0,
+      // 删除chat项
+      deleteChat(folderIdx: number, chatIdx: number) {
+        let folder = get().folder;
+        let folderChat = folder[folderIdx].chat || [];
 
-                const deletingLastSession = folderChat?.length === 1;
-                const deletedSession = folderChat?.at(chatIdx);
+        const deletingLastSession = folderChat?.length === 1;
+        const deletedSession = folderChat?.at(chatIdx);
 
-                if (!deletedSession) return;
+        if (!deletedSession) return;
 
-                const chat = folderChat?.slice();
-                chat?.splice(chatIdx, 1);
+        const chat = folderChat?.slice();
+        chat?.splice(chatIdx, 1);
 
-                const currentIndex = get().currentIndex;
-                const chatIndex = currentIndex[1]
-                let nextIndex = Math.min(
-                    chatIndex - Number(chatIdx < chatIndex),
-                    chat?.length - 1
-                );
+        const currentIndex = get().currentIndex;
+        const chatIndex = currentIndex[1];
+        let nextIndex = Math.min(
+          chatIndex - Number(chatIdx < chatIndex),
+          chat?.length - 1,
+        );
 
-                if (deletingLastSession) {
-                    nextIndex = 0;
-                    chat.push(createEmptySession());
-                }
-                
-                // for undo delete action
-                const restoreState = {
-                    currentIndex: get().currentIndex,
-                    folder: folderChat.slice(),
-                };
-
-                set(() => ({
-                    currentIndex: [currentIndex[0], nextIndex],
-                    folder: chat
-                }));
-
-                showToast(
-                    Locale.Home.DeleteToast,
-                    {
-                        text: Locale.Home.Revert,
-                        onClick() {
-                            set(() => restoreState);
-                        }
-                    },
-                    5000
-                );
-            },
-            // 选中chat项
-            selectChat (folderIdx: number, chatIdx: number) {
-                set({
-                    currentIndex: [folderIdx, chatIdx],
-                })
-            },
-            // 移动chat项
-            moveChat (from: Array<number>, to: Array<number>) {
-                set((state) => {
-                    const { folder, currentIndex: oldIndex } = state;
-                    let oldItem = (folder[oldIndex[0]].chat || [])[oldIndex[1]]
-                    oldItem = JSON.parse(JSON.stringify(oldItem));
-
-                    const newFolder = [...folder];
-                    if (from[0] == to[0]) {
-                        // 同文件夹移动
-                        const chat = newFolder[from[0]].chat || [];
-                        let moveItem = chat[from[1]]
-                        chat?.splice(from[1], 1)
-                        chat?.splice(to[1], 0, moveItem)
-                        newFolder[from[0]].chat = chat
-                    } else {
-                        // 不同文件夹移动
-                        const chat = newFolder[from[0]].chat || [];
-                        let moveItem = chat[from[1]]
-                        chat?.splice(from[1], 1)
-                        newFolder[from[0]].chat = chat
-                        newFolder[from[0]].chatCount = chat.length
-
-                        const chatTo = newFolder[to[0]].chat || [];
-                        chatTo?.splice(to[1], 0, moveItem)
-                        newFolder[to[0]].chat = chatTo
-                        newFolder[to[0]].chatCount = chatTo.length
-                    }
-                    let newIndex = oldIndex
-                    newFolder.map((it:any, idx:number) => {
-                        it.chat.map((cit:any, cidx:number) => {
-                            if (cit.id == oldItem.id) {
-                                newIndex = [idx, cidx]
-                            }
-                        })
-                    })
-        
-                    return {
-                        currentIndex: newIndex,
-                        folder: newFolder,
-                    };
-                });
-            },
-            // 当前chat
-            currentChat () {
-              let currentIndex = get().currentIndex;
-              const chat = get().folder[currentIndex[0]].chat || [];
-
-              if (currentIndex[1] < 0 || currentIndex[1] >= chat.length) {
-                currentIndex[1] = Math.min(chat.length - 1, Math.max(0, currentIndex[1]));
-                set(() => ({ currentIndex }));
-              }
-
-              return chat[currentIndex[1]];
-            },
-            // 更新当前chat
-            updateCurrentChat (updater) {
-              const currentIndex = get().currentIndex;
-
-              const folder = get().folder
-              const chat = folder[currentIndex[0]].chat || [];
-              updater(chat[currentIndex[1]]);
-              folder[currentIndex[0]].chat = chat
-
-              set({ folder });
-            },
-            // 重置chat信息
-            resetChat () {
-              get().updateCurrentChat((chat: any) => {
-                chat.messages = [];
-                chat.memoryPrompt = "";
-              });
-            },
-            onNewMessage (message) {
-              get().updateCurrentChat((chat: any) => {
-                chat.lastUpdate = Date.now();
-              });
-              get().updateStat(message);
-              get().summarizeChat();
-            },
-            async onUserInput (content) {
-              const chat = get().currentChat();
-              const modelConfig = chat.mask.modelConfig;
-      
-              const userMessage: ChatMessage = createMessage({
-                role: "user",
-                content,
-              });
-      
-              const botMessage: ChatMessage = createMessage({
-                role: "assistant",
-                streaming: true,
-                id: userMessage.id! + 1,
-                model: modelConfig.model,
-              });
-      
-              const systemInfo = createMessage({
-                role: "system",
-                content: `IMPORTANT: You are a virtual assistant powered by the ${
-                  modelConfig.model
-                } model, now time is ${new Date().toLocaleString()}}`,
-                id: botMessage.id! + 1,
-              });
-              
-              // get recent messages
-              const systemMessages = [];
-              // if user define a mask with context prompts, wont send system info
-              if (chat.mask.context.length === 0) {
-                systemMessages.push(systemInfo);
-              }
-
-              const recentMessages = get().getMessagesWithMemory();
-              const sendMessages = systemMessages.concat(
-                recentMessages.concat(userMessage),
-              );
-              const chatIndex = get().currentIndex[1];
-              const messageIndex = get().currentChat().messages.length + 1;
-              
-              // save user's and bot's message
-              get().updateCurrentChat((chat: any) => {
-                chat.messages.push(userMessage);
-                chat.messages.push(botMessage);
-              });
-      
-              // make request
-              console.log("[User Input] ", sendMessages);
-              api.llm.chat({
-                messages: sendMessages,
-                config: { ...modelConfig, stream: true },
-                onUpdate(message) {
-                  botMessage.streaming = true;
-                  if (message) {
-                    botMessage.content = message;
-                  }
-                  set(() => ({}));
-                },
-                onFinish(message) {
-                  botMessage.streaming = false;
-                  if (message) {
-                    botMessage.content = message;
-                    get().onNewMessage(botMessage);
-                  }
-                  ChatControllerPool.remove(
-                    chatIndex,
-                    botMessage.id ?? messageIndex,
-                  );
-                  set(() => ({}));
-                },
-                onError(error) {
-                  const isAborted = error.message.includes("aborted");
-                  botMessage.content =
-                    "\n\n" +
-                    prettyObject({
-                      error: true,
-                      message: error.message,
-                    });
-                  botMessage.streaming = false;
-                  userMessage.isError = !isAborted;
-                  botMessage.isError = !isAborted;
-      
-                  set(() => ({}));
-                  ChatControllerPool.remove(
-                    chatIndex,
-                    botMessage.id ?? messageIndex,
-                  );
-      
-                  console.error("[Chat] failed ", error);
-                },
-                onController(controller) {
-                  // collect controller for stop/retry
-                  ChatControllerPool.addController(
-                    chatIndex,
-                    botMessage.id ?? messageIndex,
-                    controller,
-                  );
-                }
-              });
-            },
-            getMemoryPrompt () {
-              const chat = get().currentChat();
-
-              return {
-                role: "system",
-                content:
-                  chat.memoryPrompt.length > 0
-                    ? Locale.Store.Prompt.History(chat.memoryPrompt)
-                    : "",
-                date: "",
-              } as ChatMessage;
-            },
-            getMessagesWithMemory () {
-              const chat = get().currentChat();
-              const modelConfig = chat.mask.modelConfig;
-
-              // wont send cleared context messages
-              const clearedContextMessages = chat.messages.slice(
-                chat.clearContextIndex ?? 0,
-              );
-              const messages = clearedContextMessages.filter((msg: any) => !msg.isError);
-              const n = messages.length;
-
-              const context = chat.mask.context.slice();
-
-              // long term memory
-              if (
-                modelConfig.sendMemory &&
-                chat.memoryPrompt &&
-                chat.memoryPrompt.length > 0
-              ) {
-                const memoryPrompt = get().getMemoryPrompt();
-                context.push(memoryPrompt);
-              }
-
-              // get short term and unmemoried long term memory
-              const shortTermMemoryMessageIndex = Math.max(
-                0,
-                n - modelConfig.historyMessageCount,
-              );
-              const longTermMemoryMessageIndex = chat.lastSummarizeIndex;
-              const mostRecentIndex = Math.max(
-                shortTermMemoryMessageIndex,
-                longTermMemoryMessageIndex,
-              );
-              const threshold = modelConfig.compressMessageLengthThreshold * 2;
-
-              // get recent messages as many as possible
-              const reversedRecentMessages = [];
-              for (
-                let i = n - 1, count = 0;
-                i >= mostRecentIndex && count < threshold;
-                i -= 1
-              ) {
-                const msg = messages[i];
-                if (!msg || msg.isError) continue;
-                count += msg.content.length;
-                reversedRecentMessages.push(msg);
-              }
-
-              // concat
-              const recentMessages = context.concat(reversedRecentMessages.reverse());
-
-              return recentMessages;
-            },
-            // 更新chat message(index:[folderIndex: number, chatIndex: number, messageIndex: number])
-            updateMessage (index: Array<number>, updater: (message?: ChatMessage) => void) {
-              let folder = get().folder
-              let chats = folder[index[0]].chat || []
-              let messages = chats[index[1]]?.messages
-              updater && updater(messages[index[2]])
-
-              chats[index[1]].messages = messages
-              folder[index[0]].chat = chats
-              set({ folder })
-            },
-            summarizeChat () {
-              const chat = get().currentChat();
-      
-              // remove error messages if any
-              const messages = chat.messages;
-      
-              // should summarize topic after chating more than 50 words
-              const SUMMARIZE_MIN_LEN = 50;
-              if (
-                chat.topic === DEFAULT_TOPIC &&
-                countMessages(messages) >= SUMMARIZE_MIN_LEN
-              ) {
-                const topicMessages = messages.concat(
-                  createMessage({
-                    role: "user",
-                    content: Locale.Store.Prompt.Topic,
-                  }),
-                );
-                api.llm.chat({
-                  messages: topicMessages,
-                  config: {
-                    model: "gpt-3.5-turbo",
-                  },
-                  onFinish(message) {
-                    get().updateCurrentChat(
-                      (chat: any) =>
-                        (chat.topic =
-                          message.length > 0 ? trimTopic(message) : DEFAULT_TOPIC),
-                    );
-                  },
-                });
-              }
-      
-              const modelConfig = chat.mask.modelConfig;
-              const summarizeIndex = Math.max(
-                chat.lastSummarizeIndex,
-                chat.clearContextIndex ?? 0,
-              );
-              let toBeSummarizedMsgs = messages
-                .filter((msg: any) => !msg.isError)
-                .slice(summarizeIndex);
-      
-              const historyMsgLength = countMessages(toBeSummarizedMsgs);
-      
-              if (historyMsgLength > modelConfig?.max_tokens ?? 4000) {
-                const n = toBeSummarizedMsgs.length;
-                toBeSummarizedMsgs = toBeSummarizedMsgs.slice(
-                  Math.max(0, n - modelConfig.historyMessageCount),
-                );
-              }
-      
-              // add memory prompt
-              toBeSummarizedMsgs.unshift(get().getMemoryPrompt());
-      
-              const lastSummarizeIndex = chat.messages.length;
-      
-              console.log(
-                "[Chat History] ",
-                toBeSummarizedMsgs,
-                historyMsgLength,
-                modelConfig.compressMessageLengthThreshold,
-              );
-      
-              if (
-                historyMsgLength > modelConfig.compressMessageLengthThreshold &&
-                modelConfig.sendMemory
-              ) {
-                api.llm.chat({
-                  messages: toBeSummarizedMsgs.concat({
-                    role: "system",
-                    content: Locale.Store.Prompt.Summarize,
-                    date: "",
-                  }),
-                  config: { ...modelConfig, stream: true },
-                  onUpdate(message) {
-                    chat.memoryPrompt = message;
-                  },
-                  onFinish(message) {
-                    console.log("[Memory] ", message);
-                    chat.lastSummarizeIndex = lastSummarizeIndex;
-                  },
-                  onError(err) {
-                    console.error("[Summarize] ", err);
-                  }
-                });
-              }
-            },
-            updateStat (message) {
-              get().updateCurrentChat((session: any) => {
-                session.stat.charCount += message.content.length;
-                // TODO: should update chat count and word count
-              });
-            },
-            // 新建chat
-            newChat (mask?: any) {
-                const chat = createEmptySession();
-
-                set(() => ({ globalChatId: get().globalChatId + 1, globalFolderId: get().globalFolderId + 1 }));
-                chat.id = ('chat' + get().globalChatId);
-
-                if (mask) {
-                    chat.mask = { ...mask };
-                    chat.topic = mask.name;
-                }
-
-                const folder = createEmptyFolder()
-                folder.id = ('folder' + get().globalFolderId)
-                folder.type = 'chat'
-                folder.chat = [chat]
-                folder.chatCount = 1
-
-                set((state) => ({
-                    currentIndex: [0, 0],
-                    folder: [folder].concat(state.folder)
-                }));
-            },
-            // 新建folder
-            newFolder (folder: any) {
-              set({ globalFolderId: get().globalFolderId + 1 });
-              let newFolder = createEmptyFolder({
-                id: ('folder' + get().globalFolderId),
-                type: 'folder',
-                chat: [],
-                chatCount: 0,
-                ...folder
-              })
-              set((state) => ({ folder: [newFolder].concat(state.folder) }))
-            },
-            moveFolder (from: number, to: number) {
-              set((state) => {
-                const { folder, currentIndex: oldIndex } = state;
-      
-                // move the folder
-                const newFolder = [...folder];
-                const folderFrom = newFolder[from];
-                newFolder.splice(from, 1);
-                newFolder.splice(to, 0, folderFrom);
-      
-                // modify current session id
-                let newIndex = oldIndex[0] === from ? to : oldIndex[0];
-                if (oldIndex[0] > from && oldIndex[0] <= to) {
-                  newIndex -= 1;
-                } else if (oldIndex[0] < from && oldIndex[0] >= to) {
-                  newIndex += 1;
-                }
-      
-                return {
-                  currentIndex: [newIndex, oldIndex[1]],
-                  folder: newFolder
-                };
-              });
-            },
-            // 清除folder的chat
-            clearFolderChat (index: number) {
-                let folder = get().folder
-                folder[index].chat = []
-                set({ folder })
-            },
-            // 清空Folder
-            clearFolder () {
-                set({
-                    folder: [],
-                    folderCount: 0
-                })
-            },
-            // 清除所有缓存
-            clearAllData () {
-                localStorage.clear();
-                location.reload();
-            }
-        }),
-        {
-            name: StoreKey.ChatFolder,
-            version: 1,
-            // migrate (persistedState, version) {
-            //     const state = persistedState as any;
-            //     const newState = JSON.parse(JSON.stringify(state)) as ChatFolder;
-            //     return newState
-            // }
+        if (deletingLastSession) {
+          nextIndex = 0;
+          chat.push(createEmptySession());
         }
-    )
-)
+
+        // for undo delete action
+        const restoreState = {
+          currentIndex: get().currentIndex,
+          folder: folderChat.slice(),
+        };
+
+        set(() => ({
+          currentIndex: [currentIndex[0], nextIndex],
+          folder: chat,
+        }));
+
+        showToast(
+          Locale.Home.DeleteToast,
+          {
+            text: Locale.Home.Revert,
+            onClick() {
+              set(() => restoreState);
+            },
+          },
+          5000,
+        );
+      },
+      // 选中chat项
+      selectChat(folderIdx: number, chatIdx: number) {
+        set({
+          currentIndex: [folderIdx, chatIdx],
+        });
+      },
+      // 移动chat项
+      moveChat(from: Array<number>, to: Array<number>) {
+        set((state) => {
+          const { folder, currentIndex: oldIndex } = state;
+          let oldItem = (folder[oldIndex[0]].chat || [])[oldIndex[1]];
+          oldItem = JSON.parse(JSON.stringify(oldItem));
+
+          const newFolder = [...folder];
+          if (from[0] == to[0]) {
+            // 同文件夹移动
+            const chat = newFolder[from[0]].chat || [];
+            let moveItem = chat[from[1]];
+            chat?.splice(from[1], 1);
+            chat?.splice(to[1], 0, moveItem);
+            newFolder[from[0]].chat = chat;
+          } else {
+            // 不同文件夹移动
+            const chat = newFolder[from[0]].chat || [];
+            let moveItem = chat[from[1]];
+            chat?.splice(from[1], 1);
+            newFolder[from[0]].chat = chat;
+            newFolder[from[0]].chatCount = chat.length;
+
+            const chatTo = newFolder[to[0]].chat || [];
+            chatTo?.splice(to[1], 0, moveItem);
+            newFolder[to[0]].chat = chatTo;
+            newFolder[to[0]].chatCount = chatTo.length;
+          }
+          let newIndex = oldIndex;
+          newFolder.map((it: any, idx: number) => {
+            it.chat.map((cit: any, cidx: number) => {
+              if (cit.id == oldItem.id) {
+                newIndex = [idx, cidx];
+              }
+            });
+          });
+
+          return {
+            currentIndex: newIndex,
+            folder: newFolder,
+          };
+        });
+      },
+      // 当前chat
+      currentChat() {
+        let currentIndex = get().currentIndex;
+        const chat = get().folder[currentIndex[0]].chat || [];
+
+        if (currentIndex[1] < 0 || currentIndex[1] >= chat.length) {
+          currentIndex[1] = Math.min(
+            chat.length - 1,
+            Math.max(0, currentIndex[1]),
+          );
+          set(() => ({ currentIndex }));
+        }
+
+        return chat[currentIndex[1]];
+      },
+      // 更新当前chat
+      updateCurrentChat(updater) {
+        const currentIndex = get().currentIndex;
+
+        const folder = get().folder;
+        const chat = folder[currentIndex[0]].chat || [];
+        updater(chat[currentIndex[1]]);
+        folder[currentIndex[0]].chat = chat;
+
+        set({ folder });
+      },
+      // 重置chat信息
+      resetChat() {
+        get().updateCurrentChat((chat: any) => {
+          chat.messages = [];
+          chat.memoryPrompt = "";
+        });
+      },
+      onNewMessage(message) {
+        get().updateCurrentChat((chat: any) => {
+          chat.lastUpdate = Date.now();
+        });
+        get().updateStat(message);
+        get().summarizeChat();
+      },
+      async onUserInput(content) {
+        const chat = get().currentChat();
+        const modelConfig = chat.mask.modelConfig;
+
+        const userMessage: ChatMessage = createMessage({
+          role: "user",
+          content,
+        });
+
+        const botMessage: ChatMessage = createMessage({
+          role: "assistant",
+          streaming: true,
+          id: userMessage.id! + 1,
+          model: modelConfig.model,
+        });
+
+        const systemInfo = createMessage({
+          role: "system",
+          content: `IMPORTANT: You are a virtual assistant powered by the ${
+            modelConfig.model
+          } model, now time is ${new Date().toLocaleString()}}`,
+          id: botMessage.id! + 1,
+        });
+
+        // get recent messages
+        const systemMessages = [];
+        // if user define a mask with context prompts, wont send system info
+        if (chat.mask.context.length === 0) {
+          systemMessages.push(systemInfo);
+        }
+
+        const recentMessages = get().getMessagesWithMemory();
+        const sendMessages = systemMessages.concat(
+          recentMessages.concat(userMessage),
+        );
+        const chatIndex = get().currentIndex[1];
+        const messageIndex = get().currentChat().messages.length + 1;
+
+        // save user's and bot's message
+        get().updateCurrentChat((chat: any) => {
+          chat.messages.push(userMessage);
+          chat.messages.push(botMessage);
+        });
+
+        // make request
+        console.log("[User Input] ", sendMessages);
+        api.llm.chat({
+          messages: sendMessages,
+          config: { ...modelConfig, stream: true },
+          onUpdate(message) {
+            botMessage.streaming = true;
+            if (message) {
+              botMessage.content = message;
+            }
+            set(() => ({}));
+          },
+          onFinish(message) {
+            botMessage.streaming = false;
+            if (message) {
+              botMessage.content = message;
+              get().onNewMessage(botMessage);
+            }
+            ChatControllerPool.remove(chatIndex, botMessage.id ?? messageIndex);
+            set(() => ({}));
+          },
+          onError(error) {
+            const isAborted = error.message.includes("aborted");
+            botMessage.content =
+              "\n\n" +
+              prettyObject({
+                error: true,
+                message: error.message,
+              });
+            botMessage.streaming = false;
+            userMessage.isError = !isAborted;
+            botMessage.isError = !isAborted;
+
+            set(() => ({}));
+            ChatControllerPool.remove(chatIndex, botMessage.id ?? messageIndex);
+
+            console.error("[Chat] failed ", error);
+          },
+          onController(controller) {
+            // collect controller for stop/retry
+            ChatControllerPool.addController(
+              chatIndex,
+              botMessage.id ?? messageIndex,
+              controller,
+            );
+          },
+        });
+      },
+      getMemoryPrompt() {
+        const chat = get().currentChat();
+
+        return {
+          role: "system",
+          content:
+            chat.memoryPrompt.length > 0
+              ? Locale.Store.Prompt.History(chat.memoryPrompt)
+              : "",
+          date: "",
+        } as ChatMessage;
+      },
+      getMessagesWithMemory() {
+        const chat = get().currentChat();
+        const modelConfig = chat.mask.modelConfig;
+
+        // wont send cleared context messages
+        const clearedContextMessages = chat.messages.slice(
+          chat.clearContextIndex ?? 0,
+        );
+        const messages = clearedContextMessages.filter(
+          (msg: any) => !msg.isError,
+        );
+        const n = messages.length;
+
+        const context = chat.mask.context.slice();
+
+        // long term memory
+        if (
+          modelConfig.sendMemory &&
+          chat.memoryPrompt &&
+          chat.memoryPrompt.length > 0
+        ) {
+          const memoryPrompt = get().getMemoryPrompt();
+          context.push(memoryPrompt);
+        }
+
+        // get short term and unmemoried long term memory
+        const shortTermMemoryMessageIndex = Math.max(
+          0,
+          n - modelConfig.historyMessageCount,
+        );
+        const longTermMemoryMessageIndex = chat.lastSummarizeIndex;
+        const mostRecentIndex = Math.max(
+          shortTermMemoryMessageIndex,
+          longTermMemoryMessageIndex,
+        );
+        const threshold = modelConfig.compressMessageLengthThreshold * 2;
+
+        // get recent messages as many as possible
+        const reversedRecentMessages = [];
+        for (
+          let i = n - 1, count = 0;
+          i >= mostRecentIndex && count < threshold;
+          i -= 1
+        ) {
+          const msg = messages[i];
+          if (!msg || msg.isError) continue;
+          count += msg.content.length;
+          reversedRecentMessages.push(msg);
+        }
+
+        // concat
+        const recentMessages = context.concat(reversedRecentMessages.reverse());
+
+        return recentMessages;
+      },
+      // 更新chat message(index:[folderIndex: number, chatIndex: number, messageIndex: number])
+      updateMessage(
+        index: Array<number>,
+        updater: (message?: ChatMessage) => void,
+      ) {
+        let folder = get().folder;
+        let chats = folder[index[0]].chat || [];
+        let messages = chats[index[1]]?.messages;
+        updater && updater(messages[index[2]]);
+
+        chats[index[1]].messages = messages;
+        folder[index[0]].chat = chats;
+        set({ folder });
+      },
+      summarizeChat() {
+        const chat = get().currentChat();
+
+        // remove error messages if any
+        const messages = chat.messages;
+
+        // should summarize topic after chating more than 50 words
+        const SUMMARIZE_MIN_LEN = 50;
+        if (
+          chat.topic === DEFAULT_TOPIC &&
+          countMessages(messages) >= SUMMARIZE_MIN_LEN
+        ) {
+          const topicMessages = messages.concat(
+            createMessage({
+              role: "user",
+              content: Locale.Store.Prompt.Topic,
+            }),
+          );
+          api.llm.chat({
+            messages: topicMessages,
+            config: {
+              model: "gpt-3.5-turbo",
+            },
+            onFinish(message) {
+              get().updateCurrentChat(
+                (chat: any) =>
+                  (chat.topic =
+                    message.length > 0 ? trimTopic(message) : DEFAULT_TOPIC),
+              );
+            },
+          });
+        }
+
+        const modelConfig = chat.mask.modelConfig;
+        const summarizeIndex = Math.max(
+          chat.lastSummarizeIndex,
+          chat.clearContextIndex ?? 0,
+        );
+        let toBeSummarizedMsgs = messages
+          .filter((msg: any) => !msg.isError)
+          .slice(summarizeIndex);
+
+        const historyMsgLength = countMessages(toBeSummarizedMsgs);
+
+        if (historyMsgLength > modelConfig?.max_tokens ?? 4000) {
+          const n = toBeSummarizedMsgs.length;
+          toBeSummarizedMsgs = toBeSummarizedMsgs.slice(
+            Math.max(0, n - modelConfig.historyMessageCount),
+          );
+        }
+
+        // add memory prompt
+        toBeSummarizedMsgs.unshift(get().getMemoryPrompt());
+
+        const lastSummarizeIndex = chat.messages.length;
+
+        console.log(
+          "[Chat History] ",
+          toBeSummarizedMsgs,
+          historyMsgLength,
+          modelConfig.compressMessageLengthThreshold,
+        );
+
+        if (
+          historyMsgLength > modelConfig.compressMessageLengthThreshold &&
+          modelConfig.sendMemory
+        ) {
+          api.llm.chat({
+            messages: toBeSummarizedMsgs.concat({
+              role: "system",
+              content: Locale.Store.Prompt.Summarize,
+              date: "",
+            }),
+            config: { ...modelConfig, stream: true },
+            onUpdate(message) {
+              chat.memoryPrompt = message;
+            },
+            onFinish(message) {
+              console.log("[Memory] ", message);
+              chat.lastSummarizeIndex = lastSummarizeIndex;
+            },
+            onError(err) {
+              console.error("[Summarize] ", err);
+            },
+          });
+        }
+      },
+      updateStat(message) {
+        get().updateCurrentChat((session: any) => {
+          session.stat.charCount += message.content.length;
+          // TODO: should update chat count and word count
+        });
+      },
+      // 新建chat
+      newChat(mask?: any) {
+        const chat = createEmptySession();
+
+        set(() => ({
+          globalChatId: get().globalChatId + 1,
+          globalFolderId: get().globalFolderId + 1,
+        }));
+        chat.id = "chat" + get().globalChatId;
+
+        if (mask) {
+          chat.mask = { ...mask };
+          chat.topic = mask.name;
+        }
+
+        const folder = createEmptyFolder();
+        folder.id = "folder" + get().globalFolderId;
+        folder.type = "chat";
+        folder.chat = [chat];
+        folder.chatCount = 1;
+
+        set((state) => ({
+          currentIndex: [0, 0],
+          folder: [folder].concat(state.folder),
+        }));
+      },
+      // 新建folder
+      newFolder(folder: any) {
+        set({ globalFolderId: get().globalFolderId + 1 });
+        let newFolder = createEmptyFolder({
+          id: "folder" + get().globalFolderId,
+          type: "folder",
+          chat: [],
+          chatCount: 0,
+          ...folder,
+        });
+        set((state) => ({ folder: [newFolder].concat(state.folder) }));
+      },
+      moveFolder(from: number, to: number) {
+        set((state) => {
+          const { folder, currentIndex: oldIndex } = state;
+
+          // move the folder
+          const newFolder = [...folder];
+          const folderFrom = newFolder[from];
+          newFolder.splice(from, 1);
+          newFolder.splice(to, 0, folderFrom);
+
+          // modify current session id
+          let newIndex = oldIndex[0] === from ? to : oldIndex[0];
+          if (oldIndex[0] > from && oldIndex[0] <= to) {
+            newIndex -= 1;
+          } else if (oldIndex[0] < from && oldIndex[0] >= to) {
+            newIndex += 1;
+          }
+
+          return {
+            currentIndex: [newIndex, oldIndex[1]],
+            folder: newFolder,
+          };
+        });
+      },
+      // 清除folder的chat
+      clearFolderChat(index: number) {
+        let folder = get().folder;
+        folder[index].chat = [];
+        set({ folder });
+      },
+      // 清空Folder
+      clearFolder() {
+        set({
+          folder: [],
+          folderCount: 0,
+        });
+      },
+      // 清除所有缓存
+      clearAllData() {
+        localStorage.clear();
+        location.reload();
+      },
+    }),
+    {
+      name: StoreKey.ChatFolder,
+      version: 1,
+      // migrate (persistedState, version) {
+      //     const state = persistedState as any;
+      //     const newState = JSON.parse(JSON.stringify(state)) as ChatFolder;
+      //     return newState
+      // }
+    },
+  ),
+);

@@ -301,8 +301,8 @@ export function ChatList() {
         destination.index,
       );
 
-      setGroupChats(tempGroupChats);
       resetCurrentIndex(result, tempGroupChats);
+      setGroupChats(tempGroupChats);
       return;
     }
 
@@ -319,7 +319,9 @@ export function ChatList() {
    * 重置当前选中的chat坐标
    */
   const resetCurrentIndex = (result: any, tempGroupChats: any) => {
-    console.info(result);
+    console.info(groupChats);
+    console.info(currentIndex);
+    // console.info(result);
     // 获取当前选中的folder
     let currentFolder = groupChats[currentIndex[0]];
     // 获取当前选中的folder id
@@ -327,18 +329,23 @@ export function ChatList() {
     // 获取当前选中的chat id
     let currentChatId = currentFolder.chat[currentIndex[1]].id;
     // 当前选中的新的chat坐标
-    let newFolderId = currentFolderId;
-    let newChatId = currentChatId;
+    let newFolderId = currentIndex[0];
+    let newChatId = currentIndex[1];
     tempGroupChats.map((git: any, gidx: number) => {
       if (git.id == currentFolderId) {
         newFolderId = gidx;
-        git.chat.map((cit: any, cidx: any) => {
+        console.info(JSON.stringify(git.chat));
+        git.chat.map((cit: any, cidx: number) => {
           if (cit.id == currentChatId) {
             newChatId = cidx;
+            console.info(cit);
           }
         });
       }
     });
+    console.info(currentFolderId + "," + currentChatId);
+    console.info([newFolderId, newChatId]);
+    console.info(tempGroupChats);
     chatFolderStore.selectChat(newFolderId, newChatId);
     // // 从哪个位置
     // let chatIndexFrom = result.source.index
@@ -388,9 +395,9 @@ export function ChatList() {
     tempGroupChats.map((git: any, gidx: number) => {
       git.chat = data[git.id];
     });
+    resetCurrentIndex(result, tempGroupChats);
     setGroupChats(tempGroupChats);
     setGroups(tempGroups);
-    resetCurrentIndex(result, tempGroupChats);
     //   // lastChatType = undefined
     // } else {
     //   // lastChatType = lastChatTypeTemp
