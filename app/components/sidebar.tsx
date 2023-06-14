@@ -154,13 +154,19 @@ export function SideBar(props: { className?: string }) {
                     <IconDelWhite />
                   </span>
                   {/* 新建文件夹 */}
-                  <span className={styles['tools-item']}>
+                  <span className={styles['tools-item']}
+                    onClick={() => {
+                      chatStore.newFolder({ name: '新分类' })
+                    }}>
                     <IconAddWhite />
                   </span>
                 </>
               ) : (
                 // PC端
-                <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}>
+                <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}
+                  onClick={() => {
+                    chatStore.newFolder({ name: '新分类' })
+                  }}>
                   <IconAddPrimary />
                 </span>
               )
