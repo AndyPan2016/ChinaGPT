@@ -38,6 +38,7 @@
 }
 
 .list-title {
+    margin: 0;
     padding: 8px;
     transition: background-color ease 0.2s;
     flex-grow: 1;
@@ -118,7 +119,7 @@
     padding-bottom: 0;
     transition: background-color 0.2s ease, opacity 0.1s ease;
     user-select: none;
-    width: 250px;
+    // width: 250px;
     &.is-dragging-over {
         background-color: #FFEBE6;
     }
@@ -143,4 +144,35 @@
     as it will collapse when the list is empty
   */
   padding-bottom: 8px;
+}
+
+
+.drop-container {
+    background-color: #4C9AFF;
+    // min-height: 100vh;
+    /* like display:flex but will allow bleeding over the window width */
+    // min-width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+.drag-container {
+    margin: 8px;
+    display: flex;
+    flex-direction: column;
+}
+.drag-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    background-color: #EBECF0;
+    transition: background-color 0.2s ease;
+
+    &.is-dragging {
+        background-color: #E3FCEF;
+    }
+    &:hover {
+        background-color: #E3FCEF;
+    }
 }

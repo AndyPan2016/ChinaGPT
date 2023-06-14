@@ -579,31 +579,32 @@ export function InnerQuoteList(props: any) {
   );
 }
 
-export function QuoteList1(props: {
-  ignoreContainerClipping;
-  internalScroll;
-  scrollContainerStyle;
-  isDropDisabled;
-  isCombineEnabled;
-  listId;
-  listType;
-  style;
-  quotes;
-  title;
-  useClone;
-}) {
+export function QuoteList1(props: any) {
+  const {
+    ignoreContainerClipping,
+    internalScroll,
+    scrollContainerStyle,
+    isDropDisabled,
+    isCombineEnabled,
+    listId,
+    listType,
+    style,
+    quotes,
+    title,
+    useClone
+  } = props;
   return (
     <Droppable
-      droppableId={props.listId || "LIST"}
-      type={props.listType}
-      ignoreContainerClipping={props.ignoreContainerClipping}
-      isDropDisabled={props.isDropDisabled}
-      isCombineEnabled={props.isCombineEnabled}
+      droppableId={listId || "LIST"}
+      type={listType}
+      ignoreContainerClipping={ignoreContainerClipping}
+      isDropDisabled={isDropDisabled}
+      isCombineEnabled={isCombineEnabled}
       renderClone={
-        props.useClone
+        useClone
           ? (provided, snapshot, descriptor) => (
               <QuoteItem1
-                quote={props.quotes[descriptor.source.index]}
+                quote={quotes[descriptor.source.index]}
                 provided={provided}
                 isDragging={snapshot.isDragging}
                 isClone
@@ -619,31 +620,31 @@ export function QuoteList1(props: {
             (dropSnapshot.isDraggingOver
               ? " " + listStyles["is-dragging-over"]
               : "") +
-            (Boolean(props.isDropDisabled)
+            (Boolean(isDropDisabled)
               ? " " + listStyles["is-drop-disabled"]
               : "") +
             (Boolean(dropSnapshot.draggingFromThisWith)
               ? " " + listStyles["is-dragging-from"]
               : "")
           }
-          style={props.style}
+          style={style}
           {...dropProvided.droppableProps}
         >
-          {props.internalScroll ? (
+          {internalScroll ? (
             <div
               className={listStyles["scroll-container"]}
-              style={props.scrollContainerStyle}
+              style={scrollContainerStyle}
             >
               <InnerList
-                quotes={props.quotes}
-                title={props.title}
+                quotes={quotes}
+                title={title}
                 dropProvided={dropProvided}
               />
             </div>
           ) : (
             <InnerList
-              quotes={props.quotes}
-              title={props.title}
+              quotes={quotes}
+              title={title}
               dropProvided={dropProvided}
             />
           )}
@@ -652,14 +653,14 @@ export function QuoteList1(props: {
     </Droppable>
   );
 }
-export function ChatList() {
+export function ChatList3() {
   const initialList = {
     delta: [...quotes.slice(0, 2)],
     epsilon: [...quotes.slice(3, 6)],
   };
   const [list, setList] = useState<any>(initialList);
 
-  const onDragEnd = (result): void => {
+  const onDragEnd = (result: any): void => {
     // dropped nowhere
     if (!result.destination) {
       return;
@@ -698,5 +699,301 @@ export function ChatList() {
         </div>
       </div>
     </DragDropContext>
+  );
+}
+
+let columnsData: any = {
+  "Jake": [{
+      "id": "2",
+      "content": "Sucking at something is the first step towards being sorta good at something.",
+      "author": {
+          "id": "1",
+          "name": "Jake",
+          "url": "http://adventuretime.wikia.com/wiki/Jake",
+          "avatarUrl": "static/media/stories/static/media/jake-min.png",
+          "colors": {
+              "soft": "#FFFAE6",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "3",
+      "content": "You got to focus on what's real, man",
+      "author": {
+          "id": "1",
+          "name": "Jake",
+          "url": "http://adventuretime.wikia.com/wiki/Jake",
+          "avatarUrl": "static/media/stories/static/media/jake-min.png",
+          "colors": {
+              "soft": "#FFFAE6",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  }],
+  "BMO": [{
+      "id": "1",
+      "content": "Sometimes life is scary and dark",
+      "author": {
+          "id": "2",
+          "name": "BMO",
+          "url": "http://adventuretime.wikia.com/wiki/BMO",
+          "avatarUrl": "static/media/stories/static/media/bmo-min.png",
+          "colors": {
+              "soft": "#E3FCEF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  }],
+  "Finn": [{
+      "id": "4",
+      "content": "Is that where creativity comes from? From sad biz?",
+      "author": {
+          "id": "3",
+          "name": "Finn",
+          "url": "http://adventuretime.wikia.com/wiki/Finn",
+          "avatarUrl": "static/media/stories/static/media/finn-min.png",
+          "colors": {
+              "soft": "#DEEBFF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "5",
+      "content": "Homies help homies. Always",
+      "author": {
+          "id": "3",
+          "name": "Finn",
+          "url": "http://adventuretime.wikia.com/wiki/Finn",
+          "avatarUrl": "static/media/stories/static/media/finn-min.png",
+          "colors": {
+              "soft": "#DEEBFF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "8",
+      "content": "People make mistakes. It's all a part of growing up and you never really stop growing",
+      "author": {
+          "id": "3",
+          "name": "Finn",
+          "url": "http://adventuretime.wikia.com/wiki/Finn",
+          "avatarUrl": "static/media/stories/static/media/finn-min.png",
+          "colors": {
+              "soft": "#DEEBFF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "9",
+      "content": "Don't you always call sweatpants 'give up on life pants,' Jake?",
+      "author": {
+          "id": "3",
+          "name": "Finn",
+          "url": "http://adventuretime.wikia.com/wiki/Finn",
+          "avatarUrl": "static/media/stories/static/media/finn-min.png",
+          "colors": {
+              "soft": "#DEEBFF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  }],
+  "Princess bubblegum": [{
+      "id": "6",
+      "content": "Responsibility demands sacrifice",
+      "author": {
+          "id": "4",
+          "name": "Princess bubblegum",
+          "url": "http://adventuretime.wikia.com/wiki/Princess_Bubblegum",
+          "avatarUrl": "static/media/stories/static/media/princess-min.png",
+          "colors": {
+              "soft": "#EAE6FF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "7",
+      "content": "That's it! The answer was so simple, I was too smart to see it!",
+      "author": {
+          "id": "4",
+          "name": "Princess bubblegum",
+          "url": "http://adventuretime.wikia.com/wiki/Princess_Bubblegum",
+          "avatarUrl": "static/media/stories/static/media/princess-min.png",
+          "colors": {
+              "soft": "#EAE6FF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "10",
+      "content": "I should not have drunk that much tea!",
+      "author": {
+          "id": "4",
+          "name": "Princess bubblegum",
+          "url": "http://adventuretime.wikia.com/wiki/Princess_Bubblegum",
+          "avatarUrl": "static/media/stories/static/media/princess-min.png",
+          "colors": {
+              "soft": "#EAE6FF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "11",
+      "content": "Please! I need the real you!",
+      "author": {
+          "id": "4",
+          "name": "Princess bubblegum",
+          "url": "http://adventuretime.wikia.com/wiki/Princess_Bubblegum",
+          "avatarUrl": "static/media/stories/static/media/princess-min.png",
+          "colors": {
+              "soft": "#EAE6FF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  },
+  {
+      "id": "12",
+      "content": "Haven't slept for a solid 83 hours, but, yeah, I'm good.",
+      "author": {
+          "id": "4",
+          "name": "Princess bubblegum",
+          "url": "http://adventuretime.wikia.com/wiki/Princess_Bubblegum",
+          "avatarUrl": "static/media/stories/static/media/princess-min.png",
+          "colors": {
+              "soft": "#EAE6FF",
+              "hard": "rgba(9, 30, 66, 0.71)"
+          }
+      }
+  }]
+}
+let orderedData = ["Jake","BMO","Finn","Princess bubblegum"]
+
+export function ChatList() {
+
+  const [columns, setColumns] = useState<any>(columnsData)
+  const [ordered, setOrdered] = useState<any>(orderedData)
+  
+  const onDragEnd = (result: any): void => {
+    if (result.combine) {
+      if (result.type === 'COLUMN') {
+        const shallow: string[] = [ordered];
+        shallow.splice(result.source.index, 1);
+        setOrdered(shallow);
+        return;
+      }
+
+      const column = columns[result.source.droppableId];
+      const withQuoteRemoved = [...column];
+      withQuoteRemoved.splice(result.source.index, 1);
+      const tempColumns = {
+        ...columns,
+        [result.source.droppableId]: withQuoteRemoved,
+      };
+      setColumns(tempColumns);
+      return;
+    }
+
+    // dropped nowhere
+    if (!result.destination) {
+      return;
+    }
+
+    const source = result.source;
+    const destination = result.destination;
+
+    // did not move anywhere - can bail early
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // reordering column
+    if (result.type === 'COLUMN') {
+      const tempOrdered: string[] = reorder(
+        ordered,
+        source.index,
+        destination.index,
+      );
+
+      setOrdered(tempOrdered);
+
+      return;
+    }
+
+    const data = reorderQuoteMap({
+      quoteMap: columns,
+      source,
+      destination,
+    });
+
+    setColumns(data);
+  };
+
+  return (
+    <DragDropContext
+      onDragEnd={onDragEnd}>
+      <Droppable
+        droppableId="board"
+        type="COLUMN"
+        direction="vertical"
+      >
+        {(provided) => (
+          <div
+            className={listStyles['drop-container']}
+            ref={provided.innerRef}
+            {...provided.droppableProps}>
+            {ordered.map((key: string, index: number) => (
+              <Column
+                key={key}
+                index={index}
+                title={key}
+                quotes={columns[key]}
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
+  )
+}
+
+export function Column (props: any) {
+  const { title, quotes, index } = props;
+  return (
+    <Draggable draggableId={title} index={index}>
+      {(provided, snapshot) => (
+        <div
+          className={listStyles['drag-container']}
+          ref={provided.innerRef}
+          {...provided.draggableProps}>
+          <div
+            className={listStyles['drag-header'] + (snapshot.isDragging ? (' ' + listStyles['is-dragging']) : '')}>
+            <h4
+              className={listStyles['list-title']}
+              {...provided.dragHandleProps}
+              aria-label={`${title} quote list`}>
+              {title}
+            </h4>
+          </div>
+          <QuoteList1
+            listId={title}
+            listType="QUOTE"
+            style={{
+              backgroundColor: snapshot.isDragging ? '#E3FCEF' : undefined,
+            }}
+            quotes={quotes}
+          />
+        </div>
+      )}
+    </Draggable>
   );
 }
