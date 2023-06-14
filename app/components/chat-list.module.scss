@@ -29,7 +29,6 @@
     
     box-shadow: inset 0px 0px 10px 0px rgba(94,168,246,0.1);
     border-left: 3px solid transparent;
-    border-color: var(--chat-left-border);
     border-radius: 6px;
     overflow: hidden;
 
@@ -44,6 +43,11 @@
     user-select: none;
     /* anchor overrides */
     color: #091E42;
+    position: relative;
+
+    &.current {
+        border-color: var(--chat-left-border);
+    }
 
     &:last-child {
         margin-bottom: 0;
@@ -68,6 +72,15 @@
 
     /* flexbox */
     display: flex;
+    
+    .chat-item-delete {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        transition: all ease 0.3s;
+        opacity: 1;
+        cursor: pointer;
+    }
 }
 .chat-item {
     /* flex child */
@@ -118,14 +131,6 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .chat-item-delete {
-        position: absolute;
-        top: 0px;
-        right: 0px;
-        transition: all ease 0.3s;
-        opacity: 1;
-        cursor: pointer;
-    }
 }
 .block-quote {
     &::before {
@@ -155,6 +160,9 @@
             font-size: 14px;
             color: rgba(112, 124, 151, .5);
         }
+    }
+    &.last-placeholder {
+        min-height: 100%;
     }
     // width: 250px;
     // &.is-dragging-over {
@@ -202,13 +210,17 @@
     overflow: hidden;
     background: var(--folder-content-bg);
     box-shadow: var(--folder-box-shadow);
-    position: relative;
-    z-index: 2;
+    // position: relative;
+    // z-index: 2;
     &.chat-folder {
-        // background: none;
-        // box-shadow: none;
+        background: none;
+        box-shadow: none;
+        margin: 0;
+        padding: 10px 8px;
         .chat-item-wrap {
             margin-bottom: 16px;
+            box-shadow: var(--folder-chat-box-shadow);
+            box-sizing: border-box;
             &:last-child {
                 margin-bottom: 0;
             }
@@ -218,15 +230,19 @@
         }
         .div-wrapper {
             min-height: initial;
-            padding: 0 8px;
-            // padding: 0px;
+            padding: 0px;
         }
         .drop-zone {
             padding: 0;
         }
-        // .chat-item-wrap {
-        //     margin: 0;
-        // }
+        &.chat-folder-last {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
     }
 }
 .drag-header {

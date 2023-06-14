@@ -63,43 +63,61 @@ const reorderQuoteMap = (props: any) => {
 
   return result;
 };
-
+// let lastChatType: any;
 export function QuoteItem(props: any) {
-  const { quote, isDragging, isGroupedOver, provided, style, isClone, index } = props;
+  const navigate = useNavigate();
+  const { quote, isDragging, isGroupedOver, provided, folderIndex, chatIndex } =
+    props;
+  const chatFolderStore = useChatFolderStore();
+  const currentIndex = chatFolderStore.currentIndex;
 
   return (
     <a
-      className={listStyles["chat-item-wrap"]}
+      className={
+        listStyles["chat-item-wrap"] +
+        (folderIndex == currentIndex[0] && chatIndex == currentIndex[1]
+          ? " " + listStyles["current"]
+          : "")
+      }
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
       data-is-dragging={isDragging}
       data-testid={quote.id}
-      data-index={index}
+      data-index={chatIndex}
       aria-label={`${quote.id} chat ${quote.topic}`}
     >
-      <div className={listStyles["chat-item"]}>
+      <div
+        className={listStyles["chat-item"]}
+        onClickCapture={() => {
+          chatFolderStore.selectChat(folderIndex, chatIndex);
+          navigate(Path.Chat);
+        }}
+      >
         <div className={listStyles["chat-item-title"]}>{quote.topic}</div>
         <div className={listStyles["chat-item-info"]}>
           <div className={listStyles["chat-item-count"]}>
-            0个会话
+            {quote.messages.length}个会话
           </div>
           <div className={listStyles["chat-item-date"]}>
-            2023年6月14日15:29:56
+            {new Date(quote.lastUpdate).toLocaleString()}
           </div>
         </div>
-        <div
-          className={listStyles["chat-item-delete"]}
-          onClickCapture={() => {}}>
-          <DeleteIcon />
-        </div>
+      </div>
+      <div
+        className={listStyles["chat-item-delete"]}
+        onClickCapture={() => {
+          chatFolderStore.deleteChat(folderIndex, chatIndex);
+        }}
+      >
+        <DeleteIcon />
       </div>
     </a>
   );
 }
 
 export function InnerList(props: any) {
-  const { quotes, dropProvided } = props;
+  const { quotes, folderIndex, dropProvided } = props;
   const title = props.title ? (
     <h4 className={listStyles["list-title"]}>{props.title}</h4>
   ) : null;
@@ -108,7 +126,7 @@ export function InnerList(props: any) {
     <>
       {title}
       <div className={listStyles["drop-zone"]} ref={dropProvided.innerRef}>
-        <InnerQuoteList quotes={quotes} />
+        <InnerQuoteList quotes={quotes} folderIndex={folderIndex} />
         {dropProvided.placeholder}
       </div>
     </>
@@ -116,14 +134,17 @@ export function InnerList(props: any) {
 }
 
 export function InnerQuoteList(props: any) {
+  const { quotes, folderIndex } = props;
   return (
     <>
-      {props.quotes.map((quote: any, index: number) => (
+      {quotes.map((quote: any, index: number) => (
         <Draggable key={quote.id} draggableId={quote.id} index={index}>
           {(dragProvided, dragSnapshot) => (
             <QuoteItem
               key={quote.id}
               quote={quote}
+              folderIndex={folderIndex}
+              chatIndex={index}
               isDragging={dragSnapshot.isDragging}
               isGroupedOver={Boolean(dragSnapshot.combineTargetFor)}
               provided={dragProvided}
@@ -142,12 +163,13 @@ export function QuoteList(props: any) {
     scrollContainerStyle,
     isDropDisabled,
     isCombineEnabled,
+    folderIndex,
     listId,
+    folderType,
     listType,
     style,
     quotes,
     title,
-    useClone
   } = props;
   return (
     <Droppable
@@ -156,22 +178,12 @@ export function QuoteList(props: any) {
       ignoreContainerClipping={ignoreContainerClipping}
       isDropDisabled={isDropDisabled}
       isCombineEnabled={isCombineEnabled}
-      renderClone={
-        useClone
-          ? (provided, snapshot, descriptor) => (
-              <QuoteItem
-                quote={quotes[descriptor.source.index]}
-                provided={provided}
-                isDragging={snapshot.isDragging}
-                isClone
-              />
-            )
-          : undefined
-      }>
+    >
       {(dropProvided, dropSnapshot) => (
         <div
           className={
             listStyles["div-wrapper"] +
+            // (folderType == 'chat' && !quotes.length ? (' ' + listStyles['last-placeholder']) : '') +
             (dropSnapshot.isDraggingOver
               ? " " + listStyles["is-dragging-over"]
               : "") +
@@ -183,7 +195,8 @@ export function QuoteList(props: any) {
               : "")
           }
           style={style}
-          {...dropProvided.droppableProps}>
+          {...dropProvided.droppableProps}
+        >
           {internalScroll ? (
             <div
               className={listStyles["scroll-container"]}
@@ -192,6 +205,7 @@ export function QuoteList(props: any) {
               <InnerList
                 quotes={quotes}
                 title={title}
+                folderIndex={folderIndex}
                 dropProvided={dropProvided}
               />
             </div>
@@ -199,6 +213,7 @@ export function QuoteList(props: any) {
             <InnerList
               quotes={quotes}
               title={title}
+              folderIndex={folderIndex}
               dropProvided={dropProvided}
             />
           )}
@@ -209,7 +224,6 @@ export function QuoteList(props: any) {
 }
 
 export function ChatList() {
-
   let [folder, currentIndex, selectChat, moveChat, moveFolder] =
     useChatFolderStore((state: any) => [
       state.folder,
@@ -218,42 +232,48 @@ export function ChatList() {
       state.moveChat,
       state.moveFolder,
     ]);
-  const chatStore = useChatFolderStore();
+  const chatFolderStore = useChatFolderStore();
 
-  const [columns, setColumns] = useState<any>({})
-  const [ordered, setOrdered] = useState<any>([])
-  
+  const [groups, setGroups] = useState<any>({});
+  const [groupChats, setGroupChats] = useState<any>([]);
+
   useEffect(() => {
-    let tempColumns: any = {}
-    let tempOrdered: any = []
+    let tempGroups: any = {};
+    let tempGroupChats: any = [];
     folder.map((fit: any) => {
-      tempColumns[fit.id] = fit.chat
-      tempOrdered.push(fit)
-    })
-    setColumns(tempColumns)
-    setOrdered(tempOrdered)
+      tempGroups[fit.id] = fit.chat;
+      tempGroupChats.push(fit);
+    });
+    setGroups(tempGroups);
+    setGroupChats(tempGroupChats);
 
-    console.info(tempColumns)
-    console.info(tempOrdered)
-  }, [folder])
-  
+    console.info(tempGroups);
+    console.info(tempGroupChats);
+  }, [folder]);
+
+  /**
+   * 拖拽结束
+   * @param result void
+   */
   const onDragEnd = (result: any): void => {
+    // 重置当前选中的chat坐标
+    // resetCurrentIndex(result)
     if (result.combine) {
-      if (result.type === 'COLUMN') {
-        const shallow: string[] = [ordered];
+      if (result.type === "COLUMN") {
+        const shallow: string[] = [groupChats];
         shallow.splice(result.source.index, 1);
-        setOrdered(shallow);
+        setGroupChats(shallow);
         return;
       }
 
-      const column = columns[result.source.droppableId];
-      const withQuoteRemoved = [...column];
+      const group = groups[result.source.droppableId];
+      const withQuoteRemoved = [...group];
       withQuoteRemoved.splice(result.source.index, 1);
-      const tempColumns = {
-        ...columns,
+      const tempGroups = {
+        ...groups,
         [result.source.droppableId]: withQuoteRemoved,
       };
-      setColumns(tempColumns);
+      setGroups(tempGroups);
       return;
     }
 
@@ -274,75 +294,125 @@ export function ChatList() {
     }
 
     // reordering column
-    if (result.type === 'COLUMN') {
-      const tempOrdered: string[] = reorder(
-        ordered,
+    if (result.type === "COLUMN") {
+      const tempGroupChats: string[] = reorder(
+        groupChats,
         source.index,
         destination.index,
       );
 
-      setOrdered(tempOrdered);
-
+      setGroupChats(tempGroupChats);
+      resetCurrentIndex(result, tempGroupChats);
       return;
     }
 
     const data = reorderQuoteMap({
-      quoteMap: columns,
+      quoteMap: groups,
       source,
       destination,
     });
-    // setColumns(data)
-    renderData(data)
+    // 重置数据
+    resetGroups(data, result);
   };
 
-  const renderData = (data: any) => {
-    let chatCount = 0
-    ordered.map((oit: any, oidx: number) => {
-      if (oit.type === 'chat') {
-        chatCount++
+  /**
+   * 重置当前选中的chat坐标
+   */
+  const resetCurrentIndex = (result: any, tempGroupChats: any) => {
+    console.info(result);
+    // 获取当前选中的folder
+    let currentFolder = groupChats[currentIndex[0]];
+    // 获取当前选中的folder id
+    let currentFolderId = currentFolder.id;
+    // 获取当前选中的chat id
+    let currentChatId = currentFolder.chat[currentIndex[1]].id;
+    // 当前选中的新的chat坐标
+    let newFolderId = currentFolderId;
+    let newChatId = currentChatId;
+    tempGroupChats.map((git: any, gidx: number) => {
+      if (git.id == currentFolderId) {
+        newFolderId = gidx;
+        git.chat.map((cit: any, cidx: any) => {
+          if (cit.id == currentChatId) {
+            newChatId = cidx;
+          }
+        });
       }
-    })
-    if (chatCount > 1) {
-      let tempColumns: any = {}
-      let tempOrdered: any = []
-      ordered.map((oit: any, oidx: number) => {
-        let hasDelete = false
-        if (!data[oit.id].length && oit.type === 'chat') {
-          // 如果为空，且为chat类型，就是删除
-          hasDelete = true
-        } else {
-          tempOrdered.push(oit)
-        }
-        if (!hasDelete) {
-          tempColumns[oit.id] = data[oit.id]
-        }
-      })
-      setOrdered(tempOrdered)
-      setColumns(tempColumns)
-    } else {
-      setColumns(data)
-    }
-  }
+    });
+    chatFolderStore.selectChat(newFolderId, newChatId);
+    // // 从哪个位置
+    // let chatIndexFrom = result.source.index
+    // let sourceDroppableId = result.source.droppableId
+    // let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId )
+    // // 到的位置
+    // let chatIndex = result.destination.index
+    // let droppableId = result.destination.droppableId
+    // let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId )
+    // // console.info([folderIndexFrom, chatIndexFrom])
+    // // console.info([folderIndex, chatIndex])
+    // // 当前改变位置的chat是否是选中的，如果是选中的，需要更改选中坐标(currentIndex)
+    // if (currentIndex[0] == folderIndexFrom && currentIndex[1] == chatIndexFrom) {
+    //   chatFolderStore.selectChat(folderIndex, chatIndex)
+    // }
+  };
+
+  /**
+   * 重置数据
+   * @param data 重置的数据
+   */
+  const resetGroups = (data: any, result: any) => {
+    // let chatCount = 0
+    // // let lastChatTypeTemp
+    // groupChats.map((oit: any, oidx: number) => {
+    //   if (oit.type === 'chat') {
+    //     chatCount++
+    //     // lastChatTypeTemp = oit
+    //   }
+    // })
+    // if (chatCount > 1) {
+    let tempGroups: any = {};
+    let tempGroupChats: any = [];
+    groupChats.map((oit: any, oidx: number) => {
+      let hasDelete = false;
+      if (!data[oit.id].length && oit.type === "chat") {
+        // 如果为空，且为chat类型，就是删除
+        hasDelete = true;
+      } else {
+        tempGroupChats.push(oit);
+      }
+      if (!hasDelete) {
+        tempGroups[oit.id] = data[oit.id];
+      }
+    });
+    // 同步groupChats的chat
+    tempGroupChats.map((git: any, gidx: number) => {
+      git.chat = data[git.id];
+    });
+    setGroupChats(tempGroupChats);
+    setGroups(tempGroups);
+    resetCurrentIndex(result, tempGroupChats);
+    //   // lastChatType = undefined
+    // } else {
+    //   // lastChatType = lastChatTypeTemp
+    //   setGroups(data)
+    // }
+  };
 
   return (
-    <DragDropContext
-      onDragEnd={onDragEnd}>
-      <Droppable
-        droppableId="board"
-        type="COLUMN"
-        direction="vertical"
-      >
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="board" type="COLUMN" direction="vertical">
         {(provided) => (
           <div
-            className={listStyles['drop-container']}
+            className={listStyles["drop-container"]}
             ref={provided.innerRef}
-            {...provided.droppableProps}>
-            {ordered.map((oit: any, index: number) => (
-              <Column
+            {...provided.droppableProps}
+          >
+            {groupChats.map((oit: any, index: number) => (
+              <Groups
                 key={oit.id}
-                index={index}
+                folderIndex={index}
                 folder={oit}
-                quotes={columns[oit.id]}
+                quotes={groups[oit.id]}
               />
             ))}
             {provided.placeholder}
@@ -350,33 +420,42 @@ export function ChatList() {
         )}
       </Droppable>
     </DragDropContext>
-  )
+  );
 }
 
-export function Column (props: any) {
-  const { quotes, index, folder } = props;
+export function Groups(props: any) {
+  const { quotes, folderIndex, folder } = props;
   return (
-    <Draggable draggableId={folder.id} index={index}>
+    <Draggable draggableId={folder.id} index={folderIndex}>
       {(provided, snapshot) => (
         <div
-          className={listStyles['drag-container'] + (folder.type == 'chat' ? (' ' + listStyles['chat-folder']) : '')}
+          className={
+            listStyles["drag-container"] +
+            (folder.type == "chat" ? " " + listStyles["chat-folder"] : "")
+            // (folder.type == 'chat' && !quotes.length ? (' ' + listStyles['chat-folder-last']) : '')
+          }
           ref={provided.innerRef}
-          {...provided.draggableProps}>
+          {...provided.draggableProps}
+        >
           <div
-            className={listStyles['drag-header'] + (snapshot.isDragging ? (' ' + listStyles['is-dragging']) : '')}>
+            className={
+              listStyles["drag-header"] +
+              (snapshot.isDragging ? " " + listStyles["is-dragging"] : "")
+            }
+          >
             <h4
-              className={listStyles['list-title']}
+              className={listStyles["list-title"]}
               {...provided.dragHandleProps}
-              aria-label={`${folder.id} quote list`}>
+              aria-label={`${folder.id} quote list`}
+            >
               {folder.name}
             </h4>
           </div>
           <QuoteList
+            folderIndex={folderIndex}
             listId={folder.id}
+            folderType={folder.type}
             listType="QUOTE"
-            style={{
-              backgroundColor: snapshot.isDragging ? '#E3FCEF' : undefined,
-            }}
             quotes={quotes}
           />
         </div>
@@ -384,4 +463,3 @@ export function Column (props: any) {
     </Draggable>
   );
 }
-
