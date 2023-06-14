@@ -214,7 +214,8 @@ export function SideBar(props: { className?: string }) {
           }
         }}
       >
-        <ChatList narrow={shouldNarrow} />
+        {/* <ChatList narrow={shouldNarrow} /> */}
+        <ChatList />
       </div>
       
       {/* PC才显示 */}

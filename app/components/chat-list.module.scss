@@ -137,28 +137,34 @@
 }
 .drop-zone {
     /* stop the list collapsing when empty */
-  min-height: 150px;
+    // min-height: 150px;
 
-  /*
-    not relying on the items for a margin-bottom
-    as it will collapse when the list is empty
-  */
-  padding-bottom: 8px;
+    /*
+        not relying on the items for a margin-bottom
+        as it will collapse when the list is empty
+    */
+    padding-bottom: 8px;
 }
 
 
 .drop-container {
-    background-color: #4C9AFF;
+    // background-color: #4C9AFF;
     // min-height: 100vh;
     /* like display:flex but will allow bleeding over the window width */
     // min-width: 100vw;
     display: flex;
     flex-direction: column;
+    min-height: 100%;
 }
 .drag-container {
     margin: 8px;
     display: flex;
     flex-direction: column;
+    // &.chat-folder {
+    //     .drag-header {
+    //         display: none;
+    //     }
+    // }
 }
 .drag-header {
     display: flex;

@@ -49,7 +49,7 @@ export interface ChatStat {
 }
 
 export interface ChatSession {
-  id: number;
+  id: number | string;
   topic: string;
 
   memoryPrompt: string;
@@ -575,7 +575,7 @@ export interface ChatFolder {
     // 类型(folder.文件夹 chat.chat项)
     type?: string;
     // id
-    id?: number;
+    id?: number | string;
     // 文件夹名称
     name?: string;
     // 文件夹ID
@@ -1072,7 +1072,7 @@ export const useChatFolderStore = create<ChatFolderStore>()(
                 const chat = createEmptySession();
 
                 set(() => ({ globalChatId: get().globalChatId + 1, globalFolderId: get().globalFolderId + 1 }));
-                chat.id = get().globalChatId;
+                chat.id = ('chat' + get().globalChatId);
 
                 if (mask) {
                     chat.mask = { ...mask };
@@ -1080,7 +1080,7 @@ export const useChatFolderStore = create<ChatFolderStore>()(
                 }
 
                 const folder = createEmptyFolder()
-                folder.id = get().globalFolderId
+                folder.id = ('folder' + get().globalFolderId)
                 folder.type = 'chat'
                 folder.chat = [chat]
                 folder.chatCount = 1
@@ -1094,7 +1094,7 @@ export const useChatFolderStore = create<ChatFolderStore>()(
             newFolder (folder: any) {
               set({ globalFolderId: get().globalFolderId + 1 });
               let newFolder = createEmptyFolder({
-                id: get().globalFolderId,
+                id: ('folder' + get().globalFolderId),
                 type: 'folder',
                 chat: [],
                 chatCount: 0,
