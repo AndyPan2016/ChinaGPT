@@ -291,31 +291,38 @@ export function ChatList() {
       source,
       destination,
     });
-    setColumns(data)
+    // setColumns(data)
+    renderData(data)
   };
 
-  // useEffect(() => {
-  //   console.info(ordered)
-  //   console.info(columns)
-  //   let tempData: any = {}
-  //   for (let key in columns) {
-  //     let hasDelete = false
-  //     if (!columns[key].length) {
-  //       ordered.map((oid: any, oidx: number) => {
-  //         if (oid.id === key && oid.type === 'chat') {
-  //           // 如果为空，且为chat类型，就是删除
-  //           hasDelete = true
-  //         }
-  //       })
-  //     }
-  //     if (!hasDelete) {
-  //       tempData[key] = columns[key]
-  //     }
-  //   }
-  //   console.info(tempData)
-
-  //   setColumns(tempData);
-  // }, [columns])
+  const renderData = (data: any) => {
+    let chatCount = 0
+    ordered.map((oit: any, oidx: number) => {
+      if (oit.type === 'chat') {
+        chatCount++
+      }
+    })
+    if (chatCount > 1) {
+      let tempColumns: any = {}
+      let tempOrdered: any = []
+      ordered.map((oit: any, oidx: number) => {
+        let hasDelete = false
+        if (!data[oit.id].length && oit.type === 'chat') {
+          // 如果为空，且为chat类型，就是删除
+          hasDelete = true
+        } else {
+          tempOrdered.push(oit)
+        }
+        if (!hasDelete) {
+          tempColumns[oit.id] = data[oit.id]
+        }
+      })
+      setOrdered(tempOrdered)
+      setColumns(tempColumns)
+    } else {
+      setColumns(data)
+    }
+  }
 
   return (
     <DragDropContext
