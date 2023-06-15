@@ -224,19 +224,19 @@ export function QuoteList(props: any) {
 }
 
 export function ChatList() {
-  let [folder, currentIndex, selectChat, moveChat, moveFolder] =
-    useChatFolderStore((state: any) => [
-      state.folder,
-      state.currentIndex,
-      state.selectChat,
-      state.moveChat,
-      state.moveFolder,
-    ]);
+  let [folder, currentIndex] = useChatFolderStore((state: any) => [
+    state.folder,
+    state.currentIndex
+  ]);
   const chatFolderStore = useChatFolderStore();
 
   const [groups, setGroups] = useState<any>({});
-  const [groupChats, setGroupChats] = useState<any>([]);
+  const [groupChats, setGroupChats] = useState<Array<any>>([]);
+  // 当前选中的chatID
+  const [currentId, setCurrentId] = useState<Array<any>>([]);
+  // const [effectFolder, setEffectFolder] = useState<boolean>(true);
 
+  // 初始化数据
   useEffect(() => {
     let tempGroups: any = {};
     let tempGroupChats: any = [];
@@ -251,16 +251,28 @@ export function ChatList() {
     console.info(tempGroupChats);
   }, [folder]);
 
+  // 更新Folder
+  // useEffect(() => {
+  //   console.info(2)
+  //   setEffectFolder(false)
+  //   chatFolderStore.resetFolder(groupChats)
+  // }, [groups, groupChats])
+
   /**
    * 拖拽结束
    * @param result void
    */
-  const onDragEnd = (result: any): void => {
-    // 重置当前选中的chat坐标
-    // resetCurrentIndex(result)
+  const onDragEnd1 = (result: any): void => {
+    // 获取当前选中的folder
+    let currentFolder = groupChats[currentIndex[0]];
+    // 获取当前选中的folder id
+    let currentFolderId = currentFolder.id;
+    // 获取当前选中的chat id
+    let currentChatId = currentFolder.chat[currentIndex[1]].id;
+    setCurrentId([currentFolderId, currentChatId])
     if (result.combine) {
       if (result.type === "COLUMN") {
-        const shallow: string[] = [groupChats];
+        const shallow = [groupChats];
         shallow.splice(result.source.index, 1);
         setGroupChats(shallow);
         return;
@@ -286,10 +298,7 @@ export function ChatList() {
     const destination = result.destination;
 
     // did not move anywhere - can bail early
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
 
@@ -315,53 +324,46 @@ export function ChatList() {
     resetGroups(data, result);
   };
 
+  const onDragEnd = (result: any) => {
+    // 从哪个位置
+    let chatIndexFrom = result.source.index
+    let sourceDroppableId = result.source.droppableId
+    let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId )
+    // 到的位置
+    let chatIndex = result.destination.index
+    let droppableId = result.destination.droppableId
+    let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId )
+    console.info([folderIndexFrom, chatIndexFrom])
+    console.info([folderIndex, chatIndex])
+    chatFolderStore.moveChat([folderIndexFrom, chatIndexFrom], [folderIndex, chatIndex])
+  }
+
   /**
    * 重置当前选中的chat坐标
    */
   const resetCurrentIndex = (result: any, tempGroupChats: any) => {
-    console.info(groupChats);
-    console.info(currentIndex);
-    // console.info(result);
-    // 获取当前选中的folder
-    let currentFolder = groupChats[currentIndex[0]];
-    // 获取当前选中的folder id
-    let currentFolderId = currentFolder.id;
-    // 获取当前选中的chat id
-    let currentChatId = currentFolder.chat[currentIndex[1]].id;
     // 当前选中的新的chat坐标
     let newFolderId = currentIndex[0];
     let newChatId = currentIndex[1];
     tempGroupChats.map((git: any, gidx: number) => {
-      if (git.id == currentFolderId) {
-        newFolderId = gidx;
-        console.info(JSON.stringify(git.chat));
-        git.chat.map((cit: any, cidx: number) => {
-          if (cit.id == currentChatId) {
-            newChatId = cidx;
-            console.info(cit);
-          }
-        });
-      }
+      // if (git.id == currentId[0]) {
+      git.chat.map((cit: any, cidx: number) => {
+        if (cit.id == currentId[1]) {
+          newChatId = cidx;
+          newFolderId = gidx;
+        }
+      });
+      // }
     });
-    console.info(currentFolderId + "," + currentChatId);
-    console.info([newFolderId, newChatId]);
-    console.info(tempGroupChats);
     chatFolderStore.selectChat(newFolderId, newChatId);
-    // // 从哪个位置
-    // let chatIndexFrom = result.source.index
-    // let sourceDroppableId = result.source.droppableId
-    // let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId )
-    // // 到的位置
-    // let chatIndex = result.destination.index
-    // let droppableId = result.destination.droppableId
-    // let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId )
-    // // console.info([folderIndexFrom, chatIndexFrom])
-    // // console.info([folderIndex, chatIndex])
-    // // 当前改变位置的chat是否是选中的，如果是选中的，需要更改选中坐标(currentIndex)
-    // if (currentIndex[0] == folderIndexFrom && currentIndex[1] == chatIndexFrom) {
-    //   chatFolderStore.selectChat(folderIndex, chatIndex)
-    // }
   };
+
+  /**
+   * 重置Folder
+   */
+  const resetFolder = () => {
+
+  }
 
   /**
    * 重置数据
@@ -398,6 +400,8 @@ export function ChatList() {
     resetCurrentIndex(result, tempGroupChats);
     setGroupChats(tempGroupChats);
     setGroups(tempGroups);
+    console.info(tempGroups)
+    console.info(tempGroupChats)
     //   // lastChatType = undefined
     // } else {
     //   // lastChatType = lastChatTypeTemp
