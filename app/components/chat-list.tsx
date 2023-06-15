@@ -234,7 +234,6 @@ export function ChatList() {
   const [groupChats, setGroupChats] = useState<Array<any>>([]);
   // 当前选中的chatID
   const [currentId, setCurrentId] = useState<Array<any>>([]);
-  // const [effectFolder, setEffectFolder] = useState<boolean>(true);
 
   // 初始化数据
   useEffect(() => {
@@ -250,13 +249,6 @@ export function ChatList() {
     console.info(tempGroups);
     console.info(tempGroupChats);
   }, [folder]);
-
-  // 更新Folder
-  // useEffect(() => {
-  //   console.info(2)
-  //   setEffectFolder(false)
-  //   chatFolderStore.resetFolder(groupChats)
-  // }, [groups, groupChats])
 
   /**
    * 拖拽结束
@@ -325,17 +317,26 @@ export function ChatList() {
   };
 
   const onDragEnd = (result: any) => {
-    // 从哪个位置
-    let chatIndexFrom = result.source.index
-    let sourceDroppableId = result.source.droppableId
-    let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId )
-    // 到的位置
-    let chatIndex = result.destination.index
-    let droppableId = result.destination.droppableId
-    let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId )
-    console.info([folderIndexFrom, chatIndexFrom])
-    console.info([folderIndex, chatIndex])
-    chatFolderStore.moveChat([folderIndexFrom, chatIndexFrom], [folderIndex, chatIndex])
+    // console.info(result)
+    if (result.destination) {
+      // 从哪个位置
+      let chatIndexFrom = result.source.index
+      let sourceDroppableId = result.source.droppableId
+      let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId)
+      // 到的位置
+      let chatIndex = result.destination.index
+      let droppableId = result.destination.droppableId
+      let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId)
+      if (sourceDroppableId == 'board' && droppableId == 'board') {
+        // folder移动
+        chatFolderStore.moveFolder(chatIndexFrom, chatIndex)
+      } else {
+        // chat移动
+        chatFolderStore.moveChat([folderIndexFrom, chatIndexFrom], [folderIndex, chatIndex])
+      }
+    } else {
+      // 拖出范围
+    }
   }
 
   /**
@@ -357,13 +358,6 @@ export function ChatList() {
     });
     chatFolderStore.selectChat(newFolderId, newChatId);
   };
-
-  /**
-   * 重置Folder
-   */
-  const resetFolder = () => {
-
-  }
 
   /**
    * 重置数据

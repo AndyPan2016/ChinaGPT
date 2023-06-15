@@ -765,17 +765,27 @@ export const useChatFolderStore = create<any>()(
             newFolder[to[0]].chatCount = chatTo.length;
           }
           let newIndex = oldIndex;
+          let tempNewFolder: Array<any> = []
+          // 1.先排除空位
           newFolder.map((it: any, idx: number) => {
+            if (!it.chat.length && it.type === "chat") {
+              // 如果为空，且为chat类型，就是删除
+            } else {
+              tempNewFolder.push(it)
+            }
+          });
+          // 2.再计算新的index(选中的坐标)
+          tempNewFolder.map((it: any, idx: number) => {
             it.chat.map((cit: any, cidx: number) => {
               if (cit.id == oldItem.id) {
                 newIndex = [idx, cidx];
               }
-            });
-          });
+            })
+          })
 
           return {
             currentIndex: newIndex,
-            folder: newFolder,
+            folder: tempNewFolder
           };
         });
       },
