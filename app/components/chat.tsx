@@ -113,7 +113,9 @@ export function SessionConfigModel(props: { onClose: () => void }) {
           updateMask={(updater) => {
             const mask = { ...chat.mask };
             updater(mask);
-            chatFolderStore.updateCurrentSession((chat: ChatSession) => (chat.mask = mask));
+            chatFolderStore.updateCurrentSession(
+              (chat: ChatSession) => (chat.mask = mask),
+            );
           }}
           shouldSyncFromGlobal
           extraListItems={
@@ -140,7 +142,7 @@ function PromptToast(props: {
   // const chatStore = useChatStore();
   const chatFolderStore = useChatFolderStore();
   const chat = chatFolderStore.currentChat();
-  const context = chat.mask.context;
+  const context = chat?.mask?.context;
 
   return (
     <div className={chatStyle["prompt-toast"]} key="prompt-toast">
@@ -419,8 +421,8 @@ export function Chat() {
   const chatFolderStore = useChatFolderStore();
   const [currentChat, currentIndex] = useChatFolderStore((state) => [
     state.currentChat(),
-    state.currentIndex
-  ])
+    state.currentIndex,
+  ]);
 
   const config = useAppConfig();
   const fontSize = config.fontSize;
@@ -516,7 +518,7 @@ export function Chat() {
   useEffect(() => {
     chatFolderStore.updateCurrentChat((chat: ChatSession) => {
       const stopTiming = Date.now() - REQUEST_TIMEOUT_MS;
-      chat.messages.forEach((msg: any) => {
+      chat?.messages?.forEach((msg: any) => {
         // check if should stop all stale messages
         if (msg.isError || new Date(msg.date).getTime() < stopTiming) {
           if (msg.streaming) {
@@ -534,7 +536,7 @@ export function Chat() {
       });
 
       // auto sync mask config from global config
-      if (chat.mask.syncGlobalConfig) {
+      if (chat?.mask?.syncGlobalConfig) {
         console.log("[Mask] syncing from global, name = ", chat.mask.name);
         chat.mask.modelConfig = { ...config.modelConfig };
       }
@@ -606,13 +608,16 @@ export function Chat() {
     inputRef.current?.focus();
   };
 
-  const context: RenderMessage[] = currentChat.mask.hideContext
+  const context: RenderMessage[] = currentChat?.mask?.hideContext
     ? []
-    : currentChat.mask.context.slice();
+    : currentChat?.mask?.context?.slice();
 
   const accessStore = useAccessStore();
 
-  if (context.length === 0 && currentChat.messages.at(0)?.content !== BOT_HELLO.content) {
+  if (
+    context?.length === 0 &&
+    currentChat?.messages?.at(0)?.content !== BOT_HELLO.content
+  ) {
     const copiedHello = Object.assign({}, BOT_HELLO);
     if (!accessStore.isAuthorized()) {
       copiedHello.content = Locale.Error.Unauthorized;
@@ -622,13 +627,13 @@ export function Chat() {
 
   // clear context index = context length + index in messages
   const clearContextIndex =
-    (currentChat.clearContextIndex ?? -1) >= 0
-      ? currentChat.clearContextIndex! + context.length
+    (currentChat?.clearContextIndex ?? -1) >= 0
+      ? currentChat?.clearContextIndex! + context?.length
       : -1;
 
   // preview messages
   const messages = context
-    .concat(currentChat.messages as RenderMessage[])
+    ?.concat(currentChat?.messages as RenderMessage[])
     .concat(
       isLoading
         ? [
@@ -641,7 +646,8 @@ export function Chat() {
             },
           ]
         : [],
-    ).concat(
+    )
+    .concat(
       userInput.length > 0 && config.sendPreviewBubble
         ? [
             {
@@ -660,7 +666,9 @@ export function Chat() {
   const renameSession = () => {
     const newTopic = prompt(Locale.Chat.Rename, currentChat.topic);
     if (newTopic && newTopic !== currentChat.topic) {
-      chatFolderStore.updateCurrentChat((chat: ChatSession) => (chat.topic = newTopic!));
+      chatFolderStore.updateCurrentChat(
+        (chat: ChatSession) => (chat.topic = newTopic!),
+      );
     }
   };
 
@@ -676,17 +684,17 @@ export function Chat() {
   });
 
   return (
-    <div className={styles.chat} key={currentChat.id}>
+    <div className={styles.chat} key={currentChat?.id}>
       <div className="window-header">
         <div className="window-header-title">
           <div
             className={`window-header-main-title " ${styles["chat-body-title"]}`}
             onClickCapture={renameSession}
           >
-            {!currentChat.topic ? DEFAULT_TOPIC : currentChat.topic}
+            {!currentChat?.topic ? DEFAULT_TOPIC : currentChat?.topic}
           </div>
           <div className="window-header-sub-title">
-            {Locale.Chat.SubTitle(currentChat.messages.length)}
+            {Locale.Chat.SubTitle(currentChat?.messages?.length)}
           </div>
         </div>
         <div className="window-actions">
@@ -748,7 +756,7 @@ export function Chat() {
           setAutoScroll(false);
         }}
       >
-        {messages.map((message, i) => {
+        {messages?.map((message, i) => {
           const isUser = message.role === "user";
           const showActions =
             !isUser &&

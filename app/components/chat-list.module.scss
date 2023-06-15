@@ -13,8 +13,28 @@
     height: 55px;
     display: flex;
     align-items: center;
-    color: var(--white);
+    color: var(--white-chat);
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    .title-text {
+        display: flex;
+        align-items: center;
+        width: calc(100% - 100px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .icon-folder {
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .icon-title-handle {
+        margin-left: 5px;
+        &:first-child {
+            margin: 0;
+        }
+    }
 
     &:focus {
         outline: 2px solid #998DD9;

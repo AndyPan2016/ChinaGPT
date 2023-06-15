@@ -139,7 +139,7 @@
     border-radius: 30px;
     .sidebar-btn-text {
       font-size: 18px;
-      color: var(--white);
+      color: var(--white-chat);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -161,6 +161,7 @@
   align-items: flex-start;
   flex-direction: column;
   justify-content: center;
+  color: var(--sidebar-title);
   .sidebar-title-remark {
     font-size: 14px;
     color: rgba(187, 187, 187, 1);

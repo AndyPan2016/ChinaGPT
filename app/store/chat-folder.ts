@@ -74,7 +74,7 @@ export const BOT_HELLO: ChatMessage = createMessage({
  */
 function createEmptySession(): ChatSession {
   return {
-    id: Date.now() + Math.random(),
+    id: Date.now() + Math.random() + "",
     topic: DEFAULT_TOPIC,
     memoryPrompt: "",
     messages: [],
@@ -601,6 +601,8 @@ export interface ChatFolderStore {
   folder: ChatFolder[];
   // 文件个数
   folderCount?: number;
+  // 初始化Folder
+  initFolder: () => ChatFolder;
   // 重置Folder
   resetFolder: (newFolder: ChatFolder[]) => void;
   // 删除chat
@@ -669,19 +671,25 @@ export const useChatFolderStore = create<any>()(
       globalFolderId: 0,
       globalChatId: 0,
       folder: [
-        // () => {
-        //     let id = get().globalFolderId
-        //     set({ globalFolderId: id + 1 })
-        //     return createEmptyFolder({
-        //         id,
-        //         folderId: 'folder-' + id
-        //     })
-        // }
+        createEmptyFolder({
+          type: "chat",
+          id: "folder0",
+          folderId: "folder-0",
+        }),
       ],
+      // 初始化folder
+      initFolder() {
+        let id = get().globalFolderId;
+        set({ globalFolderId: id + 1 });
+        return createEmptyFolder({
+          id,
+          folderId: "folder-" + id,
+        });
+      },
       // folderCount: 0,
       // 重置Folder
-      resetFolder (newFolder: ChatFolder[]) {
-        set({ folder: newFolder })
+      resetFolder(newFolder: ChatFolder[]) {
+        set({ folder: newFolder });
       },
       // 删除chat项
       deleteChat(folderIdx: number, chatIdx: number) {
@@ -765,13 +773,13 @@ export const useChatFolderStore = create<any>()(
             newFolder[to[0]].chatCount = chatTo.length;
           }
           let newIndex = oldIndex;
-          let tempNewFolder: Array<any> = []
+          let tempNewFolder: Array<any> = [];
           // 1.先排除空位
           newFolder.map((it: any, idx: number) => {
             if (!it.chat.length && it.type === "chat") {
               // 如果为空，且为chat类型，就是删除
             } else {
-              tempNewFolder.push(it)
+              tempNewFolder.push(it);
             }
           });
           // 2.再计算新的index(选中的坐标)
@@ -780,21 +788,25 @@ export const useChatFolderStore = create<any>()(
               if (cit.id == oldItem.id) {
                 newIndex = [idx, cidx];
               }
-            })
-          })
+            });
+          });
 
           return {
             currentIndex: newIndex,
-            folder: tempNewFolder
+            folder: tempNewFolder,
           };
         });
       },
       // 当前chat
       currentChat() {
         let currentIndex = get().currentIndex;
-        const chat = get().folder[currentIndex[0]].chat || [];
+        let folder = get().folder;
+        const chat = folder[currentIndex[0]]?.chat || [];
 
-        if (currentIndex[1] < 0 || currentIndex[1] >= chat.length) {
+        if (
+          (currentIndex[1] < 0 || currentIndex[1] >= chat.length) &&
+          chat.length
+        ) {
           currentIndex[1] = Math.min(
             chat.length - 1,
             Math.max(0, currentIndex[1]),
@@ -809,9 +821,9 @@ export const useChatFolderStore = create<any>()(
         const currentIndex = get().currentIndex;
 
         const folder = get().folder;
-        const chat = folder[currentIndex[0]].chat || [];
+        const chat = (folder[currentIndex[0]] || {}).chat || [];
         updater(chat[currentIndex[1]]);
-        folder[currentIndex[0]].chat = chat;
+        (folder[currentIndex[0]] || {}).chat = chat;
 
         set({ folder });
       },
@@ -891,7 +903,10 @@ export const useChatFolderStore = create<any>()(
               botMessage.content = message;
               get().onNewMessage(botMessage);
             }
-            ChatControllerPool.remove(currentIndex, botMessage.id ?? messageIndex);
+            ChatControllerPool.remove(
+              currentIndex,
+              botMessage.id ?? messageIndex,
+            );
             set(() => ({}));
           },
           onError(error) {
@@ -907,7 +922,10 @@ export const useChatFolderStore = create<any>()(
             botMessage.isError = !isAborted;
 
             set(() => ({}));
-            ChatControllerPool.remove(currentIndex, botMessage.id ?? messageIndex);
+            ChatControllerPool.remove(
+              currentIndex,
+              botMessage.id ?? messageIndex,
+            );
 
             console.error("[Chat] failed ", error);
           },
@@ -989,7 +1007,10 @@ export const useChatFolderStore = create<any>()(
         return recentMessages;
       },
       // 更新chat message(index:[folderIndex: number, chatIndex: number, messageIndex: number])
-      updateMessage(index: Array<number>, updater: (message?: ChatMessage) => void) {
+      updateMessage(
+        index: Array<number>,
+        updater: (message?: ChatMessage) => void,
+      ) {
         let folder = get().folder;
         let chats = folder[index[0]].chat || [];
         let messages = chats[index[1]]?.messages;
@@ -1095,24 +1116,24 @@ export const useChatFolderStore = create<any>()(
       /**
        * 获取当前选中的数据ID
        */
-      getCurrentId () {
-        let folder = get().folder
-        let currentIndex = get().currentIndex
+      getCurrentId() {
+        let folder = get().folder;
+        let currentIndex = get().currentIndex;
         // 获取当前选中的folder
         let currentFolder = folder[currentIndex[0]];
         // 获取当前选中的folder id
         let currentFolderId = currentFolder.id;
         // 获取当前选中的chat id
         let currentChatId = (currentFolder?.chat || [])[currentIndex[1]].id;
-        return [currentFolderId, currentChatId]
+        return [currentFolderId, currentChatId];
       },
       /**
        * 根据当前选中的数据ID，查找数据所在位置
        */
-      findCurrentIndex (currentId: any) {
-        let folder = get().folder
-        let currentIndex = get().currentIndex
-        currentId = currentId || get().getCurrentId()
+      findCurrentIndex(currentId: any) {
+        let folder = get().folder;
+        let currentIndex = get().currentIndex;
+        currentId = currentId || get().getCurrentId();
         // 当前选中的新的chat坐标
         let newFolderIndex = currentIndex[0];
         let newChatIndex = currentIndex[1];
@@ -1127,7 +1148,7 @@ export const useChatFolderStore = create<any>()(
           // }
         });
         set({ currentIndex: [newFolderIndex, newChatIndex] });
-        return [newFolderIndex, newChatIndex]
+        return [newFolderIndex, newChatIndex];
       },
       // 新建chat
       newChat(mask?: any) {
@@ -1158,7 +1179,7 @@ export const useChatFolderStore = create<any>()(
       // 新建folder
       newFolder(folder: any) {
         set({ globalFolderId: get().globalFolderId + 1 });
-        let currentId = get().getCurrentId()
+        let currentId = get().getCurrentId();
         let newFolder = createEmptyFolder({
           id: "folder" + get().globalFolderId,
           type: "folder",
@@ -1167,7 +1188,7 @@ export const useChatFolderStore = create<any>()(
           ...folder,
         });
         set((state: any) => ({ folder: [newFolder].concat(state.folder) }));
-        get().findCurrentIndex(currentId)
+        get().findCurrentIndex(currentId);
       },
       moveFolder(from: number, to: number) {
         set((state: any) => {

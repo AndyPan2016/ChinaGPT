@@ -18,6 +18,10 @@ import { Path } from "../constant";
 import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
 import { useRef, useEffect, useState, use } from "react";
+import IconFolderWhite from "../icons/svg/icon-folder-white.svg";
+import IconTitleEditWhite from "../icons/svg/icon-title-edit-white.svg";
+import IconTitleDeleteWhite from "../icons/svg/icon-title-delete-white.svg";
+import IconArrowTopWhite from "../icons/svg/icon-arrow-top-white.svg";
 
 // a little function to help us with reordering the result
 function reorder<TItem>(
@@ -226,7 +230,7 @@ export function QuoteList(props: any) {
 export function ChatList() {
   let [folder, currentIndex] = useChatFolderStore((state: any) => [
     state.folder,
-    state.currentIndex
+    state.currentIndex,
   ]);
   const chatFolderStore = useChatFolderStore();
 
@@ -261,7 +265,7 @@ export function ChatList() {
     let currentFolderId = currentFolder.id;
     // 获取当前选中的chat id
     let currentChatId = currentFolder.chat[currentIndex[1]].id;
-    setCurrentId([currentFolderId, currentChatId])
+    setCurrentId([currentFolderId, currentChatId]);
     if (result.combine) {
       if (result.type === "COLUMN") {
         const shallow = [groupChats];
@@ -290,7 +294,10 @@ export function ChatList() {
     const destination = result.destination;
 
     // did not move anywhere - can bail early
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
@@ -324,24 +331,29 @@ export function ChatList() {
     // console.info(result)
     if (result.destination) {
       // 从哪个位置
-      let chatIndexFrom = result.source.index
-      let sourceDroppableId = result.source.droppableId
-      let folderIndexFrom = groupChats.findIndex((it: any) => it.id == sourceDroppableId)
+      let chatIndexFrom = result.source.index;
+      let sourceDroppableId = result.source.droppableId;
+      let folderIndexFrom = groupChats.findIndex(
+        (it: any) => it.id == sourceDroppableId,
+      );
       // 到的位置
-      let chatIndex = result.destination.index
-      let droppableId = result.destination.droppableId
-      let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId)
-      if (sourceDroppableId == 'board' && droppableId == 'board') {
+      let chatIndex = result.destination.index;
+      let droppableId = result.destination.droppableId;
+      let folderIndex = groupChats.findIndex((it: any) => it.id == droppableId);
+      if (sourceDroppableId == "board" && droppableId == "board") {
         // folder移动
-        chatFolderStore.moveFolder(chatIndexFrom, chatIndex)
+        chatFolderStore.moveFolder(chatIndexFrom, chatIndex);
       } else {
         // chat移动
-        chatFolderStore.moveChat([folderIndexFrom, chatIndexFrom], [folderIndex, chatIndex])
+        chatFolderStore.moveChat(
+          [folderIndexFrom, chatIndexFrom],
+          [folderIndex, chatIndex],
+        );
       }
     } else {
       // 拖出范围
     }
-  }
+  };
 
   /**
    * 重置当前选中的chat坐标
@@ -398,8 +410,8 @@ export function ChatList() {
     resetCurrentIndex(result, tempGroupChats);
     setGroupChats(tempGroupChats);
     setGroups(tempGroups);
-    console.info(tempGroups)
-    console.info(tempGroupChats)
+    console.info(tempGroups);
+    console.info(tempGroupChats);
     //   // lastChatType = undefined
     // } else {
     //   // lastChatType = lastChatTypeTemp
@@ -457,7 +469,21 @@ export function Groups(props: any) {
               {...provided.dragHandleProps}
               aria-label={`${folder.id} quote list`}
             >
-              {folder.name}
+              <span className={listStyles["title-text"]}>
+                <IconFolderWhite className={listStyles["icon-folder"]} />
+                {folder.name}
+              </span>
+              <span className={listStyles["title-handle"]}>
+                <IconTitleEditWhite
+                  className={listStyles["icon-title-handle"]}
+                />
+                <IconTitleDeleteWhite
+                  className={listStyles["icon-title-handle"]}
+                />
+                <IconArrowTopWhite
+                  className={listStyles["icon-title-handle"]}
+                />
+              </span>
             </h4>
           </div>
           <QuoteList
