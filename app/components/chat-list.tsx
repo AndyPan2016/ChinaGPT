@@ -316,6 +316,10 @@ export function ChatList() {
     resetGroups(data, result);
   };
 
+  /**
+   * 拖拽结束
+   * @param result void
+   */
   const onDragEnd = (result: any) => {
     // console.info(result)
     if (result.destination) {

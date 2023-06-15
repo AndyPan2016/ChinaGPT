@@ -25,6 +25,7 @@ import StopIcon from "../icons/pause.svg";
 import {
   ChatMessage,
   SubmitKey,
+  ChatSession,
   useChatStore,
   useChatFolderStore,
   BOT_HELLO,
@@ -68,8 +69,9 @@ const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
 });
 
 export function SessionConfigModel(props: { onClose: () => void }) {
-  const chatStore = useChatStore();
-  const session = chatStore.currentSession();
+  // const chatStore = useChatStore();
+  const chatFolderStore = useChatFolderStore();
+  const chat = chatFolderStore.currentChat();
   const maskStore = useMaskStore();
   const navigate = useNavigate();
 
@@ -86,8 +88,8 @@ export function SessionConfigModel(props: { onClose: () => void }) {
             text={Locale.Chat.Config.Reset}
             onClick={() => {
               if (confirm(Locale.Memory.ResetConfirm)) {
-                chatStore.updateCurrentSession(
-                  (session) => (session.memoryPrompt = ""),
+                chatFolderStore.updateCurrentChat(
+                  (chat: ChatSession) => (chat.memoryPrompt = ""),
                 );
               }
             }}
@@ -100,25 +102,25 @@ export function SessionConfigModel(props: { onClose: () => void }) {
             onClick={() => {
               navigate(Path.Masks);
               setTimeout(() => {
-                maskStore.create(session.mask);
+                maskStore.create(chat.mask);
               }, 500);
             }}
           />,
         ]}
       >
         <MaskConfig
-          mask={session.mask}
+          mask={chat.mask}
           updateMask={(updater) => {
-            const mask = { ...session.mask };
+            const mask = { ...chat.mask };
             updater(mask);
-            chatStore.updateCurrentSession((session) => (session.mask = mask));
+            chatFolderStore.updateCurrentSession((chat: ChatSession) => (chat.mask = mask));
           }}
           shouldSyncFromGlobal
           extraListItems={
-            session.mask.modelConfig.sendMemory ? (
+            chat.mask.modelConfig.sendMemory ? (
               <ListItem
-                title={`${Locale.Memory.Title} (${session.lastSummarizeIndex} of ${session.messages.length})`}
-                subTitle={session.memoryPrompt || Locale.Memory.EmptyContent}
+                title={`${Locale.Memory.Title} (${chat.lastSummarizeIndex} of ${chat.messages.length})`}
+                subTitle={chat.memoryPrompt || Locale.Memory.EmptyContent}
               ></ListItem>
             ) : (
               <></>
@@ -135,9 +137,10 @@ function PromptToast(props: {
   showModal?: boolean;
   setShowModal: (_: boolean) => void;
 }) {
-  const chatStore = useChatStore();
-  const session = chatStore.currentSession();
-  const context = session.mask.context;
+  // const chatStore = useChatStore();
+  const chatFolderStore = useChatFolderStore();
+  const chat = chatFolderStore.currentChat();
+  const context = chat.mask.context;
 
   return (
     <div className={chatStyle["prompt-toast"]} key="prompt-toast">
@@ -259,14 +262,15 @@ export function PromptHints(props: {
 }
 
 function ClearContextDivider() {
-  const chatStore = useChatStore();
+  // const chatStore = useChatStore();
+  const chatFolderStore = useChatFolderStore();
 
   return (
     <div
       className={chatStyle["clear-context"]}
       onClick={() =>
-        chatStore.updateCurrentSession(
-          (session) => (session.clearContextIndex = undefined),
+        chatFolderStore.updateCurrentChat(
+          (chat: ChatSession) => (chat.clearContextIndex = undefined),
         )
       }
     >
@@ -312,7 +316,8 @@ export function ChatActions(props: {
 }) {
   const config = useAppConfig();
   const navigate = useNavigate();
-  const chatStore = useChatStore();
+  // const chatStore = useChatStore();
+  const chatFolderStore = useChatFolderStore();
 
   // switch themes
   const theme = config.theme;
@@ -387,12 +392,12 @@ export function ChatActions(props: {
       <div
         className={`${chatStyle["chat-input-action"]} clickable`}
         onClick={() => {
-          chatStore.updateCurrentSession((session) => {
-            if (session.clearContextIndex === session.messages.length) {
-              session.clearContextIndex = undefined;
+          chatFolderStore.updateCurrentChat((chat: ChatSession) => {
+            if (chat.clearContextIndex === chat.messages.length) {
+              chat.clearContextIndex = undefined;
             } else {
-              session.clearContextIndex = session.messages.length;
-              session.memoryPrompt = ""; // will clear memory
+              chat.clearContextIndex = chat.messages.length;
+              chat.memoryPrompt = ""; // will clear memory
             }
           });
         }}
@@ -406,11 +411,17 @@ export function ChatActions(props: {
 export function Chat() {
   type RenderMessage = ChatMessage & { preview?: boolean };
 
-  const chatStore = useChatStore();
-  const [session, sessionIndex] = useChatStore((state) => [
-    state.currentSession(),
-    state.currentSessionIndex,
-  ]);
+  // const chatStore = useChatStore();
+  // const [session, sessionIndex] = useChatStore((state) => [
+  //   state.currentSession(),
+  //   state.currentSessionIndex,
+  // ]);
+  const chatFolderStore = useChatFolderStore();
+  const [currentChat, currentIndex] = useChatFolderStore((state) => [
+    state.currentChat(),
+    state.currentIndex
+  ])
+
   const config = useAppConfig();
   const fontSize = config.fontSize;
 
@@ -489,7 +500,7 @@ export function Chat() {
   const doSubmit = (userInput: string) => {
     if (userInput.trim() === "") return;
     setIsLoading(true);
-    chatStore.onUserInput(userInput).then(() => setIsLoading(false));
+    chatFolderStore.onUserInput(userInput).then(() => setIsLoading(false));
     localStorage.setItem(LAST_INPUT_KEY, userInput);
     setUserInput("");
     setPromptHints([]);
@@ -499,22 +510,22 @@ export function Chat() {
 
   // stop response
   const onUserStop = (messageId: number) => {
-    ChatControllerPool.stop(sessionIndex, messageId);
+    ChatControllerPool.stop(currentIndex, messageId);
   };
 
   useEffect(() => {
-    chatStore.updateCurrentSession((session) => {
+    chatFolderStore.updateCurrentChat((chat: ChatSession) => {
       const stopTiming = Date.now() - REQUEST_TIMEOUT_MS;
-      session.messages.forEach((m) => {
+      chat.messages.forEach((msg: any) => {
         // check if should stop all stale messages
-        if (m.isError || new Date(m.date).getTime() < stopTiming) {
-          if (m.streaming) {
-            m.streaming = false;
+        if (msg.isError || new Date(msg.date).getTime() < stopTiming) {
+          if (msg.streaming) {
+            msg.streaming = false;
           }
 
-          if (m.content.length === 0) {
-            m.isError = true;
-            m.content = prettyObject({
+          if (msg.content.length === 0) {
+            msg.isError = true;
+            msg.content = prettyObject({
               error: true,
               message: "empty response",
             });
@@ -523,9 +534,9 @@ export function Chat() {
       });
 
       // auto sync mask config from global config
-      if (session.mask.syncGlobalConfig) {
-        console.log("[Mask] syncing from global, name = ", session.mask.name);
-        session.mask.modelConfig = { ...config.modelConfig };
+      if (chat.mask.syncGlobalConfig) {
+        console.log("[Mask] syncing from global, name = ", chat.mask.name);
+        chat.mask.modelConfig = { ...config.modelConfig };
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -558,8 +569,8 @@ export function Chat() {
   const findLastUserIndex = (messageId: number) => {
     // find last user input message and resend
     let lastUserMessageIndex: number | null = null;
-    for (let i = 0; i < session.messages.length; i += 1) {
-      const message = session.messages[i];
+    for (let i = 0; i < currentChat.messages.length; i += 1) {
+      const message = currentChat.messages[i];
       if (message.id === messageId) {
         break;
       }
@@ -572,8 +583,8 @@ export function Chat() {
   };
 
   const deleteMessage = (userIndex: number) => {
-    chatStore.updateCurrentSession((session) =>
-      session.messages.splice(userIndex, 2),
+    chatFolderStore.updateCurrentChat((chat: ChatSession) =>
+      chat.messages.splice(userIndex, 2),
     );
   };
 
@@ -589,22 +600,19 @@ export function Chat() {
     if (userIndex === null) return;
 
     setIsLoading(true);
-    const content = session.messages[userIndex].content;
+    const content = currentChat.messages[userIndex].content;
     deleteMessage(userIndex);
-    chatStore.onUserInput(content).then(() => setIsLoading(false));
+    chatFolderStore.onUserInput(content).then(() => setIsLoading(false));
     inputRef.current?.focus();
   };
 
-  const context: RenderMessage[] = session.mask.hideContext
+  const context: RenderMessage[] = currentChat.mask.hideContext
     ? []
-    : session.mask.context.slice();
+    : currentChat.mask.context.slice();
 
   const accessStore = useAccessStore();
 
-  if (
-    context.length === 0 &&
-    session.messages.at(0)?.content !== BOT_HELLO.content
-  ) {
+  if (context.length === 0 && currentChat.messages.at(0)?.content !== BOT_HELLO.content) {
     const copiedHello = Object.assign({}, BOT_HELLO);
     if (!accessStore.isAuthorized()) {
       copiedHello.content = Locale.Error.Unauthorized;
@@ -614,13 +622,13 @@ export function Chat() {
 
   // clear context index = context length + index in messages
   const clearContextIndex =
-    (session.clearContextIndex ?? -1) >= 0
-      ? session.clearContextIndex! + context.length
+    (currentChat.clearContextIndex ?? -1) >= 0
+      ? currentChat.clearContextIndex! + context.length
       : -1;
 
   // preview messages
   const messages = context
-    .concat(session.messages as RenderMessage[])
+    .concat(currentChat.messages as RenderMessage[])
     .concat(
       isLoading
         ? [
@@ -633,8 +641,7 @@ export function Chat() {
             },
           ]
         : [],
-    )
-    .concat(
+    ).concat(
       userInput.length > 0 && config.sendPreviewBubble
         ? [
             {
@@ -651,9 +658,9 @@ export function Chat() {
   const [showPromptModal, setShowPromptModal] = useState(false);
 
   const renameSession = () => {
-    const newTopic = prompt(Locale.Chat.Rename, session.topic);
-    if (newTopic && newTopic !== session.topic) {
-      chatStore.updateCurrentSession((session) => (session.topic = newTopic!));
+    const newTopic = prompt(Locale.Chat.Rename, currentChat.topic);
+    if (newTopic && newTopic !== currentChat.topic) {
+      chatFolderStore.updateCurrentChat((chat: ChatSession) => (chat.topic = newTopic!));
     }
   };
 
@@ -669,17 +676,17 @@ export function Chat() {
   });
 
   return (
-    <div className={styles.chat} key={session.id}>
+    <div className={styles.chat} key={currentChat.id}>
       <div className="window-header">
         <div className="window-header-title">
           <div
             className={`window-header-main-title " ${styles["chat-body-title"]}`}
             onClickCapture={renameSession}
           >
-            {!session.topic ? DEFAULT_TOPIC : session.topic}
+            {!currentChat.topic ? DEFAULT_TOPIC : currentChat.topic}
           </div>
           <div className="window-header-sub-title">
-            {Locale.Chat.SubTitle(session.messages.length)}
+            {Locale.Chat.SubTitle(currentChat.messages.length)}
           </div>
         </div>
         <div className="window-actions">
@@ -764,7 +771,7 @@ export function Chat() {
                     {message.role === "user" ? (
                       <Avatar avatar={config.avatar} />
                     ) : (
-                      <MaskAvatar mask={session.mask} />
+                      <MaskAvatar mask={currentChat.mask} />
                     )}
                   </div>
                   {showTyping && (

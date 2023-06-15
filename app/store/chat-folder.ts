@@ -75,7 +75,7 @@ export const BOT_HELLO: ChatMessage = createMessage({
 function createEmptySession(): ChatSession {
   return {
     id: Date.now() + Math.random(),
-    topic: DEFAULT_TOPIC + Math.random(),
+    topic: DEFAULT_TOPIC,
     memoryPrompt: "",
     messages: [],
     stat: {
@@ -284,7 +284,7 @@ export const useChatStore = create<ChatStore>()(
         const sendMessages = systemMessages.concat(
           recentMessages.concat(userMessage),
         );
-        const sessionIndex = get().currentSessionIndex;
+        const sessionIndex = [get().currentSessionIndex];
         const messageIndex = get().currentSession().messages.length + 1;
 
         // save user's and bot's message
@@ -864,7 +864,7 @@ export const useChatFolderStore = create<any>()(
         const sendMessages = systemMessages.concat(
           recentMessages.concat(userMessage),
         );
-        const chatIndex = get().currentIndex[1];
+        const currentIndex = get().currentIndex;
         const messageIndex = get().currentChat().messages.length + 1;
 
         // save user's and bot's message
@@ -891,7 +891,7 @@ export const useChatFolderStore = create<any>()(
               botMessage.content = message;
               get().onNewMessage(botMessage);
             }
-            ChatControllerPool.remove(chatIndex, botMessage.id ?? messageIndex);
+            ChatControllerPool.remove(currentIndex, botMessage.id ?? messageIndex);
             set(() => ({}));
           },
           onError(error) {
@@ -907,14 +907,14 @@ export const useChatFolderStore = create<any>()(
             botMessage.isError = !isAborted;
 
             set(() => ({}));
-            ChatControllerPool.remove(chatIndex, botMessage.id ?? messageIndex);
+            ChatControllerPool.remove(currentIndex, botMessage.id ?? messageIndex);
 
             console.error("[Chat] failed ", error);
           },
           onController(controller) {
             // collect controller for stop/retry
             ChatControllerPool.addController(
-              chatIndex,
+              currentIndex,
               botMessage.id ?? messageIndex,
               controller,
             );
@@ -989,10 +989,7 @@ export const useChatFolderStore = create<any>()(
         return recentMessages;
       },
       // 更新chat message(index:[folderIndex: number, chatIndex: number, messageIndex: number])
-      updateMessage(
-        index: Array<number>,
-        updater: (message?: ChatMessage) => void,
-      ) {
+      updateMessage(index: Array<number>, updater: (message?: ChatMessage) => void) {
         let folder = get().folder;
         let chats = folder[index[0]].chat || [];
         let messages = chats[index[1]]?.messages;
