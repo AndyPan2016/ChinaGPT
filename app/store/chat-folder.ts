@@ -1260,8 +1260,8 @@ export const useChatFolderStore = create<any>()(
         let folder = get().folder.splice();
         let currentIndex = get().currentIndex.slice()
         const restoreState = {
-          currentIndex: currentIndex.slice(),
-          folder: folder.slice()
+          currentIndex: JSON.parse(JSON.stringify(currentIndex)),
+          folder: JSON.parse(JSON.stringify(folder))
         };
         folder.splice(folderIdx, 1)
         if (currentIndex[0] == folderIdx) {
