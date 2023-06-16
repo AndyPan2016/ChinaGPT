@@ -79,7 +79,9 @@ const cn = {
   Home: {
     NewChat: "新的会话",
     DeleteChat: "确认删除选中的对话？",
+    DeleteFolder: "确认删除当前的分类？",
     DeleteToast: "已删除会话",
+    DeleteToastFolder: "已删除分类",
     Revert: "撤销",
   },
   Settings: {

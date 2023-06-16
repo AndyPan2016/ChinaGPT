@@ -2,21 +2,7 @@ import { useEffect, useRef } from "react";
 
 import styles from "./home.module.scss";
 
-import { IconButton } from "./button";
-import SettingsIcon from "../icons/settings.svg";
-import GithubIcon from "../icons/github.svg";
-import ChatGptIcon from "../icons/chatgpt.svg";
-import AddIcon from "../icons/add.svg";
-import CloseIcon from "../icons/close.svg";
-import MaskIcon from "../icons/mask.svg";
-import PluginIcon from "../icons/plugin.svg";
-
-import IconAddWhite from '../icons/svg/icon-add-white.svg';
-import IconAddPrimary from '../icons/svg/icon-add-primary.svg';
-import IconSetWhite from '../icons/svg/icon-set-white.svg';
-import IconSetPrimary from '../icons/svg/icon-set-primary.svg';
-import IconDelWhite from '../icons/svg/icon-del-white.svg';
-import IconDelPrimary from '../icons/svg/icon-del-primary.svg';
+import { Icon } from './tools/index'
 
 import Locale from "../locales";
 
@@ -142,7 +128,8 @@ export function SideBar(props: { className?: string }) {
                   {/* 设置 */}
                   <Link className={styles['tools-item']}
                     to={Path.Settings}>
-                    <IconSetWhite />
+                    {/* <IconSetWhite /> */}
+                    <Icon name="icon-set-white.png" />
                   </Link>
                   {/* 清空 */}
                   <span className={styles['tools-item']}
@@ -151,14 +138,16 @@ export function SideBar(props: { className?: string }) {
                         chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
                       }
                     }}>
-                    <IconDelWhite />
+                    {/* <IconDelWhite /> */}
+                    <Icon name="icon-delete-white.png" />
                   </span>
                   {/* 新建文件夹 */}
                   <span className={styles['tools-item']}
                     onClick={() => {
                       chatStore.newFolder({ name: '新分类' })
                     }}>
-                    <IconAddWhite />
+                    {/* <IconAddWhite /> */}
+                    <Icon name="icon-add-white.png" />
                   </span>
                 </>
               ) : (
@@ -167,7 +156,8 @@ export function SideBar(props: { className?: string }) {
                   onClick={() => {
                     chatStore.newFolder({ name: '新分类' })
                   }}>
-                  <IconAddPrimary />
+                  {/* <IconAddPrimary /> */}
+                    <Icon name="icon-add-primary.png" />
                 </span>
               )
             }
@@ -185,7 +175,7 @@ export function SideBar(props: { className?: string }) {
               // } else {
               //   navigate(Path.NewChat);
               // }
-            }}><IconAddWhite />&nbsp;{shouldNarrow ? undefined : Locale.Home.NewChat}</span>
+            }}><Icon name="icon-add-white.png" />&nbsp;{shouldNarrow ? undefined : Locale.Home.NewChat}</span>
         </div>
         {/* <div className={styles["sidebar-sub-title"]}>
           Build your own AI assistant.
@@ -232,7 +222,8 @@ export function SideBar(props: { className?: string }) {
               {/* 设置 */}
               <Link className={styles['tools-item']}
                 to={Path.Settings}>
-                <IconSetWhite />
+                {/* <IconSetWhite /> */}
+                <Icon name="icon-set-white.png" />
               </Link>
               {/* 清空 */}
               <span className={styles['tools-item']}
@@ -241,7 +232,8 @@ export function SideBar(props: { className?: string }) {
                     chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
                   }
                 }}>
-                <IconDelWhite />
+                {/* <IconDelWhite /> */}
+                <Icon name="icon-delete-white.png" />
               </span>
             </div>
           </div>

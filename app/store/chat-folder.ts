@@ -642,6 +642,8 @@ export interface ChatFolderStore {
   clearFolderChat: (index: number) => void;
   // 清空Folder
   clearFolder: () => void;
+  // 删除Folder
+  deleteFolder: (folderIdx: number) => void;
   // 清除所有
   clearAllData: () => void;
 }
@@ -705,15 +707,36 @@ export const useChatFolderStore = create<any>()(
         chat?.splice(chatIdx, 1);
 
         const currentIndex = get().currentIndex;
-        const chatIndex = currentIndex[1];
-        let nextIndex = Math.min(
-          chatIndex - Number(chatIdx < chatIndex),
-          chat?.length - 1,
-        );
-
+        // const chatIndex = currentIndex[1];
+        // let nextIndex = Math.min(
+        //   chatIndex - Number(chatIdx < chatIndex),
+        //   chat?.length - 1
+        // );
+        let newCurrentIndex: any = currentIndex
         if (deletingLastSession) {
-          nextIndex = 0;
-          chat.push(createEmptySession());
+          // 当前删除的为当前目录的最后一个chat
+          if (folder[folderIdx].type == 'chat') {
+            // chat类型的folder，删除
+            folder.splice(folderIdx, 1)
+            if (currentIndex[0] == folderIdx) {
+              // 选中设置为下一个目录的第一个
+              newCurrentIndex = [0, 0]
+            }
+          } else {
+            // 普通目录不删除，将选中设置为下一个目录的第一个chat
+            if (folder[folderIdx + 1] && folder[folderIdx + 1]?.chat.length) {
+              newCurrentIndex = [folderIdx + 1, 0]
+            } else {
+              newCurrentIndex = [0, 0]
+            }
+          }
+          // nextIndex = 0;
+          // chat.push(createEmptySession());
+        } else {
+          // 当前删除的为选中chat，且还有其他chat，选中当前目录的第一个
+          if (currentIndex[0] == folderIdx && currentIndex[1] == chatIdx) {
+            newCurrentIndex = [currentIndex[0], 0]
+          }
         }
 
         // for undo delete action
@@ -722,10 +745,14 @@ export const useChatFolderStore = create<any>()(
           folder: folderChat.slice(),
         };
 
-        set(() => ({
-          currentIndex: [currentIndex[0], nextIndex],
-          folder: chat,
-        }));
+        // set(() => ({
+        //   currentIndex: [currentIndex[0], nextIndex],
+        //   folder: chat,
+        // }));
+        set({
+          currentIndex: newCurrentIndex,
+          folder: folder
+        })
 
         showToast(
           Locale.Home.DeleteToast,
@@ -1226,6 +1253,35 @@ export const useChatFolderStore = create<any>()(
           folder: [],
           folderCount: 0,
         });
+      },
+      // 删除Folder
+      deleteFolder (folderIdx: number) {
+        let folder = get().folder;
+        let currentIndex = get().currentIndex
+        const restoreState = {
+          currentIndex: currentIndex.slice(),
+          folder: folder.slice()
+        };
+        folder.splice(folderIdx, 1)
+        if (currentIndex[0] == folderIdx) {
+          currentIndex = [0, 0]
+        }
+        console.info(folder)
+        set({
+          currentIndex,
+          folder
+        })
+
+        showToast(
+          Locale.Home.DeleteToastFolder,
+          {
+            text: Locale.Home.Revert,
+            onClick() {
+              set(() => restoreState);
+            }
+          },
+          5000,
+        );
       },
       // 清除所有缓存
       clearAllData() {

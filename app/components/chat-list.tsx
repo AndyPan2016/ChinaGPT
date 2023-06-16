@@ -11,6 +11,7 @@ import {
 } from "@hello-pangea/dnd";
 
 import { useChatFolderStore, ChatFolder, ChatSession } from "../store";
+import { Icon } from './tools/index'
 
 import Locale from "../locales";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,10 +19,6 @@ import { Path } from "../constant";
 import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
 import { useRef, useEffect, useState, use } from "react";
-import IconFolderWhite from "../icons/svg/icon-folder-white.svg";
-import IconTitleEditWhite from "../icons/svg/icon-title-edit-white.svg";
-import IconTitleDeleteWhite from "../icons/svg/icon-title-delete-white.svg";
-import IconArrowTopWhite from "../icons/svg/icon-arrow-top-white.svg";
 
 // a little function to help us with reordering the result
 function reorder<TItem>(
@@ -114,7 +111,7 @@ export function QuoteItem(props: any) {
           chatFolderStore.deleteChat(folderIndex, chatIndex);
         }}
       >
-        <DeleteIcon />
+        <Icon name="icon-delete-primary.png" />
       </div>
     </a>
   );
@@ -141,7 +138,7 @@ export function InnerQuoteList(props: any) {
   const { quotes, folderIndex } = props;
   return (
     <>
-      {quotes.map((quote: any, index: number) => (
+      {quotes?.map((quote: any, index: number) => (
         <Draggable key={quote.id} draggableId={quote.id} index={index}>
           {(dragProvided, dragSnapshot) => (
             <QuoteItem
@@ -446,6 +443,7 @@ export function ChatList() {
 
 export function Groups(props: any) {
   const { quotes, folderIndex, folder } = props;
+  const chatFolderStore = useChatFolderStore();
   return (
     <Draggable draggableId={folder.id} index={folderIndex}>
       {(provided, snapshot) => (
@@ -470,19 +468,28 @@ export function Groups(props: any) {
               aria-label={`${folder.id} quote list`}
             >
               <span className={listStyles["title-text"]}>
-                <IconFolderWhite className={listStyles["icon-folder"]} />
+                <Icon name="icon-folder-white.png" className={listStyles["icon-folder"]} />
                 {folder.name}
               </span>
               <span className={listStyles["title-handle"]}>
-                <IconTitleEditWhite
+                {/* 编辑Folder */}
+                <Icon
+                  name="icon-edit-folder-white.png"
                   className={listStyles["icon-title-handle"]}
-                />
-                <IconTitleDeleteWhite
+                  onClick={() => { }} />
+                {/* 删除Folder */}
+                <Icon
+                  name="icon-delete-white.png"
                   className={listStyles["icon-title-handle"]}
-                />
-                <IconArrowTopWhite
-                  className={listStyles["icon-title-handle"]}
-                />
+                  onClick={() => {
+                    if (confirm(Locale.Home.DeleteFolder)) {
+                      chatFolderStore.deleteFolder(folderIndex)
+                    }
+                  }} />
+                {/* 折叠Folder */}
+                <Icon
+                  name="icon-arrow-top-white.png"
+                  className={listStyles["icon-title-handle"]} />
               </span>
             </h4>
           </div>
