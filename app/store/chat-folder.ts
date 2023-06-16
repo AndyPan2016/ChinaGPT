@@ -696,6 +696,11 @@ export const useChatFolderStore = create<any>()(
       // 删除chat项
       deleteChat(folderIdx: number, chatIdx: number) {
         let folder = get().folder.slice();
+        // for undo delete action
+        const restoreState = {
+          currentIndex: JSON.parse(JSON.stringify(get().currentIndex)),
+          folder: JSON.parse(JSON.stringify(folder))
+        };
         let folderChat = folder[folderIdx].chat || [];
 
         const deletingLastSession = folderChat?.length === 1;
@@ -740,12 +745,6 @@ export const useChatFolderStore = create<any>()(
           }
         }
 
-        // for undo delete action
-        const restoreState = {
-          currentIndex: get().currentIndex.slice(),
-          folder: folder.slice(),
-        };
-
         // set(() => ({
         //   currentIndex: [currentIndex[0], nextIndex],
         //   folder: chat,
@@ -760,6 +759,7 @@ export const useChatFolderStore = create<any>()(
           {
             text: Locale.Home.Revert,
             onClick() {
+              console.info(restoreState)
               set(() => restoreState);
             },
           },
