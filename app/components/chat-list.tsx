@@ -236,8 +236,10 @@ export function ChatList() {
   // 当前选中的chatID
   const [currentId, setCurrentId] = useState<Array<any>>([]);
 
+  console.info(folder)
   // 初始化数据
   useEffect(() => {
+    console.info('useEffect')
     let tempGroups: any = {};
     let tempGroupChats: any = [];
     folder.map((fit: any) => {
@@ -247,9 +249,9 @@ export function ChatList() {
     setGroups(tempGroups);
     setGroupChats(tempGroupChats);
 
-    console.info(tempGroups);
-    console.info(tempGroupChats);
-  }, [folder]);
+    // console.info(tempGroups);
+    // console.info(tempGroupChats);
+  }, [folder, currentIndex]);
 
   /**
    * 拖拽结束

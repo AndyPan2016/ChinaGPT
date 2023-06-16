@@ -695,7 +695,7 @@ export const useChatFolderStore = create<any>()(
       },
       // 删除chat项
       deleteChat(folderIdx: number, chatIdx: number) {
-        let folder = get().folder;
+        let folder = get().folder.slice();
         let folderChat = folder[folderIdx].chat || [];
 
         const deletingLastSession = folderChat?.length === 1;
@@ -705,8 +705,9 @@ export const useChatFolderStore = create<any>()(
 
         const chat = folderChat?.slice();
         chat?.splice(chatIdx, 1);
+        folder[folderIdx].chat = chat || []
 
-        const currentIndex = get().currentIndex;
+        const currentIndex = get().currentIndex.slice();
         // const chatIndex = currentIndex[1];
         // let nextIndex = Math.min(
         //   chatIndex - Number(chatIdx < chatIndex),
@@ -741,8 +742,8 @@ export const useChatFolderStore = create<any>()(
 
         // for undo delete action
         const restoreState = {
-          currentIndex: get().currentIndex,
-          folder: folderChat.slice(),
+          currentIndex: get().currentIndex.slice(),
+          folder: folder.slice(),
         };
 
         // set(() => ({
@@ -1256,8 +1257,8 @@ export const useChatFolderStore = create<any>()(
       },
       // 删除Folder
       deleteFolder (folderIdx: number) {
-        let folder = get().folder;
-        let currentIndex = get().currentIndex
+        let folder = get().folder.splice();
+        let currentIndex = get().currentIndex.slice()
         const restoreState = {
           currentIndex: currentIndex.slice(),
           folder: folder.slice()
