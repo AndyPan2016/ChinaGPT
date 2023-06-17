@@ -625,9 +625,11 @@ export interface ChatFolderStore {
   summarizeChat: () => void;
   updateStat: (message: ChatMessage) => void;
   // 获取当前选中的数据ID
-  getCurrentId: () => Array<any>;
+  getCurrentId: (folder?: ChatFolder[]) => Array<any>;
   // 根据当前选中的数据ID，查找数据所在位置
-  findCurrentIndex: () => Array<any>;
+  findCurrentIndex: (currentId?: Array<any>, folder?: ChatFolder[]) => Array<any>;
+  // 设置下一个选中(当选中的被删除，需要找到下一个并选中)
+  setNextSelect: (folder?: ChatFolder[]) => void;
   // 重置chat信息
   resetChat: () => void;
   onNewMessage: (message: ChatMessage) => void;
@@ -696,70 +698,24 @@ export const useChatFolderStore = create<any>()(
       // 删除chat项
       deleteChat(folderIdx: number, chatIdx: number) {
         let folder = get().folder.slice();
+        let currentIndex = get().currentIndex.slice();
         // for undo delete action
         const restoreState = {
-          currentIndex: JSON.parse(JSON.stringify(get().currentIndex)),
+          currentIndex: currentIndex.slice(),
           folder: JSON.parse(JSON.stringify(folder))
         };
-        let folderChat = folder[folderIdx].chat || [];
+        let currentFolder = folder[folderIdx]
+        let folderChat = currentFolder?.chat;
+        folderChat?.splice(chatIdx, 1);
 
-        const deletingLastSession = folderChat?.length === 1;
-        const deletedSession = folderChat?.at(chatIdx);
-
-        if (!deletedSession) return;
-
-        const chat = folderChat?.slice();
-        chat?.splice(chatIdx, 1);
-        folder[folderIdx].chat = chat || []
-
-        const currentIndex = get().currentIndex.slice();
-        // const chatIndex = currentIndex[1];
-        // let nextIndex = Math.min(
-        //   chatIndex - Number(chatIdx < chatIndex),
-        //   chat?.length - 1
-        // );
-        let newCurrentIndex: any = currentIndex
-        if (deletingLastSession) {
-          // 当前删除的为当前目录的最后一个chat
-          if (folder[folderIdx].type == 'chat') {
-            // chat类型的folder，删除
-            folder.splice(folderIdx, 1)
-            if (currentIndex[0] == folderIdx) {
-              // 选中设置为下一个目录的第一个
-              newCurrentIndex = [0, 0]
-            }
-          } else {
-            // 普通目录不删除，将选中设置为下一个目录的第一个chat
-            if (folder[folderIdx + 1] && folder[folderIdx + 1]?.chat.length) {
-              newCurrentIndex = [folderIdx + 1, 0]
-            } else {
-              newCurrentIndex = [0, 0]
-            }
-          }
-          // nextIndex = 0;
-          // chat.push(createEmptySession());
-        } else {
-          // 当前删除的为选中chat，且还有其他chat，选中当前目录的第一个
-          if (currentIndex[0] == folderIdx && currentIndex[1] == chatIdx) {
-            newCurrentIndex = [currentIndex[0], 0]
-          }
-        }
-
-        // set(() => ({
-        //   currentIndex: [currentIndex[0], nextIndex],
-        //   folder: chat,
-        // }));
-        set({
-          currentIndex: newCurrentIndex,
-          folder: folder
-        })
+        get().setNextSelect(folder)
+        set({ folder })
 
         showToast(
           Locale.Home.DeleteToast,
           {
             text: Locale.Home.Revert,
             onClick() {
-              console.info(restoreState)
               set(() => restoreState);
             },
           },
@@ -1144,39 +1100,91 @@ export const useChatFolderStore = create<any>()(
       /**
        * 获取当前选中的数据ID
        */
-      getCurrentId() {
-        let folder = get().folder;
+      getCurrentId(folder: ChatFolder[]) {
+        folder = folder || get().folder;
         let currentIndex = get().currentIndex;
         // 获取当前选中的folder
         let currentFolder = folder[currentIndex[0]];
         // 获取当前选中的folder id
         let currentFolderId = currentFolder.id;
         // 获取当前选中的chat id
-        let currentChatId = (currentFolder?.chat || [])[currentIndex[1]].id;
-        return [currentFolderId, currentChatId];
+        let currentChatId = (currentFolder?.chat || [])[currentIndex[1]]?.id;
+        return currentFolderId && currentChatId ? [currentFolderId, currentChatId] : [];
       },
       /**
        * 根据当前选中的数据ID，查找数据所在位置
        */
-      findCurrentIndex(currentId: any) {
-        let folder = get().folder;
+      findCurrentIndex(currentId: Array<any>, folder: ChatFolder[]) {
+        folder = folder || get().folder;
         let currentIndex = get().currentIndex;
         currentId = currentId || get().getCurrentId();
         // 当前选中的新的chat坐标
         let newFolderIndex = currentIndex[0];
         let newChatIndex = currentIndex[1];
-        folder.map((git: any, gidx: number) => {
-          // if (git.id == currentId[0]) {
-          git.chat.map((cit: any, cidx: number) => {
-            if (cit.id == currentId[1]) {
-              newChatIndex = cidx;
-              newFolderIndex = gidx;
-            }
+        if (currentId.length) {
+          folder.map((git: any, gidx: number) => {
+            // if (git.id == currentId[0]) {
+            git.chat.map((cit: any, cidx: number) => {
+              if (cit.id == currentId[1]) {
+                newChatIndex = cidx;
+                newFolderIndex = gidx;
+              }
+            });
+            // }
           });
-          // }
-        });
-        set({ currentIndex: [newFolderIndex, newChatIndex] });
+          set({ currentIndex: [newFolderIndex, newChatIndex] });
+        } else {
+          newChatIndex = 0;
+          newFolderIndex = 0;
+        }
         return [newFolderIndex, newChatIndex];
+      },
+      // 设置下一个选中(当选中的被删除，需要找到下一个并选中)
+      setNextSelect (folder: ChatFolder[]) {
+        let currentId = get().getCurrentId()
+        folder = folder || get().folder
+        // 新的选中坐标
+        let newCurrentIndex = get().findCurrentIndex(currentId, folder)
+        
+        let currentIndex = get().currentIndex
+        // currentIndex对应的当前目录
+        let currentFolder = folder[currentIndex[0]]
+        // currentIndex对应的当前chats
+        let currentFolderChat = currentFolder?.chat
+        const findNextSelect = function () {
+          let theIndex = [0, 0]
+          // 当前目录已不存在，选中folder下面的第一个chat
+          let folderItem: ChatFolder;
+          let i: number = 0;
+          let len: number = folder.length;
+          for (;i < len; i++) {
+            folderItem = folder[i]
+            if (folderItem.chat && folderItem.chat.length) {
+              theIndex = [i, 0]
+              break;
+            }
+          }
+          return theIndex
+        }
+        if (currentFolder) {
+          // 如果当前目录存在
+          if (currentFolderChat && currentFolderChat.length) {
+            // 当前目录下存在chat，选中第一个
+            newCurrentIndex = [currentIndex[0], 0]
+          } else {
+            // 当前目录已不存在chat项了(空目录)
+            if (currentFolder.type == 'chat') {
+              // 如果为chat类型，删除该目录
+              folder.splice(currentIndex[0], 1)
+            }
+            // 重新找存在chat的项进行选中
+            newCurrentIndex = findNextSelect()
+          }
+        } else {
+          // 当前目录已不存在，选中folder下面的第一个chat
+          newCurrentIndex = findNextSelect()
+        }
+        set({ currentIndex: newCurrentIndex })
       },
       // 新建chat
       newChat(mask?: any) {
@@ -1257,21 +1265,14 @@ export const useChatFolderStore = create<any>()(
       },
       // 删除Folder
       deleteFolder (folderIdx: number) {
-        let folder = get().folder.splice();
-        let currentIndex = get().currentIndex.slice()
+        let folder = get().folder.slice();
         const restoreState = {
-          currentIndex: JSON.parse(JSON.stringify(currentIndex)),
+          currentIndex: get().currentIndex.slice(),
           folder: JSON.parse(JSON.stringify(folder))
         };
         folder.splice(folderIdx, 1)
-        if (currentIndex[0] == folderIdx) {
-          currentIndex = [0, 0]
-        }
-        console.info(folder)
-        set({
-          currentIndex,
-          folder
-        })
+        get().setNextSelect(folder)
+        set({ folder })
 
         showToast(
           Locale.Home.DeleteToastFolder,
