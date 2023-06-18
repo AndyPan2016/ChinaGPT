@@ -1,0 +1,18 @@
+/**
+ * 修改内容弹窗 SCSS
+ * @authors AndyPan (pye-mail@163.com)
+ * @remark 无
+ * @log 2023年6月18日23:01:13 - 创建
+ */
+
+
+.modify-modal-title {
+    color: #3D3D3D;
+    font-size: 16px;
+    background: url(../../icons/png/icon-wran-min.png) 0 center no-repeat;
+    background-size: 18px 18px;
+    padding-left: 28px;
+    display: flex;
+    height: 22px;
+    align-items: center;
+}

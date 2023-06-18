@@ -9,9 +9,10 @@ import {
   Draggable,
   OnDragEndResponder,
 } from "@hello-pangea/dnd";
+import { Modal } from "antd";
 
 import { useChatFolderStore, ChatFolder, ChatSession } from "../store";
-import { Icon } from './tools/index'
+import { Icon } from "./tools/index";
 
 import Locale from "../locales";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ import { Path } from "../constant";
 import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
 import { useRef, useEffect, useState, use } from "react";
+import { ModifyModal } from "./modify-modal";
 
 // a little function to help us with reordering the result
 function reorder<TItem>(
@@ -98,7 +100,7 @@ export function QuoteItem(props: any) {
         <div className={listStyles["chat-item-title"]}>{quote.topic}</div>
         <div className={listStyles["chat-item-info"]}>
           <div className={listStyles["chat-item-count"]}>
-            {quote.messages.length}个会话
+            {quote.messages.length}条会话
           </div>
           <div className={listStyles["chat-item-date"]}>
             {new Date(quote.lastUpdate).toLocaleString()}
@@ -111,7 +113,11 @@ export function QuoteItem(props: any) {
           chatFolderStore.deleteChat(folderIndex, chatIndex);
         }}
       >
-        <Icon name="icon-delete-primary.png" />
+        {folderIndex == currentIndex[0] && chatIndex == currentIndex[1] ? (
+          <Icon name="icon-delete-primary.png" />
+        ) : (
+          <Icon name="icon-delete-default.png" />
+        )}
       </div>
     </a>
   );
@@ -233,13 +239,12 @@ export function ChatList() {
 
   const [groups, setGroups] = useState<any>({});
   const [groupChats, setGroupChats] = useState<Array<any>>([]);
-  // 当前选中的chatID
-  const [currentId, setCurrentId] = useState<Array<any>>([]);
+  const [modifyOpen, setModifyOpen] = useState<boolean>(false);
+  const [modifyIdx, setModifyIdx] = useState<number>(0);
+  const [formData, setFormData] = useState<any>({});
 
-  console.info(folder)
   // 初始化数据
   useEffect(() => {
-    console.info('useEffect')
     let tempGroups: any = {};
     let tempGroupChats: any = [];
     folder.map((fit: any) => {
@@ -252,75 +257,6 @@ export function ChatList() {
     // console.info(tempGroups);
     // console.info(tempGroupChats);
   }, [folder, currentIndex]);
-
-  /**
-   * 拖拽结束
-   * @param result void
-   */
-  const onDragEnd1 = (result: any): void => {
-    // 获取当前选中的folder
-    let currentFolder = groupChats[currentIndex[0]];
-    // 获取当前选中的folder id
-    let currentFolderId = currentFolder.id;
-    // 获取当前选中的chat id
-    let currentChatId = currentFolder.chat[currentIndex[1]].id;
-    setCurrentId([currentFolderId, currentChatId]);
-    if (result.combine) {
-      if (result.type === "COLUMN") {
-        const shallow = [groupChats];
-        shallow.splice(result.source.index, 1);
-        setGroupChats(shallow);
-        return;
-      }
-
-      const group = groups[result.source.droppableId];
-      const withQuoteRemoved = [...group];
-      withQuoteRemoved.splice(result.source.index, 1);
-      const tempGroups = {
-        ...groups,
-        [result.source.droppableId]: withQuoteRemoved,
-      };
-      setGroups(tempGroups);
-      return;
-    }
-
-    // dropped nowhere
-    if (!result.destination) {
-      return;
-    }
-
-    const source = result.source;
-    const destination = result.destination;
-
-    // did not move anywhere - can bail early
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
-      return;
-    }
-
-    // reordering column
-    if (result.type === "COLUMN") {
-      const tempGroupChats: string[] = reorder(
-        groupChats,
-        source.index,
-        destination.index,
-      );
-
-      resetCurrentIndex(result, tempGroupChats);
-      setGroupChats(tempGroupChats);
-      return;
-    }
-
-    const data = reorderQuoteMap({
-      quoteMap: groups,
-      source,
-      destination,
-    });
-    // 重置数据
-    resetGroups(data, result);
-  };
 
   /**
    * 拖拽结束
@@ -354,97 +290,55 @@ export function ChatList() {
     }
   };
 
-  /**
-   * 重置当前选中的chat坐标
-   */
-  const resetCurrentIndex = (result: any, tempGroupChats: any) => {
-    // 当前选中的新的chat坐标
-    let newFolderId = currentIndex[0];
-    let newChatId = currentIndex[1];
-    tempGroupChats.map((git: any, gidx: number) => {
-      // if (git.id == currentId[0]) {
-      git.chat.map((cit: any, cidx: number) => {
-        if (cit.id == currentId[1]) {
-          newChatId = cidx;
-          newFolderId = gidx;
-        }
-      });
-      // }
-    });
-    chatFolderStore.selectChat(newFolderId, newChatId);
-  };
-
-  /**
-   * 重置数据
-   * @param data 重置的数据
-   */
-  const resetGroups = (data: any, result: any) => {
-    // let chatCount = 0
-    // // let lastChatTypeTemp
-    // groupChats.map((oit: any, oidx: number) => {
-    //   if (oit.type === 'chat') {
-    //     chatCount++
-    //     // lastChatTypeTemp = oit
-    //   }
-    // })
-    // if (chatCount > 1) {
-    let tempGroups: any = {};
-    let tempGroupChats: any = [];
-    groupChats.map((oit: any, oidx: number) => {
-      let hasDelete = false;
-      if (!data[oit.id].length && oit.type === "chat") {
-        // 如果为空，且为chat类型，就是删除
-        hasDelete = true;
-      } else {
-        tempGroupChats.push(oit);
-      }
-      if (!hasDelete) {
-        tempGroups[oit.id] = data[oit.id];
-      }
-    });
-    // 同步groupChats的chat
-    tempGroupChats.map((git: any, gidx: number) => {
-      git.chat = data[git.id];
-    });
-    resetCurrentIndex(result, tempGroupChats);
-    setGroupChats(tempGroupChats);
-    setGroups(tempGroups);
-    console.info(tempGroups);
-    console.info(tempGroupChats);
-    //   // lastChatType = undefined
-    // } else {
-    //   // lastChatType = lastChatTypeTemp
-    //   setGroups(data)
-    // }
+  const sureModify = (data: any) => {
+    chatFolderStore.updateFolderName(modifyIdx, data.name);
+    setModifyOpen(false);
   };
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="board" type="COLUMN" direction="vertical">
-        {(provided) => (
-          <div
-            className={listStyles["drop-container"]}
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            {groupChats.map((oit: any, index: number) => (
-              <Groups
-                key={oit.id}
-                folderIndex={index}
-                folder={oit}
-                quotes={groups[oit.id]}
-              />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+    <>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="board" type="COLUMN" direction="vertical">
+          {(provided) => (
+            <div
+              className={listStyles["drop-container"]}
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {groupChats.map((oit: any, index: number) => (
+                <Groups
+                  key={oit.id}
+                  folderIndex={index}
+                  folder={oit}
+                  quotes={groups[oit.id]}
+                  onModifyModel={(folderIdx: number) => {
+                    setFormData({ name: folder[folderIdx].name });
+                    setModifyIdx(folderIdx);
+                    setModifyOpen(true);
+                  }}
+                />
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+      {/* 修改分类弹窗 */}
+      <ModifyModal
+        title="修改分类名称"
+        formData={formData}
+        open={modifyOpen}
+        onCancel={() => {
+          setModifyOpen(false);
+        }}
+        onOk={sureModify}
+      />
+    </>
   );
 }
 
 export function Groups(props: any) {
-  const { quotes, folderIndex, folder } = props;
+  const { quotes, folderIndex, folder, onModifyModel } = props;
   const chatFolderStore = useChatFolderStore();
   return (
     <Draggable draggableId={folder.id} index={folderIndex}>
@@ -452,7 +346,8 @@ export function Groups(props: any) {
         <div
           className={
             listStyles["drag-container"] +
-            (folder.type == "chat" ? " " + listStyles["chat-folder"] : "")
+            (folder.type == "chat" ? " " + listStyles["chat-folder"] : "") +
+            (folder.expand ? " " + listStyles["folder-expand"] : "")
             // (folder.type == 'chat' && !quotes.length ? (' ' + listStyles['chat-folder-last']) : '')
           }
           ref={provided.innerRef}
@@ -469,29 +364,61 @@ export function Groups(props: any) {
               {...provided.dragHandleProps}
               aria-label={`${folder.id} quote list`}
             >
-              <span className={listStyles["title-text"]}>
-                <Icon name="icon-folder-white.png" className={listStyles["icon-folder"]} />
-                {folder.name}
-              </span>
+              <div className={listStyles["title-text-wrap"]}>
+                <span className={listStyles["title-text"]}>
+                  <Icon
+                    name="icon-folder-white.png"
+                    className={listStyles["icon-folder"]}
+                  />
+                  {folder.name}
+                </span>
+                {folder.expand ? (
+                  <span className={listStyles["title-chat-count"]}>
+                    {folder.chat.length}个会话
+                  </span>
+                ) : null}
+              </div>
               <span className={listStyles["title-handle"]}>
-                {/* 编辑Folder */}
-                <Icon
-                  name="icon-edit-folder-white.png"
-                  className={listStyles["icon-title-handle"]}
-                  onClick={() => { }} />
-                {/* 删除Folder */}
-                <Icon
-                  name="icon-delete-white.png"
-                  className={listStyles["icon-title-handle"]}
-                  onClick={() => {
-                    if (confirm(Locale.Home.DeleteFolder)) {
-                      chatFolderStore.deleteFolder(folderIndex)
-                    }
-                  }} />
+                {folder.type !== "static" ? (
+                  <>
+                    {/* 编辑Folder */}
+                    <Icon
+                      name="icon-edit-folder-white.png"
+                      className={listStyles["icon-title-handle"]}
+                      onClick={() => {
+                        onModifyModel && onModifyModel(folderIndex);
+                      }}
+                    />
+                    {/* 删除Folder */}
+                    <Icon
+                      name="icon-delete-white.png"
+                      className={listStyles["icon-title-handle"]}
+                      onClick={() => {
+                        if (confirm(Locale.Home.DeleteFolder)) {
+                          chatFolderStore.deleteFolder(folderIndex);
+                        }
+                      }}
+                    />
+                  </>
+                ) : null}
                 {/* 折叠Folder */}
-                <Icon
-                  name="icon-arrow-top-white.png"
-                  className={listStyles["icon-title-handle"]} />
+                {folder.expand ? (
+                  <Icon
+                    name="icon-arrow-up-white.png"
+                    className={listStyles["icon-title-handle"]}
+                    onClick={() => {
+                      chatFolderStore.folderExpand(folderIndex);
+                    }}
+                  />
+                ) : (
+                  <Icon
+                    name="icon-arrow-down-white.png"
+                    className={listStyles["icon-title-handle"]}
+                    onClick={() => {
+                      chatFolderStore.folderExpand(folderIndex);
+                    }}
+                  />
+                )}
               </span>
             </h4>
           </div>
