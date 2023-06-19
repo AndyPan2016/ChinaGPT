@@ -44,6 +44,8 @@ import {
   useMobileScreen,
 } from "../utils";
 
+import { Icon, IconWrap, IconGroup } from "./tools";
+
 import dynamic from "next/dynamic";
 
 import { ChatControllerPool } from "../client/controller";
@@ -324,7 +326,8 @@ export function ChatActions(props: {
   // switch themes
   const theme = config.theme;
   function nextTheme() {
-    const themes = [Theme.Auto, Theme.Light, Theme.Dark];
+    // const themes = [Theme.Auto, Theme.Light, Theme.Dark];
+    const themes = [Theme.Light, Theme.Dark];
     const themeIndex = themes.indexOf(theme);
     const nextIndex = (themeIndex + 1) % themes.length;
     const nextTheme = themes[nextIndex];
@@ -337,7 +340,34 @@ export function ChatActions(props: {
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
-      {couldStop && (
+      {/* GPT版本 */}
+      <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <Icon name="icon-version-default.png" />
+        <span className={chatStyle["chat-action-text"]}>GTP-3.5</span>
+        <span className={chatStyle["chat-action-primarytext"]}>(20次)</span>
+      </div>
+      {/* 预设角色 */}
+      <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <Icon name="icon-role-default.png" />
+        <span className={chatStyle["chat-action-text"]}>预设角色</span>
+      </div>
+      {/* 黑暗模式 */}
+      <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <Icon name="icon-mode-default.png" />
+        <span className={chatStyle["chat-action-text"]}>黑暗模式</span>
+      </div>
+      {/* 刷新 */}
+      <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <Icon name="icon-refresh-default.png" />
+        <span className={chatStyle["chat-action-text"]}>刷新</span>
+      </div>
+      {/* 停止 */}
+      <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <Icon name="icon-message-stop-default.png" />
+        <span className={chatStyle["chat-action-text"]}>停止</span>
+      </div>
+
+      {/* {couldStop && (
         <div
           className={`${chatStyle["chat-input-action"]} clickable`}
           onClick={stopAll}
@@ -405,7 +435,7 @@ export function ChatActions(props: {
         }}
       >
         <BreakIcon />
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -699,33 +729,54 @@ export function Chat() {
         </div>
         <div className="window-actions">
           <div className={"window-action-button" + " " + styles.mobile}>
-            <IconButton
+            {/* <IconButton
               icon={<ReturnIcon />}
               bordered
               title={Locale.Chat.Actions.ChatList}
               onClick={() => navigate(Path.Home)}
-            />
+            /> */}
+            <IconWrap className="icon-wrap-52">
+              <Icon name="icon-arrow-back-primary.png" />
+            </IconWrap>
           </div>
           <div className="window-action-button">
-            <IconButton
+            {/* <IconButton
               icon={<RenameIcon />}
               bordered
               onClick={renameSession}
-            />
+            /> */}
+            <IconWrap className="icon-wrap-52">
+              <Icon name="icon-edit-folder-primary.png" />
+            </IconWrap>
           </div>
-          <div className="window-action-button">
-            <IconButton
+          <div
+            className="window-action-button"
+            onClick={() => {
+              setShowExport(true);
+            }}
+          >
+            {/* <IconButton
               icon={<ExportIcon />}
               bordered
               title={Locale.Chat.Actions.Export}
               onClick={() => {
                 setShowExport(true);
               }}
-            />
+            /> */}
+            <IconWrap className="icon-wrap-52">
+              <Icon name="icon-export-primary.png" />
+            </IconWrap>
           </div>
           {!isMobileScreen && (
-            <div className="window-action-button">
-              <IconButton
+            <div
+              className="window-action-button"
+              onClick={() => {
+                config.update(
+                  (config) => (config.tightBorder = !config.tightBorder),
+                );
+              }}
+            >
+              {/* <IconButton
                 icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
                 bordered
                 onClick={() => {
@@ -733,16 +784,23 @@ export function Chat() {
                     (config) => (config.tightBorder = !config.tightBorder),
                   );
                 }}
-              />
+              /> */}
+              <IconWrap className="icon-wrap-52">
+                {config.tightBorder ? (
+                  <Icon name="icon-narrow-primary.png" />
+                ) : (
+                  <Icon name="icon-enlarge-primary.png" />
+                )}
+              </IconWrap>
             </div>
           )}
         </div>
 
-        <PromptToast
+        {/* <PromptToast
           showToast={!hitBottom}
           showModal={showPromptModal}
           setShowModal={setShowPromptModal}
-        />
+        /> */}
       </div>
 
       <div
@@ -775,70 +833,77 @@ export function Chat() {
                 }
               >
                 <div className={styles["chat-message-container"]}>
-                  <div className={styles["chat-message-avatar"]}>
-                    {message.role === "user" ? (
-                      <Avatar avatar={config.avatar} />
-                    ) : (
-                      <MaskAvatar mask={currentChat.mask} />
-                    )}
-                  </div>
-                  {showTyping && (
-                    <div className={styles["chat-message-status"]}>
-                      {Locale.Chat.Typing}
+                  <div className={chatStyle["chat-message-wrap"]}>
+                    <div className={styles["chat-message-avatar"]}>
+                      {message.role ===
+                      "user" ? // <Avatar avatar={config.avatar} />
+                      null : (
+                        <MaskAvatar mask={currentChat.mask} />
+                      )}
                     </div>
-                  )}
-                  <div className={styles["chat-message-item"]}>
-                    {showActions && (
-                      <div className={styles["chat-message-top-actions"]}>
-                        {message.streaming ? (
-                          <div
-                            className={styles["chat-message-top-action"]}
-                            onClick={() => onUserStop(message.id ?? i)}
-                          >
-                            {Locale.Chat.Actions.Stop}
-                          </div>
-                        ) : (
-                          <>
-                            <div
-                              className={styles["chat-message-top-action"]}
-                              onClick={() => onDelete(message.id ?? i)}
-                            >
-                              {Locale.Chat.Actions.Delete}
-                            </div>
-                            <div
-                              className={styles["chat-message-top-action"]}
-                              onClick={() => onResend(message.id ?? i)}
-                            >
-                              {Locale.Chat.Actions.Retry}
-                            </div>
-                          </>
-                        )}
-
-                        <div
-                          className={styles["chat-message-top-action"]}
-                          onClick={() => copyToClipboard(message.content)}
-                        >
-                          {Locale.Chat.Actions.Copy}
-                        </div>
+                    {showTyping && (
+                      <div className={styles["chat-message-status"]}>
+                        {Locale.Chat.Typing}
                       </div>
                     )}
-                    <Markdown
-                      content={message.content}
-                      loading={
-                        (message.preview || message.content.length === 0) &&
-                        !isUser
-                      }
-                      onContextMenu={(e) => onRightClick(e, message)}
-                      onDoubleClickCapture={() => {
-                        if (!isMobileScreen) return;
-                        setUserInput(message.content);
-                      }}
-                      fontSize={fontSize}
-                      parentRef={scrollRef}
-                      defaultShow={i >= messages.length - 10}
-                    />
+                    <div className={styles["chat-message-item"]}>
+                      {/* {showActions && (
+                        <div className={styles["chat-message-top-actions"]}>
+                          {message.streaming ? (
+                            <div
+                              className={styles["chat-message-top-action"]}
+                              onClick={() => onUserStop(message.id ?? i)}
+                            >
+                              {Locale.Chat.Actions.Stop}
+                            </div>
+                          ) : (
+                            <>
+                              <div
+                                className={styles["chat-message-top-action"]}
+                                onClick={() => onDelete(message.id ?? i)}
+                              >
+                                {Locale.Chat.Actions.Delete}
+                              </div>
+                              <div
+                                className={styles["chat-message-top-action"]}
+                                onClick={() => onResend(message.id ?? i)}
+                              >
+                                {Locale.Chat.Actions.Retry}
+                              </div>
+                            </>
+                          )}
+
+                          <div
+                            className={styles["chat-message-top-action"]}
+                            onClick={() => copyToClipboard(message.content)}
+                          >
+                            {Locale.Chat.Actions.Copy}
+                          </div>
+                        </div>
+                      )} */}
+                      <Markdown
+                        className={
+                          isUser ? "chat-message-md-user" : "chat-message-md"
+                        }
+                        fontSize="16"
+                        followParent={true}
+                        followColor={isUser ? "rgba(183, 189, 203, 1)" : "#FFF"}
+                        content={message.content}
+                        loading={
+                          (message.preview || message.content.length === 0) &&
+                          !isUser
+                        }
+                        onContextMenu={(e) => onRightClick(e, message)}
+                        onDoubleClickCapture={() => {
+                          if (!isMobileScreen) return;
+                          setUserInput(message.content);
+                        }}
+                        parentRef={scrollRef}
+                        defaultShow={i >= messages.length - 10}
+                      />
+                    </div>
                   </div>
-                  {!isUser && !message.preview && (
+                  {!message.preview && (
                     <div className={styles["chat-message-actions"]}>
                       <div className={styles["chat-message-action-date"]}>
                         {message.date.toLocaleString()}

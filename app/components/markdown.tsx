@@ -10,6 +10,7 @@ import { copyToClipboard } from "../utils";
 import mermaid from "mermaid";
 
 import LoadingIcon from "../icons/three-dots.svg";
+import LoadingParentIcon from "../icons/three-dots-parent.svg";
 import React from "react";
 
 export function Mermaid(props: { code: string; onError: () => void }) {
@@ -123,6 +124,10 @@ export function Markdown(
     fontSize?: number;
     parentRef?: RefObject<HTMLDivElement>;
     defaultShow?: boolean;
+    className?: string;
+    // 颜色跟随父级
+    followParent?: boolean;
+    followColor?: string;
   } & React.DOMAttributes<HTMLDivElement>,
 ) {
   const mdRef = useRef<HTMLDivElement>(null);
@@ -157,9 +162,9 @@ export function Markdown(
 
   return (
     <div
-      className="markdown-body"
+      className={"markdown-body " + props.className}
       style={{
-        fontSize: `${props.fontSize ?? 14}px`,
+        fontSize: (props.fontSize || 14) + "px",
         height:
           !inView.current && renderedHeight.current > 0
             ? renderedHeight.current
@@ -171,7 +176,9 @@ export function Markdown(
     >
       {inView.current &&
         (props.loading ? (
-          <LoadingIcon />
+          <span style={{ color: props.followColor }}>
+            {props.followParent ? <LoadingParentIcon /> : <LoadingIcon />}
+          </span>
         ) : (
           <MarkdownContent content={props.content} />
         ))}

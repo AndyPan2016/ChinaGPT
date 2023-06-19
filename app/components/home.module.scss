@@ -474,7 +474,7 @@
 }
 
 .chat-message-avatar {
-  margin-top: 20px;
+  // margin-top: 20px;
 }
 
 .chat-message-status {
@@ -487,15 +487,34 @@
 .chat-message-item {
   box-sizing: border-box;
   max-width: 100%;
-  margin-top: 10px;
-  border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.05);
+  // margin-top: 10px;
+  // border-radius: 10px;
+  // background-color: rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #60A9F6 0%, #2A8BF2 100%);
+  border-radius: 0px 10px 10px 10px;
+  margin-left: 20px;
   padding: 10px;
-  font-size: 14px;
+  font-size: 16px;
   user-select: text;
   word-break: break-word;
-  border: var(--border-in-light);
+  // border: var(--border-in-light);
   position: relative;
+  color: #FFF;
+  .markdown-body {
+    color: transparent;
+    background: transparent;
+  }
+}
+.chat-message-user {
+  .chat-message-item {
+    background: #FFFFFF;
+    border-radius: 10px 10px 0px 10px;
+    border: 1px solid rgba(112,124,151,0.25);
+    .markdown-body {
+      color: rgba(112, 124, 151, 1);
+      background: transparent;
+    }
+  }
 }
 
 .chat-message-top-actions {
@@ -542,7 +561,7 @@
 }
 
 .chat-message-action-date {
-  color: #aaa;
+  color: rgba(112, 124, 151, 0.70);
 }
 
 .chat-input-panel {

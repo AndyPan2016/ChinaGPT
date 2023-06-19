@@ -80,6 +80,9 @@
         .chat-item-title {
             color: var(--chat-item-title-active);
         }
+        .chat-item-info {
+            color: var(--chat-item-info-active);
+        }
     }
 
     &:last-child {
@@ -139,20 +142,17 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         animation: slide-in ease 0.3s;
-        color: var(chat-item-title);
+        color: var(--chat-item-title);
     }
     &.chat-item-selected {
         &::after {
           left: 17px;
         }
-        .chat-item-title {
-          color: var(--chat-item-title-active);
-        }
     }
     .chat-item-info {
         display: flex;
         justify-content: space-between;
-        color: rgba(187, 187, 187, 1);
+        color: var(--chat-item-info);
         font-size: 12px;
         margin-top: 8px;
         animation: slide-in ease 0.3s;

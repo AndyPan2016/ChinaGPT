@@ -11,7 +11,13 @@ import {
 } from "@hello-pangea/dnd";
 import { Modal } from "antd";
 
-import { useChatFolderStore, ChatFolder, ChatSession } from "../store";
+import {
+  useChatFolderStore,
+  ChatFolder,
+  ChatSession,
+  Theme,
+  useAppConfig,
+} from "../store";
 import { Icon } from "./tools/index";
 
 import Locale from "../locales";
@@ -73,6 +79,7 @@ export function QuoteItem(props: any) {
     props;
   const chatFolderStore = useChatFolderStore();
   const currentIndex = chatFolderStore.currentIndex;
+  const config = useAppConfig();
 
   return (
     <a
@@ -114,7 +121,11 @@ export function QuoteItem(props: any) {
         }}
       >
         {folderIndex == currentIndex[0] && chatIndex == currentIndex[1] ? (
-          <Icon name="icon-delete-primary.png" />
+          config.theme === "dark" ? (
+            <Icon name="icon-delete-white.png" />
+          ) : (
+            <Icon name="icon-delete-primary.png" />
+          )
         ) : (
           <Icon name="icon-delete-default.png" />
         )}
