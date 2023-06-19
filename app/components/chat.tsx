@@ -65,6 +65,7 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
+import { ModifyModal } from "./modify-modal";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -316,12 +317,14 @@ export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
   showPromptHints: () => void;
+  onResend?: () => void;
   hitBottom: boolean;
 }) {
   const config = useAppConfig();
   const navigate = useNavigate();
   // const chatStore = useChatStore();
   const chatFolderStore = useChatFolderStore();
+  const isMobileScreen = useMobileScreen();
 
   // switch themes
   const theme = config.theme;
@@ -339,7 +342,12 @@ export function ChatActions(props: {
   const stopAll = () => ChatControllerPool.stopAll();
 
   return (
-    <div className={chatStyle["chat-input-actions"]}>
+    <div
+      className={
+        chatStyle["chat-input-actions"] +
+        (isMobileScreen ? " " + chatStyle["chat-input-actions-mobile"] : "")
+      }
+    >
       {/* GPT版本 */}
       <div className={chatStyle["chat-input-action"] + " clickable"}>
         <Icon name="icon-version-default.png" />
@@ -352,20 +360,39 @@ export function ChatActions(props: {
         <span className={chatStyle["chat-action-text"]}>预设角色</span>
       </div>
       {/* 黑暗模式 */}
-      <div className={chatStyle["chat-input-action"] + " clickable"}>
-        <Icon name="icon-mode-default.png" />
+      <div
+        className={
+          chatStyle["chat-input-action"] +
+          " clickable" +
+          (theme === Theme.Dark ? " " + chatStyle["active"] : "")
+        }
+        onClick={nextTheme}
+      >
+        {theme === Theme.Light ? (
+          <Icon name="icon-mode-default.png" />
+        ) : (
+          <Icon name="icon-mode-primary.png" />
+        )}
         <span className={chatStyle["chat-action-text"]}>黑暗模式</span>
       </div>
-      {/* 刷新 */}
-      <div className={chatStyle["chat-input-action"] + " clickable"}>
-        <Icon name="icon-refresh-default.png" />
-        <span className={chatStyle["chat-action-text"]}>刷新</span>
-      </div>
-      {/* 停止 */}
-      <div className={chatStyle["chat-input-action"] + " clickable"}>
-        <Icon name="icon-message-stop-default.png" />
-        <span className={chatStyle["chat-action-text"]}>停止</span>
-      </div>
+      {couldStop ? (
+        // 停止
+        <div className={chatStyle["chat-input-action"] + " clickable"}>
+          <Icon name="icon-message-stop-default.png" />
+          <span className={chatStyle["chat-action-text"]}>停止</span>
+        </div>
+      ) : (
+        // 刷新
+        <div
+          className={chatStyle["chat-input-action"] + " clickable"}
+          onClick={() => {
+            props.onResend && props.onResend();
+          }}
+        >
+          <Icon name="icon-refresh-default.png" />
+          <span className={chatStyle["chat-action-text"]}>刷新</span>
+        </div>
+      )}
 
       {/* {couldStop && (
         <div
@@ -465,6 +492,8 @@ export function Chat() {
   const { submitKey, shouldSubmit } = useSubmitHandler();
   const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
   const [hitBottom, setHitBottom] = useState(true);
+  const [modifyOpen, setModifyOpen] = useState<boolean>(false);
+  const [formData, setFormData] = useState<any>({});
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
 
@@ -626,13 +655,16 @@ export function Chat() {
     deleteMessage(userIndex);
   };
 
-  const onResend = (botMessageId: number) => {
+  const onResend = (botMessageId?: number) => {
+    let messages = currentChat.messages;
+    let len = messages.length;
+    let msgId = botMessageId ?? messages[len - 1].id;
     // find last user input message and resend
-    const userIndex = findLastUserIndex(botMessageId);
+    const userIndex = findLastUserIndex(msgId);
     if (userIndex === null) return;
 
     setIsLoading(true);
-    const content = currentChat.messages[userIndex].content;
+    const content = messages[userIndex].content;
     deleteMessage(userIndex);
     chatFolderStore.onUserInput(content).then(() => setIsLoading(false));
     inputRef.current?.focus();
@@ -702,6 +734,14 @@ export function Chat() {
     }
   };
 
+  const sureModify = (data: any) => {
+    chatFolderStore.updateCurrentChat((chat: ChatSession) => {
+      chat.topic = data?.name;
+      // chat.mask?.name = data?.name
+    });
+    setModifyOpen(false);
+  };
+
   const location = useLocation();
   const isChat = location.pathname === Path.Chat;
   const autoFocus = !isMobileScreen || isChat; // only focus in chat page
@@ -728,7 +768,22 @@ export function Chat() {
           </div>
         </div>
         <div className="window-actions">
-          <div className={"window-action-button" + " " + styles.mobile}>
+          {/* 修改分类弹窗 */}
+          <ModifyModal
+            title="修改会话名称"
+            placeholder="请输入会话名称"
+            formData={formData}
+            open={modifyOpen}
+            onCancel={() => {
+              setModifyOpen(false);
+            }}
+            onOk={sureModify}
+          />
+          <div
+            className={"window-action-button clickable" + " " + styles.mobile}
+            title={Locale.Chat.Actions.ChatList}
+            onClick={() => navigate(Path.Home)}
+          >
             {/* <IconButton
               icon={<ReturnIcon />}
               bordered
@@ -739,7 +794,13 @@ export function Chat() {
               <Icon name="icon-arrow-back-primary.png" />
             </IconWrap>
           </div>
-          <div className="window-action-button">
+          <div
+            className="window-action-button clickable"
+            onClick={() => {
+              setFormData({ name: currentChat?.topic });
+              setModifyOpen(true);
+            }}
+          >
             {/* <IconButton
               icon={<RenameIcon />}
               bordered
@@ -750,7 +811,7 @@ export function Chat() {
             </IconWrap>
           </div>
           <div
-            className="window-action-button"
+            className="window-action-button clickable"
             onClick={() => {
               setShowExport(true);
             }}
@@ -769,7 +830,7 @@ export function Chat() {
           </div>
           {!isMobileScreen && (
             <div
-              className="window-action-button"
+              className="window-action-button clickable"
               onClick={() => {
                 config.update(
                   (config) => (config.tightBorder = !config.tightBorder),
@@ -835,17 +896,10 @@ export function Chat() {
                 <div className={styles["chat-message-container"]}>
                   <div className={chatStyle["chat-message-wrap"]}>
                     <div className={styles["chat-message-avatar"]}>
-                      {message.role ===
-                      "user" ? // <Avatar avatar={config.avatar} />
-                      null : (
+                      {message.role === "user" ? null : ( // <Avatar avatar={config.avatar} />
                         <MaskAvatar mask={currentChat.mask} />
                       )}
                     </div>
-                    {showTyping && (
-                      <div className={styles["chat-message-status"]}>
-                        {Locale.Chat.Typing}
-                      </div>
-                    )}
                     <div className={styles["chat-message-item"]}>
                       {/* {showActions && (
                         <div className={styles["chat-message-top-actions"]}>
@@ -903,6 +957,11 @@ export function Chat() {
                       />
                     </div>
                   </div>
+                  {showTyping && (
+                    <div className={styles["chat-message-status"]}>
+                      {Locale.Chat.Typing}
+                    </div>
+                  )}
                   {!message.preview && (
                     <div className={styles["chat-message-actions"]}>
                       <div className={styles["chat-message-action-date"]}>
@@ -925,6 +984,7 @@ export function Chat() {
           showPromptModal={() => setShowPromptModal(true)}
           scrollToBottom={scrollToBottom}
           hitBottom={hitBottom}
+          onResend={onResend}
           showPromptHints={() => {
             // Click again to close
             if (promptHints.length > 0) {

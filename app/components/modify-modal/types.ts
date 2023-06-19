@@ -12,6 +12,8 @@ export interface IModifyModal {
   open: boolean;
   // 表单数据
   formData?: any;
+  // placeholder
+  placeholder?: string;
   // 确定事件
   onOk?: (data: any) => void;
   // 取消事件

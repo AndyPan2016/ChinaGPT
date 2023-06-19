@@ -29,12 +29,25 @@
     &:not(:last-child) {
       margin-right: 10px;
     }
+    &.active {
+      color: rgba(42, 139, 242, 1);
+    }
     .chat-action-text {
       margin-left: 5px;
     }
     .chat-action-primarytext {
       color: rgba(42, 139, 242, 1);
       margin-left: 5px;
+    }
+  }
+  &.chat-input-actions-mobile {
+    .chat-input-action {
+      border: 0;
+      padding: 0;
+      box-shadow: none;
+      .chat-action-text {
+        display: none;
+      }
     }
   }
 }

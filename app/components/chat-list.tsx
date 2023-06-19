@@ -337,6 +337,7 @@ export function ChatList() {
       {/* 修改分类弹窗 */}
       <ModifyModal
         title="修改分类名称"
+        placeholder="请输入类型名称"
         formData={formData}
         open={modifyOpen}
         onCancel={() => {

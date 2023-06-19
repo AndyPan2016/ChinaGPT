@@ -14,6 +14,7 @@ import { Icon } from "../tools/index";
 export const ModifyModal = ({
   title,
   open,
+  placeholder,
   formData,
   onOk,
   onCancel,
@@ -61,13 +62,13 @@ export const ModifyModal = ({
           rules={[
             {
               required: true,
-              message: "请输入类型名称",
+              message: placeholder,
             },
           ]}
         >
           <Input
             style={{ fontSize: 14, maxWidth: "initial", textAlign: "left" }}
-            placeholder="请输入类型名称"
+            placeholder={placeholder}
           />
         </Form.Item>
       </Form>

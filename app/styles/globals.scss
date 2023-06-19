@@ -110,7 +110,7 @@
     --window-height: var(--full-height);
     --sidebar-width: 100vw;
     --window-content-width: var(--window-width);
-    --message-max-width: 100%;
+    --message-max-width: 95%;
   }
 
   .no-mobile {
@@ -437,6 +437,7 @@ pre {
     .ant-form-item-control {
       &.ant-col-2 {
         flex: 1;
+        max-width: 100%;
       }
       .ant-input {
         height: 40px;
