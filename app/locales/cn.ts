@@ -30,11 +30,12 @@ const cn = {
     Rename: "重命名对话",
     Typing: "正在输入…",
     Input: (submitKey: string) => {
-      var inputHints = `${submitKey} 发送`;
-      if (submitKey === String(SubmitKey.Enter)) {
-        inputHints += "，Shift + Enter 换行";
-      }
-      return inputHints + "，/ 触发补全";
+      // var inputHints = `${submitKey} 发送`;
+      // if (submitKey === String(SubmitKey.Enter)) {
+      //   inputHints += "，Shift + Enter 换行";
+      // }
+      // return inputHints + "，/ 触发补全";
+      return "问点什么...（Ctrl+Enter发送）";
     },
     Send: "发送",
     Config: {

@@ -44,7 +44,8 @@ import {
   useMobileScreen,
 } from "../utils";
 
-import { Icon, IconWrap, IconGroup } from "./tools";
+import { Icon, IconWrap, IconGroup, ActionSelectList } from "./tools";
+import { ISelectItem } from "./tools/types";
 
 import dynamic from "next/dynamic";
 
@@ -66,6 +67,7 @@ import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { ModifyModal } from "./modify-modal";
+import { Popover } from "antd";
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -324,8 +326,25 @@ export function ChatActions(props: {
   const navigate = useNavigate();
   // const chatStore = useChatStore();
   const chatFolderStore = useChatFolderStore();
-  const [currentChat] = useChatFolderStore((state) => [state.currentChat()]);
+  const [currentChat] = useChatFolderStore((state: any) => [
+    state.currentChat(),
+  ]);
   const isMobileScreen = useMobileScreen();
+  let [dataList, setDataList] = useState<Array<ISelectItem>>([
+    { text: "GPT-4.0（0次）", value: 1, active: true },
+    { text: "GPT-3.5（20次）", value: 2 },
+    { text: "GPT-3.0（无限制）", value: 3 },
+  ]);
+  let [gptVersionP, setGPTVersionP] = useState<boolean>(false);
+  let [currentGPT, setCurrentGPT] = useState<ISelectItem>(dataList[0]);
+
+  let [roleList, setRoleList] = useState<Array<ISelectItem>>([
+    { text: "大学生", value: 1, active: true },
+    { text: "建筑工人", value: 2 },
+    { text: "证券分析师", value: 3 },
+  ]);
+  let [roleP, setRoleP] = useState<boolean>(false);
+  let [currentRole, setCurrentRole] = useState<ISelectItem>(roleList[0]);
 
   // switch themes
   const theme = config.theme;
@@ -342,6 +361,13 @@ export function ChatActions(props: {
   const couldStop = ChatControllerPool.hasPending();
   const stopAll = () => ChatControllerPool.stopAll();
 
+  const handleGPTVisibleChange = (visible: any) => {
+    setGPTVersionP(visible);
+  };
+  const handleRolePChange = (visible: any) => {
+    setRoleP(visible);
+  };
+
   return (
     <div
       className={
@@ -350,16 +376,78 @@ export function ChatActions(props: {
       }
     >
       {/* GPT版本 */}
-      <div className={chatStyle["chat-input-action"] + " clickable"}>
-        <Icon name="icon-version-default.png" />
-        <span className={chatStyle["chat-action-text"]}>GTP-3.5</span>
-        <span className={chatStyle["chat-action-primarytext"]}>(20次)</span>
-      </div>
+      <Popover
+        content={
+          <ActionSelectList
+            data={dataList}
+            onSelect={(item: ISelectItem[]) => {
+              setCurrentGPT(item[0]);
+              setGPTVersionP(false);
+            }}
+          />
+        }
+        trigger="click"
+        visible={gptVersionP}
+        onVisibleChange={handleGPTVisibleChange}
+      >
+        <div
+          className={
+            chatStyle["chat-input-action"] +
+            (gptVersionP ? " " + chatStyle["focus"] : "")
+          }
+        >
+          <Icon
+            name={
+              gptVersionP
+                ? "icon-version-white.png"
+                : "icon-version-default.png"
+            }
+          />
+          <span className={chatStyle["chat-action-text"]}>
+            {currentGPT.text}
+          </span>
+          {/* <span className={chatStyle["chat-action-primarytext"]}>(20次)</span> */}
+        </div>
+      </Popover>
       {/* 预设角色 */}
-      <div className={chatStyle["chat-input-action"] + " clickable"}>
-        <Icon name="icon-role-default.png" />
-        <span className={chatStyle["chat-action-text"]}>预设角色</span>
-      </div>
+      <Popover
+        content={
+          <ActionSelectList
+            data={roleList}
+            onSelect={(item: ISelectItem[]) => {
+              setCurrentRole(item[0]);
+              setRoleP(false);
+            }}
+          >
+            <div className={chatStyle["customer-role"]}>
+              <Icon
+                name="icon-add-primary.png"
+                width="14px"
+                height="14px"
+                style={{ marginRight: "5px" }}
+              />
+              自定义角色
+            </div>
+          </ActionSelectList>
+        }
+        trigger="click"
+        visible={roleP}
+        onVisibleChange={handleRolePChange}
+      >
+        <div
+          className={
+            chatStyle["chat-input-action"] +
+            (roleP ? " " + chatStyle["focus"] : "")
+          }
+        >
+          <Icon
+            name={roleP ? "icon-role-white.png" : "icon-role-default.png"}
+          />
+          <span className={chatStyle["chat-action-text"]}>
+            {currentRole.text}
+          </span>
+        </div>
+      </Popover>
       {/* 黑暗模式 */}
       <div
         className={
@@ -983,7 +1071,12 @@ export function Chat() {
         })}
       </div>
 
-      <div className={styles["chat-input-panel"]}>
+      <div
+        className={
+          styles["chat-input-panel"] +
+          (isMobileScreen ? " " + styles["chat-input-panel-mobile"] : "")
+        }
+      >
         <PromptHints prompts={promptHints} onPromptSelect={onPromptSelect} />
 
         <ChatActions
@@ -1016,13 +1109,14 @@ export function Chat() {
             rows={inputRows}
             autoFocus={autoFocus}
           />
-          <IconButton
+          <div className={styles["chat-input-send"]}></div>
+          {/* <IconButton
             icon={<SendWhiteIcon />}
             text={Locale.Chat.Send}
             className={styles["chat-input-send"]}
             type="primary"
             onClick={() => doSubmit(userInput)}
-          />
+          /> */}
         </div>
       </div>
 

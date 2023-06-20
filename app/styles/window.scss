@@ -6,6 +6,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--window-header);
+  border-bottom: 1px solid var(--window-header-border);
 }
 
 .window-header-title {

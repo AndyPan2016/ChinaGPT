@@ -25,9 +25,14 @@
     margin-bottom: 10px;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 
     &:not(:last-child) {
       margin-right: 10px;
+    }
+    &:focus, &.focus {
+      background: rgba(112, 124, 151, 1);
+      color: #FFF;
     }
     &.active {
       color: rgba(42, 139, 242, 1);
@@ -50,6 +55,16 @@
       }
     }
   }
+}
+
+.customer-role {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: rgba(42, 139, 242, 1);
+  margin-top: 10px;
+  cursor: pointer;
 }
 
 .prompt-toast {

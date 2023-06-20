@@ -7,7 +7,18 @@ import { string } from "prop-types";
  * @log 2023年6月10日21:46:06 - 创建
  */
 
-export interface IIcon {
+export interface IProps {
+  // 子集
+  children?: React.ReactNode;
+  // 类名
+  className?: string;
+  // 类名集合
+  classNames?: Array<string>;
+  // 自定义style
+  style?: object;
+}
+
+export interface IIcon extends IProps {
   // 名称，从icons/png去取存在的文件名称，名称|src|icon只传其一
   name?: string;
   // src，自定义文件全路径，名称|src|icon只传其一
@@ -18,15 +29,30 @@ export interface IIcon {
   width?: string | number;
   // 高度
   height?: string | number;
-  // 自定义类名
-  className?: string;
   // 点击事件
   onClick?: (e: any) => void;
 }
 
-export interface IIconWrap {
-  children?: React.ReactNode;
-  className?: string;
+export interface IIconWrap extends IProps {}
+
+export interface IIconGroup extends IProps {}
+
+// 选项列表
+export interface IActionSelectList extends IProps {
+  // 数据
+  data?: Array<ISelectItem>;
+  // 选项类型(radio.单选 multiple.多选)
+  type?: string;
+  // 选中事件
+  onSelect?: (item: Array<ISelectItem>) => void;
 }
 
-export interface IIconGroup extends IIconWrap {}
+// 列表选项
+export interface ISelectItem {
+  // 文本
+  text: string;
+  // 选中状态
+  active?: boolean;
+  // 值
+  value?: any;
+}

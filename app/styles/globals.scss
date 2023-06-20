@@ -31,6 +31,13 @@
   --hover-color: #f3f3f3;
   --bar-color: rgba(0, 0, 0, 0.1);
   --theme-color: var(--gray);
+  --chat-input-panel: rgba(250, 251, 255, 1);
+  --chat-input-panel-border: rgba(221, 236, 252, 1);
+  --window-header: rgba(250, 251, 255, 1);
+  --window-header-border: rgba(221, 236, 252, 1);
+  --chat-body: linear-gradient(180deg, #F3F3FB 0%, #FDFBFD 100%);
+  --chat-input: rgba(255, 255, 255, 1);
+  --chat-input-border: 1px solid rgba(215, 229, 245, 1);
 
   /* shadow */
   --shadow: 50px 50px 100px 10px rgb(0, 0, 0, 0.1);
@@ -75,6 +82,13 @@
   --border-in-light: 1px solid rgba(255, 255, 255, 0.192);
 
   --theme-color: var(--gray);
+  --chat-input-panel: rgba(73, 76, 84, 1);
+  --chat-input-panel-border: rgba(73, 76, 84, 1);
+  --window-header: rgba(73, 76, 84, 1);
+  --window-header-border: rgba(73, 76, 84, 1);
+  --chat-body: rgba(53, 54, 58, 1);
+  --chat-input: rgba(255, 255, 255, 0.15);
+  --chat-input-border: rgba(255, 255, 255, 0.15);
 
   div:not(.no-dark) > svg {
     filter: invert(0.5);

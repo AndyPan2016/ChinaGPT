@@ -4,8 +4,15 @@
  * @remark 无
  * @log 2023年6月10日21:40:13 - 创建
  */
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { IIcon, IIconWrap, IIconGroup } from "./types";
+import {
+  IIcon,
+  IIconWrap,
+  IIconGroup,
+  IActionSelectList,
+  ISelectItem,
+} from "./types";
 import styles from "./tools.module.scss";
 import { useMobileScreen } from "../../utils";
 import { useAppConfig } from "../../store";
@@ -19,6 +26,7 @@ export const Icon = ({
   width = "24px",
   height = "24px",
   className,
+  style,
   onClick,
 }: IIcon) => {
   let img;
@@ -33,6 +41,7 @@ export const Icon = ({
   return (
     <img
       src={img}
+      style={style ? { ...style } : {}}
       className={styles["icon-thumb"] + (className ? " " + className : "")}
       width={width}
       height={height}
@@ -60,3 +69,69 @@ export const IconWrap = ({ children, className }: IIconWrap) => {
 export const IconGroup = ({ children }: IIconGroup) => {
   return <div className={styles["icon-group"]}>{children}</div>;
 };
+
+// 列表
+export function ActionSelectList({
+  children,
+  className,
+  classNames,
+  data,
+  type = "radio",
+  onSelect,
+}: IActionSelectList) {
+  let [dataList, setDataList] = useState<Array<ISelectItem>>([]);
+
+  useEffect(() => {
+    if (data) {
+      setDataList(data);
+    }
+  }, [data]);
+
+  const onSelectItem = (item: ISelectItem, index: number) => {
+    let tempDataList = dataList.slice();
+    tempDataList.map((it: ISelectItem, idx: number) => {
+      if (type === "multiple") {
+        // 多选
+        it.active = !!it.active;
+      } else {
+        // 单选
+        it.active = index == idx;
+      }
+    });
+    setDataList(tempDataList);
+    let theSelect: Array<ISelectItem> = [];
+    tempDataList.map((it: ISelectItem, idx: number) => {
+      if (it.active) {
+        theSelect.push(it);
+      }
+    });
+    onSelect && onSelect(theSelect);
+  };
+
+  return (
+    <div className={styles["action-select-list"]}>
+      {dataList && dataList.length ? (
+        <div className={styles["select-list-wrap"]}>
+          {dataList.map((it: ISelectItem, idx: number) => {
+            return (
+              <div
+                className={
+                  styles["select-list-item"] +
+                  (it.active ? " " + styles["select-item-active"] : "")
+                }
+                key={idx}
+                onClick={() => {
+                  onSelectItem(it, idx);
+                }}
+                title={it.text}
+              >
+                <span className={styles["select-item-wrap"]}>{it.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+      {children}
+    </div>
+  );
+}
