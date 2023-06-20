@@ -324,6 +324,7 @@ export function ChatActions(props: {
   const navigate = useNavigate();
   // const chatStore = useChatStore();
   const chatFolderStore = useChatFolderStore();
+  const [currentChat] = useChatFolderStore((state) => [state.currentChat()]);
   const isMobileScreen = useMobileScreen();
 
   // switch themes
@@ -377,12 +378,15 @@ export function ChatActions(props: {
       </div>
       {couldStop ? (
         // 停止
-        <div className={chatStyle["chat-input-action"] + " clickable"}>
+        <div
+          className={chatStyle["chat-input-action"] + " clickable"}
+          onClick={stopAll}
+        >
           <Icon name="icon-message-stop-default.png" />
           <span className={chatStyle["chat-action-text"]}>停止</span>
         </div>
-      ) : (
-        // 刷新
+      ) : // 刷新
+      currentChat.messages && currentChat.messages.length ? (
         <div
           className={chatStyle["chat-input-action"] + " clickable"}
           onClick={() => {
@@ -392,7 +396,7 @@ export function ChatActions(props: {
           <Icon name="icon-refresh-default.png" />
           <span className={chatStyle["chat-action-text"]}>刷新</span>
         </div>
-      )}
+      ) : null}
 
       {/* {couldStop && (
         <div
@@ -658,16 +662,18 @@ export function Chat() {
   const onResend = (botMessageId?: number) => {
     let messages = currentChat.messages;
     let len = messages.length;
-    let msgId = botMessageId ?? messages[len - 1].id;
-    // find last user input message and resend
-    const userIndex = findLastUserIndex(msgId);
-    if (userIndex === null) return;
+    if (len) {
+      let msgId = botMessageId ?? messages[len - 1].id;
+      // find last user input message and resend
+      const userIndex = findLastUserIndex(msgId);
+      if (userIndex === null) return;
 
-    setIsLoading(true);
-    const content = messages[userIndex].content;
-    deleteMessage(userIndex);
-    chatFolderStore.onUserInput(content).then(() => setIsLoading(false));
-    inputRef.current?.focus();
+      setIsLoading(true);
+      const content = messages[userIndex].content;
+      deleteMessage(userIndex);
+      chatFolderStore.onUserInput(content).then(() => setIsLoading(false));
+      inputRef.current?.focus();
+    }
   };
 
   const context: RenderMessage[] = currentChat?.mask?.hideContext

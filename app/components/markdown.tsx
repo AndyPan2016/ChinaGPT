@@ -121,7 +121,7 @@ export function Markdown(
   props: {
     content: string;
     loading?: boolean;
-    fontSize?: number;
+    fontSize?: number | string;
     parentRef?: RefObject<HTMLDivElement>;
     defaultShow?: boolean;
     className?: string;
