@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import styles from "./home.module.scss";
 
-import { Icon } from './tools/index'
+import { Icon } from "./tools/index";
 
 import Locale from "../locales";
 
@@ -27,7 +27,6 @@ const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
 
 function useHotKey() {
   // const chatStore = useChatFolderStore();
-
   // useEffect(() => {
   //   const onKeyDown = (e: KeyboardEvent) => {
   //     if (e.metaKey || e.altKey || e.ctrlKey) {
@@ -41,7 +40,6 @@ function useHotKey() {
   //       }
   //     }
   //   };
-
   //   window.addEventListener("keydown", onKeyDown);
   //   return () => window.removeEventListener("keydown", onKeyDown);
   // });
@@ -113,58 +111,64 @@ export function SideBar(props: { className?: string }) {
       }`}
     >
       <div className={styles["sidebar-header"]}>
-        <div className={styles['sidebar-header-wrap']}>
-          <div className={styles["sidebar-title"]}>历史会话
-            {
-              !isMobileScreen ? (
-                <div className={styles['sidebar-title-remark']}>Your AI assistant list</div>
-              ) : null
-            }
+        <div className={styles["sidebar-header-wrap"]}>
+          <div className={styles["sidebar-title"]}>
+            历史会话
+            {!isMobileScreen ? (
+              <div className={styles["sidebar-title-remark"]}>
+                Your AI assistant list
+              </div>
+            ) : null}
           </div>
-          <div className={styles['sidebar-tools']}>
-            {
-              isMobileScreen ? (
-                <>
-                  {/* 设置 */}
-                  <Link className={styles['tools-item']}
-                    to={Path.Settings}>
-                    {/* <IconSetWhite /> */}
-                    <Icon name="icon-set-white.png" />
-                  </Link>
-                  {/* 清空 */}
-                  <span className={styles['tools-item']}
-                    onClick={() => {
-                      if (confirm(Locale.Home.DeleteChat)) {
-                        chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
-                      }
-                    }}>
-                    {/* <IconDelWhite /> */}
-                    <Icon name="icon-delete-white.png" />
-                  </span>
-                  {/* 新建文件夹 */}
-                  <span className={styles['tools-item']}
-                    onClick={() => {
-                      chatStore.newFolder({ name: '新分类' })
-                    }}>
-                    {/* <IconAddWhite /> */}
-                    <Icon name="icon-add-white.png" />
-                  </span>
-                </>
-              ) : (
-                // PC端
-                <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}
+          <div className={styles["sidebar-tools"]}>
+            {isMobileScreen ? (
+              <>
+                {/* 设置 */}
+                <Link className={styles["tools-item"]} to={Path.Settings}>
+                  {/* <IconSetWhite /> */}
+                  <Icon name="icon-set-white.png" />
+                </Link>
+                {/* 清空 */}
+                <span
+                  className={styles["tools-item"]}
                   onClick={() => {
-                    chatStore.newFolder({ name: '新分类' })
-                  }}>
-                  {/* <IconAddPrimary /> */}
-                    <Icon name="icon-add-primary.png" />
+                    if (confirm(Locale.Home.DeleteChat)) {
+                      chatStore.deleteChat(
+                        chatStore.currentIndex[0],
+                        chatStore.currentIndex[1],
+                      );
+                    }
+                  }}
+                >
+                  {/* <IconDelWhite /> */}
+                  <Icon name="icon-delete-white.png" />
                 </span>
-              )
-            }
+                {/* 新建文件夹 */}
+                <span
+                  className={styles["tools-item"]}
+                  onClick={() => {
+                    chatStore.newFolder({ name: "新分类" });
+                  }}
+                >
+                  {/* <IconAddWhite /> */}
+                  <Icon name="icon-add-white.png" />
+                </span>
+              </>
+            ) : (
+              // PC端
+              // <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}
+              //   onClick={() => {
+              //     chatStore.newFolder({ name: '新分类' })
+              //   }}>
+              //     <Icon name="icon-add-primary.png" />
+              // </span>
+              <Icon classNames={["icon-customer icon-add"]} />
+            )}
           </div>
         </div>
-        <div className={styles['sidebar-btn-new']}>
-          <span className={styles['sidebar-btn-text']}
+        <div className={styles["sidebar-btn-new"]}>
+          <span
+            className={styles["sidebar-btn-text"]}
             onClick={() => {
               // 新建会话，直接开始
               chatStore.newChat();
@@ -175,7 +179,11 @@ export function SideBar(props: { className?: string }) {
               // } else {
               //   navigate(Path.NewChat);
               // }
-            }}><Icon name="icon-add-white.png" />&nbsp;{shouldNarrow ? undefined : Locale.Home.NewChat}</span>
+            }}
+          >
+            <Icon name="icon-add-white.png" />
+            &nbsp;{shouldNarrow ? undefined : Locale.Home.NewChat}
+          </span>
         </div>
         {/* <div className={styles["sidebar-sub-title"]}>
           Build your own AI assistant.
@@ -213,32 +221,38 @@ export function SideBar(props: { className?: string }) {
         {/* <ChatList narrow={shouldNarrow} /> */}
         <ChatList />
       </div>
-      
+
       {/* PC才显示 */}
-      {
-        !isMobileScreen ? (
-          <div className={styles["sidebar-tail"]}>
-            <div className={styles["sidebar-actions"] + ' ' + styles["sidebar-tools"]}>
-              {/* 设置 */}
-              <Link className={styles['tools-item']}
-                to={Path.Settings}>
-                {/* <IconSetWhite /> */}
-                <Icon name="icon-set-white.png" />
-              </Link>
-              {/* 清空 */}
-              <span className={styles['tools-item']}
-                onClick={() => {
-                  if (confirm(Locale.Home.DeleteChat)) {
-                    chatStore.deleteChat(chatStore.currentIndex[0], chatStore.currentIndex[1]);
-                  }
-                }}>
-                {/* <IconDelWhite /> */}
-                <Icon name="icon-delete-white.png" />
-              </span>
-            </div>
+      {!isMobileScreen ? (
+        <div className={styles["sidebar-tail"]}>
+          <div
+            className={
+              styles["sidebar-actions"] + " " + styles["sidebar-tools"]
+            }
+          >
+            {/* 设置 */}
+            <Link className={styles["tools-item"]} to={Path.Settings}>
+              {/* <IconSetWhite /> */}
+              <Icon name="icon-set-white.png" />
+            </Link>
+            {/* 清空 */}
+            <span
+              className={styles["tools-item"]}
+              onClick={() => {
+                if (confirm(Locale.Home.DeleteChat)) {
+                  chatStore.deleteChat(
+                    chatStore.currentIndex[0],
+                    chatStore.currentIndex[1],
+                  );
+                }
+              }}
+            >
+              {/* <IconDelWhite /> */}
+              <Icon name="icon-delete-white.png" />
+            </span>
           </div>
-        ) : null
-      }
+        </div>
+      ) : null}
       {/* <div className={styles["sidebar-tail"]}>
         <div className={styles["sidebar-actions"]}>
           <div className={styles["sidebar-action"] + " " + styles.mobile}>

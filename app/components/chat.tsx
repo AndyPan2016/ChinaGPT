@@ -7,6 +7,7 @@ import RenameIcon from "../icons/rename.svg";
 import ExportIcon from "../icons/share.svg";
 import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
+import LoadingParentIcon from "../icons/three-dots-parent.svg";
 import LoadingIcon from "../icons/three-dots.svg";
 import PromptIcon from "../icons/prompt.svg";
 import MaskIcon from "../icons/mask.svg";
@@ -68,10 +69,36 @@ import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { ModifyModal } from "./modify-modal";
 import { Popover } from "antd";
+// import { Markdown, Markdown as MarkdownUser } from './markdown'
 
-const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
-  loading: () => <LoadingIcon />,
-});
+const Markdown = dynamic(
+  async () => {
+    const md = await import("./markdown");
+    // setMDState(true)
+    return md.Markdown;
+  },
+  {
+    loading: () => (
+      <span style={{ color: "#FFF" }}>
+        <LoadingParentIcon />
+      </span>
+    ),
+  },
+);
+const MarkdownUser = dynamic(
+  async () => {
+    const mdUser = (await import("./markdown")).Markdown;
+    // setMDUserState(true)
+    return mdUser;
+  },
+  {
+    loading: () => (
+      <span style={{ color: "rgba(183, 189, 203, 1)" }}>
+        <LoadingParentIcon />
+      </span>
+    ),
+  },
+);
 
 export function SessionConfigModel(props: { onClose: () => void }) {
   // const chatStore = useChatStore();
@@ -452,7 +479,6 @@ export function ChatActions(props: {
       <div
         className={
           chatStyle["chat-input-action"] +
-          " clickable" +
           (theme === Theme.Dark ? " " + chatStyle["active"] : "")
         }
         onClick={nextTheme}
@@ -466,17 +492,14 @@ export function ChatActions(props: {
       </div>
       {couldStop ? (
         // 停止
-        <div
-          className={chatStyle["chat-input-action"] + " clickable"}
-          onClick={stopAll}
-        >
+        <div className={chatStyle["chat-input-action"]} onClick={stopAll}>
           <Icon name="icon-message-stop-default.png" />
           <span className={chatStyle["chat-action-text"]}>停止</span>
         </div>
       ) : // 刷新
       currentChat.messages && currentChat.messages.length ? (
         <div
-          className={chatStyle["chat-input-action"] + " clickable"}
+          className={chatStyle["chat-input-action"]}
           onClick={() => {
             props.onResend && props.onResend();
           }}
@@ -586,6 +609,10 @@ export function Chat() {
   const [hitBottom, setHitBottom] = useState(true);
   const [modifyOpen, setModifyOpen] = useState<boolean>(false);
   const [formData, setFormData] = useState<any>({});
+  const [modifyContOpen, setModifyContOpen] = useState<boolean>(false);
+  const [formDataCont, setFormDataCont] = useState<any>({});
+  const [mdState, setMDState] = useState<boolean>(false);
+  const [mdUserState, setMDUserState] = useState<boolean>(false);
   const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
 
@@ -816,6 +843,13 @@ export function Chat() {
           ]
         : [],
     );
+  let lastUserMsgIdx: number | null = null;
+  for (let i = 0; i < currentChat.messages.length; i += 1) {
+    const message = currentChat.messages[i];
+    if (message.role === "user") {
+      lastUserMsgIdx = i + 1;
+    }
+  }
 
   const [showPromptModal, setShowPromptModal] = useState(false);
 
@@ -834,6 +868,16 @@ export function Chat() {
       // chat.mask?.name = data?.name
     });
     setModifyOpen(false);
+  };
+
+  const sureModifyCont = (data: any) => {
+    let currentIndex = chatFolderStore.currentIndex.slice();
+    currentIndex.push(data.index);
+    chatFolderStore.updateMessage(currentIndex, (message: any) => {
+      message.content = data.name;
+    });
+    setModifyContOpen(false);
+    onResend();
   };
 
   const location = useLocation();
@@ -873,6 +917,20 @@ export function Chat() {
             }}
             onOk={sureModify}
           />
+          {/* 修改会话内容 */}
+          <ModifyModal
+            title="修改会话内容"
+            placeholder="请输入会话内容"
+            labelIconName="icon-edit-folder-primary.png"
+            inputType="textarea"
+            formData={formDataCont}
+            open={modifyContOpen}
+            onCancel={() => {
+              setModifyContOpen(false);
+            }}
+            onOk={sureModifyCont}
+          />
+
           <div
             className={"window-action-button clickable" + " " + styles.mobile}
             title={Locale.Chat.Actions.ChatList}
@@ -884,9 +942,10 @@ export function Chat() {
               title={Locale.Chat.Actions.ChatList}
               onClick={() => navigate(Path.Home)}
             /> */}
-            <IconWrap className="icon-wrap-52">
+            {/* <IconWrap className="icon-wrap-52">
               <Icon name="icon-arrow-back-primary.png" />
-            </IconWrap>
+            </IconWrap> */}
+            <Icon classNames={["icon-customer", "icon-arrow-back"]} />
           </div>
           <div
             className="window-action-button clickable"
@@ -900,9 +959,10 @@ export function Chat() {
               bordered
               onClick={renameSession}
             /> */}
-            <IconWrap className="icon-wrap-52">
+            {/* <IconWrap className="icon-wrap-52">
               <Icon name="icon-edit-folder-primary.png" />
-            </IconWrap>
+            </IconWrap> */}
+            <Icon classNames={["icon-customer", "icon-edit"]} />
           </div>
           <div
             className="window-action-button clickable"
@@ -918,9 +978,10 @@ export function Chat() {
                 setShowExport(true);
               }}
             /> */}
-            <IconWrap className="icon-wrap-52">
+            {/* <IconWrap className="icon-wrap-52">
               <Icon name="icon-export-primary.png" />
-            </IconWrap>
+            </IconWrap> */}
+            <Icon classNames={["icon-customer", "icon-export"]} />
           </div>
           {!isMobileScreen && (
             <div
@@ -940,13 +1001,18 @@ export function Chat() {
                   );
                 }}
               /> */}
-              <IconWrap className="icon-wrap-52">
+              {/* <IconWrap className="icon-wrap-52">
                 {config.tightBorder ? (
                   <Icon name="icon-narrow-primary.png" />
                 ) : (
                   <Icon name="icon-enlarge-primary.png" />
                 )}
-              </IconWrap>
+              </IconWrap> */}
+              {config.tightBorder ? (
+                <Icon classNames={["icon-customer", "icon-narrow"]} />
+              ) : (
+                <Icon classNames={["icon-customer", "icon-enlarge"]} />
+              )}
             </div>
           )}
         </div>
@@ -972,9 +1038,7 @@ export function Chat() {
         {messages?.map((message, i) => {
           const isUser = message.role === "user";
           const showActions =
-            !isUser &&
-            i > 0 &&
-            !(message.preview || message.content.length === 0);
+            i > 0 && !(message.preview || message.content.length === 0);
           const showTyping = message.preview || message.streaming;
 
           const shouldShowClearContextDivider = i === clearContextIndex - 1;
@@ -994,7 +1058,21 @@ export function Chat() {
                         <MaskAvatar mask={currentChat.mask} />
                       )}
                     </div>
-                    <div className={styles["chat-message-item"]}>
+                    {mdState}
+                    <div
+                      className={
+                        styles["chat-message-item"] +
+                        (isUser &&
+                        mdUserState &&
+                        showActions &&
+                        lastUserMsgIdx == i
+                          ? " " + styles["user-edit"]
+                          : "") +
+                        (!isUser && mdState && showActions
+                          ? " " + styles["system-copy"]
+                          : "")
+                      }
+                    >
                       {/* {showActions && (
                         <div className={styles["chat-message-top-actions"]}>
                           {message.streaming ? (
@@ -1029,26 +1107,81 @@ export function Chat() {
                           </div>
                         </div>
                       )} */}
-                      <Markdown
-                        className={
-                          isUser ? "chat-message-md-user" : "chat-message-md"
-                        }
-                        fontSize="16"
-                        followParent={true}
-                        followColor={isUser ? "rgba(183, 189, 203, 1)" : "#FFF"}
-                        content={message.content}
-                        loading={
-                          (message.preview || message.content.length === 0) &&
-                          !isUser
-                        }
-                        onContextMenu={(e) => onRightClick(e, message)}
-                        onDoubleClickCapture={() => {
-                          if (!isMobileScreen) return;
-                          setUserInput(message.content);
-                        }}
-                        parentRef={scrollRef}
-                        defaultShow={i >= messages.length - 10}
-                      />
+
+                      {isUser ? (
+                        <MarkdownUser
+                          className="chat-message-md-user"
+                          fontSize="16"
+                          followParent={true}
+                          followColor="rgba(183, 189, 203, 1)"
+                          content={message.content}
+                          loading={
+                            (message.preview || message.content.length === 0) &&
+                            !isUser
+                          }
+                          renderBack={() => {
+                            if (!mdUserState) {
+                              setMDUserState(true);
+                            }
+                          }}
+                          onContextMenu={(e) => onRightClick(e, message)}
+                          onDoubleClickCapture={() => {
+                            if (!isMobileScreen) return;
+                            setUserInput(message.content);
+                          }}
+                          parentRef={scrollRef}
+                          defaultShow={i >= messages.length - 10}
+                        />
+                      ) : (
+                        <Markdown
+                          className="chat-message-md"
+                          fontSize="16"
+                          followParent={true}
+                          followColor="#FFF"
+                          content={message.content}
+                          loading={
+                            (message.preview || message.content.length === 0) &&
+                            !isUser
+                          }
+                          renderBack={() => {
+                            if (!mdState) {
+                              setMDState(true);
+                            }
+                          }}
+                          onContextMenu={(e) => onRightClick(e, message)}
+                          onDoubleClickCapture={() => {
+                            if (!isMobileScreen) return;
+                            setUserInput(message.content);
+                          }}
+                          parentRef={scrollRef}
+                          defaultShow={i >= messages.length - 10}
+                        />
+                      )}
+                      {showActions && mdState && !isUser ? (
+                        <span className={styles["chat-message-handle"]}>
+                          <Icon
+                            name="icon-copy-white.png"
+                            onClick={() => copyToClipboard(message.content)}
+                          />
+                        </span>
+                      ) : null}
+                      {showActions &&
+                      mdUserState &&
+                      isUser &&
+                      lastUserMsgIdx == i ? (
+                        <span
+                          className={styles["chat-message-handle"]}
+                          onClick={() => {
+                            setFormDataCont({
+                              name: message.content,
+                              index: i - 1,
+                            });
+                            setModifyContOpen(true);
+                          }}
+                        >
+                          <Icon name="icon-edit-folder-primary.png" />
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   {showTyping && (
@@ -1109,7 +1242,10 @@ export function Chat() {
             rows={inputRows}
             autoFocus={autoFocus}
           />
-          <div className={styles["chat-input-send"]}></div>
+          <div
+            className={styles["chat-input-send"]}
+            onClick={() => doSubmit(userInput)}
+          ></div>
           {/* <IconButton
             icon={<SendWhiteIcon />}
             text={Locale.Chat.Send}

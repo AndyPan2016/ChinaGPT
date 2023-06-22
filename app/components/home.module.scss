@@ -187,14 +187,26 @@
     position: relative;
     overflow: hidden;
     box-shadow: 0px 5px 25px 0px rgba(42,139,242,0.07), 0px 7px 25px 0px rgba(42,139,242,0.03), 0px 10px 15px 0px rgba(0,0,0,0.03);
-    
+    transition: all ease .2s;
+    cursor: pointer;
+
     &:first-child {
       margin-left: 0;
     }
     &.tools-item-pc {
-      background: #FFFFFF;
       box-shadow: 0px 5px 25px 0px rgba(42,139,242,0.07), 0px 7px 25px 0px rgba(42,139,242,0.03), 0px 10px 15px 0px rgba(0,0,0,0.03);
       color: rgba(42, 139, 242, 1);
+      background: #FFF;
+      // background-position:  center center;
+      // background-repeat: no-repeat;
+      // background-image: url(../icons/png/icon-add-primary.png);
+      // background-size: 24px 24px;
+      // background-color: #FFFFFF;
+      // &:hover {
+      //   background-image: url(../icons/png/icon-add-white.png);
+      //   background-size: 24px 24px;
+      //   background-color: linear-gradient(135deg, #60A9F6 0%, #2A8BF2 100%);
+      // }
     }
   }
 }
@@ -458,10 +470,11 @@
 }
 
 .chat-message-container {
-  max-width: var(--message-max-width);
+  // max-width: var(--message-max-width);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  max-width: 100%;
 
   &:hover {
     .chat-message-top-actions {
@@ -490,7 +503,7 @@
 
 .chat-message-item {
   box-sizing: border-box;
-  max-width: 80%;
+  // max-width: 80%;
   // margin-top: 10px;
   // border-radius: 10px;
   // background-color: rgba(0, 0, 0, 0.05);
@@ -504,6 +517,19 @@
   // border: var(--border-in-light);
   position: relative;
   color: #FFF;
+  max-width: 100%;
+  overflow: auto;
+  .chat-message-handle {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+  }
+  &.system-copy {
+    padding-right: 60px;
+  }
+  &.user-edit {
+    padding-right: 60px;
+  }
   .markdown-body {
     color: transparent;
     background: transparent;
@@ -656,7 +682,7 @@
   border: var(--chat-input-border);
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
   background-color: var(--chat-input);
-  color: rgba(51, 51, 51, 1);
+  color: var(--chat-input-color);
   font-family: inherit;
   padding: 10px 98px 10px 14px;
   resize: none;

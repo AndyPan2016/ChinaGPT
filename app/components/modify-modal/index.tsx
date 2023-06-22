@@ -7,15 +7,18 @@
 
 import { useEffect, useState } from "react";
 import { Modal, Form, Input, Button } from "antd";
+const { TextArea } = Input;
 import { IModifyModal } from "./types";
 import styles from "./index.module.scss";
 import { Icon } from "../tools/index";
 
 export const ModifyModal = ({
   title,
+  inputType,
   open,
   placeholder,
   formData,
+  labelIconName,
   onOk,
   onCancel,
 }: IModifyModal) => {
@@ -27,7 +30,7 @@ export const ModifyModal = ({
 
   const sureModify = () => {
     form.validateFields().then(async (res) => {
-      onOk && onOk(res);
+      onOk && onOk({ ...formData, ...res });
     });
   };
 
@@ -58,7 +61,7 @@ export const ModifyModal = ({
       >
         <Form.Item
           name="name"
-          label={<Icon name="icon-folder-primary.png" />}
+          label={<Icon name={labelIconName || "icon-folder-primary.png"} />}
           rules={[
             {
               required: true,
@@ -66,10 +69,22 @@ export const ModifyModal = ({
             },
           ]}
         >
-          <Input
-            style={{ fontSize: 14, maxWidth: "initial", textAlign: "left" }}
-            placeholder={placeholder}
-          />
+          {inputType === "textarea" ? (
+            <TextArea
+              style={{
+                fontSize: 14,
+                maxWidth: "initial",
+                textAlign: "left",
+                height: 90,
+              }}
+              placeholder={placeholder}
+            />
+          ) : (
+            <Input
+              style={{ fontSize: 14, maxWidth: "initial", textAlign: "left" }}
+              placeholder={placeholder}
+            />
+          )}
         </Form.Item>
       </Form>
     </Modal>

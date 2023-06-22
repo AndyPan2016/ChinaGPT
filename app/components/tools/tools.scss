@@ -1,0 +1,106 @@
+/**
+ * 公共工具类 SCSS
+ * @authors AndyPan (pye-mail@163.com)
+ * @remark 无
+ * @log 2023年6月10日21:43:57 - 创建
+ */
+
+.icon-customer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    background: #FFFFFF;
+    position: relative;
+    outline: none;
+    text-decoration: none;
+    overflow: hidden;
+    box-shadow: 0px 5px 25px 0px rgba(42,139,242,0.07), 0px 7px 25px 0px rgba(42,139,242,0.03), 0px 10px 15px 0px rgba(0,0,0,0.03);
+    cursor: pointer;
+    transition: all ease .2s;
+    &::after {
+        content: '';
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+    }
+    &:hover {
+        background: linear-gradient(135deg, #60A9F6 0%, #2A8BF2 100%);
+    }
+    &.icon-add {
+        &::after {
+            background: url('../../icons/png/icon-add-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-add-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+    &.icon-edit {
+        &::after {
+            background: url('../../icons/png/icon-edit-folder-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-edit-folder-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+    
+    &.icon-arrow-back {
+        &::after {
+            background: url('../../icons/png/icon-arrow-back-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-arrow-back-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+    &.icon-export {
+        &::after {
+            background: url('../../icons/png/icon-export-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-export-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+    &.icon-narrow {
+        &::after {
+            background: url('../../icons/png/icon-narrow-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-narrow-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+    &.icon-enlarge {
+        &::after {
+            background: url('../../icons/png/icon-enlarge-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-enlarge-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
+}
+

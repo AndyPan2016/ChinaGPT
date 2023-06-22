@@ -37,6 +37,7 @@
   --window-header-border: rgba(221, 236, 252, 1);
   --chat-body: linear-gradient(180deg, #F3F3FB 0%, #FDFBFD 100%);
   --chat-input: rgba(255, 255, 255, 1);
+  --chat-input-color: rgba(51, 51, 51, 1);
   --chat-input-border: 1px solid rgba(215, 229, 245, 1);
 
   /* shadow */
@@ -88,6 +89,7 @@
   --window-header-border: rgba(73, 76, 84, 1);
   --chat-body: rgba(53, 54, 58, 1);
   --chat-input: rgba(255, 255, 255, 0.15);
+  --chat-input-color: rgba(255, 255, 255, 1);
   --chat-input-border: rgba(255, 255, 255, 0.15);
 
   div:not(.no-dark) > svg {

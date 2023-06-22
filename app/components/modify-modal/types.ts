@@ -10,8 +10,12 @@ export interface IModifyModal {
   title?: React.ReactNode;
   // open
   open: boolean;
+  // 输入框类型
+  inputType?: string;
   // 表单数据
   formData?: any;
+  // 自定义label图标名称
+  labelIconName?: string;
   // placeholder
   placeholder?: string;
   // 确定事件

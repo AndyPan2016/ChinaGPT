@@ -10,10 +10,13 @@ import { string } from "prop-types";
 export interface IProps {
   // 子集
   children?: React.ReactNode;
+  // 父级类名
+  parentClassName?: any;
   // 类名
   className?: string;
   // 类名集合
   classNames?: Array<string>;
+  // classNames?: string;
   // 自定义style
   style?: object;
 }

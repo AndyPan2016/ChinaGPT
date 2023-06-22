@@ -1008,7 +1008,7 @@ export const useChatFolderStore = create<any>()(
         index: Array<number>,
         updater: (message?: ChatMessage) => void,
       ) {
-        let folder = get().folder;
+        let folder = get().folder.slice();
         let chats = folder[index[0]].chat || [];
         let messages = chats[index[1]]?.messages;
         updater && updater(messages[index[2]]);

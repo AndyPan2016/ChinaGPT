@@ -14,6 +14,7 @@ import {
   ISelectItem,
 } from "./types";
 import styles from "./tools.module.scss";
+import "./tools.scss";
 import { useMobileScreen } from "../../utils";
 import { useAppConfig } from "../../store";
 
@@ -25,7 +26,9 @@ export const Icon = ({
   icon,
   width = "24px",
   height = "24px",
+  parentClassName,
   className,
+  classNames,
   style,
   onClick,
 }: IIcon) => {
@@ -38,7 +41,15 @@ export const Icon = ({
     img = icon;
   }
 
-  return (
+  const [clas, setClas] = useState<any>();
+  if (classNames) {
+    let a = classNames.map((it: any) => {
+      return " " + styles[it];
+    });
+    console.info(a);
+  }
+
+  return img ? (
     <img
       src={img}
       style={style ? { ...style } : {}}
@@ -47,6 +58,14 @@ export const Icon = ({
       height={height}
       onClick={onClick}
     />
+  ) : (
+    <span
+      className={
+        (className ? styles[className] : "") +
+        (parentClassName ? " " + parentClassName : "") +
+        (classNames ? " " + classNames.join(" ") : "")
+      }
+    ></span>
   );
 };
 

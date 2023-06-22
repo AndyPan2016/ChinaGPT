@@ -101,7 +101,7 @@ function _MarkDownContent(props: { content: string }) {
         ],
       ]}
       components={{
-        pre: PreCode,
+        // pre: PreCode,
         a: (aProps) => {
           const href = aProps.href || "";
           const isInternal = /^\/#/i.test(href);
@@ -128,6 +128,7 @@ export function Markdown(
     // 颜色跟随父级
     followParent?: boolean;
     followColor?: string;
+    renderBack?: () => void;
   } & React.DOMAttributes<HTMLDivElement>,
 ) {
   const mdRef = useRef<HTMLDivElement>(null);
@@ -156,6 +157,7 @@ export function Markdown(
         md.getBoundingClientRect().height,
       );
     }
+    props.renderBack && props.renderBack();
   };
 
   setTimeout(() => checkInView(), 1);
