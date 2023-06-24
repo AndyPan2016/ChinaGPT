@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { showToast } from "./components/ui-lib";
+import { showToast, showToastGPT } from "./components/ui-lib";
 import Locale from "./locales";
 
 export function trimTopic(topic: string) {
@@ -9,7 +9,7 @@ export function trimTopic(topic: string) {
 export async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
-    showToast(Locale.Copy.Success);
+    showToastGPT({ content: Locale.Copy.Success, type: "success" });
   } catch (error) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
@@ -18,9 +18,9 @@ export async function copyToClipboard(text: string) {
     textArea.select();
     try {
       document.execCommand("copy");
-      showToast(Locale.Copy.Success);
+      showToastGPT({ content: Locale.Copy.Success, type: "success" });
     } catch (error) {
-      showToast(Locale.Copy.Failed);
+      showToastGPT({ content: Locale.Copy.Failed, type: "fail" });
     }
     document.body.removeChild(textArea);
   }
@@ -68,27 +68,34 @@ export function isIOS() {
 }
 
 export function useWindowSize() {
-  const [size, setSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+  try {
+    const [size, setSize] = useState({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
 
-  useEffect(() => {
-    const onResize = () => {
-      setSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
+    useEffect(() => {
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+      };
+
+      window.addEventListener("resize", onResize);
+
+      return () => {
+        window.removeEventListener("resize", onResize);
+      };
+    }, []);
+
+    return size;
+  } catch (e: any) {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
     };
-
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
-
-  return size;
+  }
 }
 
 export const MOBILE_MAX_WIDTH = 600;

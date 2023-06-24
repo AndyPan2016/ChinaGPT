@@ -608,9 +608,9 @@ export function Chat() {
   const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
   const [hitBottom, setHitBottom] = useState(true);
   const [modifyOpen, setModifyOpen] = useState<boolean>(false);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<any>([]);
   const [modifyContOpen, setModifyContOpen] = useState<boolean>(false);
-  const [formDataCont, setFormDataCont] = useState<any>({});
+  const [formDataCont, setFormDataCont] = useState<any>([]);
   const [mdState, setMDState] = useState<boolean>(false);
   const [mdUserState, setMDUserState] = useState<boolean>(false);
   const isMobileScreen = useMobileScreen();
@@ -1181,7 +1181,7 @@ export function Chat() {
                                 onClick={() =>
                                   copyToClipboard(
                                     message.content,
-                                    "对话复制成功！",
+                                    // "对话复制成功！",
                                   )
                                 }
                               />

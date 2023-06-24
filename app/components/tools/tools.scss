@@ -102,5 +102,17 @@
             }
         }
     }
+    &.icon-close {
+        &::after {
+            background: url('../../icons/png/icon-close-primary.png') center center no-repeat;
+            background-size: 24px 24px;
+        }
+        &:hover {
+            &::after {
+                background: url('../../icons/png/icon-close-white.png') center center no-repeat;
+                background-size: 24px 24px;
+            }
+        }
+    }
 }
 

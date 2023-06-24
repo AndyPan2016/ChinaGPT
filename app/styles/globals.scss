@@ -441,12 +441,15 @@ pre {
 
 .ant-form {
   .ant-form-item{
-    margin: 0;
+    // margin: 0;
+    // &:last-child {
+    //   margin: 0;
+    // }
     .ant-form-item-label {
       &.ant-col-1 {
         max-width: 24px;
-        flex: auto;
         width: 24px;
+        flex: auto;
         margin-right: 15px;
       }
     }
@@ -455,10 +458,31 @@ pre {
         flex: 1;
         max-width: 100%;
       }
-      .ant-input {
+      .ant-input{
         height: 40px;
         border-color: #DDDDDD;
         border-radius: 3px;
+      }
+      .ant-form-item-control-input-content {
+        .ant-input-affix-wrapper {
+          padding: 0 10px;
+          .ant-input {
+            max-width: initial;
+            text-align: left;
+          }
+        }
+      }
+    }
+  }
+}
+.text-form {
+  .ant-form {
+    .ant-form-item{
+      .ant-form-item-label {
+        &.ant-col-1 {
+          max-width: 60px;
+          width: 60px;
+        }
       }
     }
   }

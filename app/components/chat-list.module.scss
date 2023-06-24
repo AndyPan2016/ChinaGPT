@@ -313,9 +313,9 @@
 }
 
 .delete-confirm-text {
-    color: #707C97;
+    color: var(--chat-item-info-active);
     .text-name {
-        color: #2A8BF2;
+        color: var(--primary);
         font-weight: bold;
     }
 }

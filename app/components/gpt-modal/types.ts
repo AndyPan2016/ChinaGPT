@@ -15,10 +15,22 @@ export interface IGPTModalFormData {
   label?: React.ReactNode;
   // 表单item类型(input.输入框 textarea.文本域 text.纯文本)
   formItemType: string;
+  // 自定义表单验证规则
+  rules?: any;
+  // (Form.Item的)依赖字段
+  dependencies?: any;
+  // 字段名
+  fieldName?: string;
 }
 
 // 弹窗类型
 export interface IGPTModal {
+  // 弹窗loading状态
+  loading?: boolean;
+  // 表单项验证状态图标
+  hasFeedback?: boolean;
+  // 自定义弹窗类名
+  className?: string;
   // 标题
   title?: React.ReactNode;
   titleIcon?: string;
@@ -32,6 +44,8 @@ export interface IGPTModal {
   // labelIconName?: string;
   // placeholder
   // placeholder?: string;
+  // 按钮位置切换
+  btnSwitch?: boolean;
   // 确认按钮文本
   okText?: string;
   // 取消按钮文本
@@ -40,4 +54,6 @@ export interface IGPTModal {
   onOk?: (data: any) => void;
   // 取消事件
   onCancel?: () => void;
+  // 关闭事件
+  onClose?: () => void;
 }

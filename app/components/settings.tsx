@@ -18,10 +18,12 @@ import {
   PasswordInput,
   Popover,
   Select,
+  toastSuccess,
 } from "./ui-lib";
 import { ModelConfigList } from "./model-config";
 
 import { IconButton } from "./button";
+import { Button, Form } from "antd";
 import {
   SubmitKey,
   useChatStore,
@@ -37,7 +39,8 @@ import Locale, {
   changeLang,
   getLang,
 } from "../locales";
-import { copyToClipboard } from "../utils";
+import { copyToClipboard, useMobileScreen } from "../utils";
+import { Icon } from "./tools";
 import Link from "next/link";
 import { Path, UPDATE_URL } from "../constant";
 import { Prompt, SearchService, usePromptStore } from "../store/prompt";
@@ -45,6 +48,7 @@ import { ErrorBoundary } from "./error";
 import { InputRange } from "./input-range";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarPicker } from "./emoji";
+import { GPTModal } from "./gpt-modal";
 
 function EditPromptModal(props: { id: number; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -211,6 +215,7 @@ function formatVersionDate(t: string) {
 }
 
 export function Settings() {
+  const isMobileScreen = useMobileScreen();
   const navigate = useNavigate();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const config = useAppConfig();
@@ -263,6 +268,25 @@ export function Settings() {
   const builtinCount = SearchService.count.builtin;
   const customCount = promptStore.getUserPrompts().length ?? 0;
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
+  let defaultModifyLoginPwd = {
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "原密码",
+        placeholder: "请输入原密码",
+        value: "",
+        formItemType: "password",
+      },
+    ],
+    cancelText: "取消",
+    okText: "下一步",
+  };
+  const [modifyLoginPwd, setModifyLoginPwd] = useState<any>(
+    JSON.parse(JSON.stringify(defaultModifyLoginPwd)),
+  );
+  const [modifyPwdStep, setModifyPwdStep] = useState<number>(0);
+  const [modifyPwdData, setModifyPwdData] = useState<Array<any>>([]);
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
@@ -285,19 +309,158 @@ export function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 修改密码关闭
+  const closeModifyLoginPwd = () => {
+    setModifyLoginPwd({
+      ...modifyLoginPwd,
+      ...{ open: false },
+    });
+  };
+
+  // 修改密码取消
+  const cancelModifyLoginPwd = () => {
+    if (modifyPwdStep === 0) {
+      // 第一步的取消，关闭
+      closeModifyLoginPwd();
+    } else if (modifyPwdStep === 1) {
+      // 第二步的上一步，显示第一步
+      setModifyPwdStep(0);
+      setModifyLoginPwd({
+        ...modifyPwdData[0],
+        ...{ open: true },
+      });
+    }
+  };
+
+  // 修改密码确定
+  const sureModifyLoginPwd = (res: any) => {
+    setModifyLoginPwd({
+      ...modifyLoginPwd,
+      ...{ loading: true },
+      // ...{formData: res, open: false}
+    });
+    let tempModifyLoginPwd = {
+      ...modifyLoginPwd,
+      ...{ formData: res },
+    };
+    modifyPwdData[modifyPwdStep] = tempModifyLoginPwd;
+    setModifyPwdData(modifyPwdData);
+    if (modifyPwdStep === 0) {
+      // 第一步的下一步
+      setTimeout(() => {
+        setModifyPwdStep(1);
+        setModifyLoginPwd(
+          modifyPwdData[1] || {
+            open: true,
+            loading: false,
+            formData: [
+              {
+                label: "新密码",
+                placeholder: "请输入新登录密码",
+                value: "",
+                formItemType: "password",
+                rules: [
+                  (forms: any) => ({
+                    validator: (_: any, value: any) => {
+                      if (value) {
+                        let status = new RegExp(
+                          /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
+                        ).test(value);
+                        if (status) {
+                          status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
+                          if (status) {
+                            // forms.validateFields([1, 'value'])
+                            return Promise.resolve();
+                          } else {
+                            return Promise.reject("不能包含特殊字符或中文");
+                          }
+                        } else {
+                          return Promise.reject("密码格式不正确");
+                        }
+                      }
+                      return Promise.reject("请输入新登录密码");
+                    },
+                  }),
+                ],
+              },
+              {
+                label: "确认密码",
+                placeholder: "请再次输入新登录密码",
+                value: "",
+                formItemType: "password",
+                // dependencies: ['0', 'value'],
+                rules: [
+                  ({ getFieldValue }: any) => ({
+                    validator: (_: any, value: any) => {
+                      if (value) {
+                        let status = new RegExp(
+                          /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
+                        ).test(value);
+                        if (status) {
+                          status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
+                          if (status) {
+                            let value0 = getFieldValue([0, "value"]);
+                            if (value0 !== value) {
+                              return Promise.reject("两次密码输入不一致");
+                            }
+                            return Promise.resolve();
+                          } else {
+                            return Promise.reject("不能包含特殊字符或中文");
+                          }
+                        } else {
+                          return Promise.reject("密码格式不正确");
+                        }
+                      }
+                      return Promise.reject("请再次输入新登录密码");
+                    },
+                  }),
+                ],
+              },
+              {
+                value: (
+                  <span className={styles["value-text"]}>
+                    登录密码长度为8~14个字符，字母/数字2种，不允许有空格、中文、特殊字符（字母不区分大小写）
+                  </span>
+                ),
+                formItemType: "text",
+              },
+            ],
+            cancelText: "上一步",
+            okText: "修改登录密码",
+          },
+        );
+      }, 1000);
+    } else if (modifyPwdStep === 1) {
+      // 修改登录密码
+      setTimeout(() => {
+        console.info(res);
+        setModifyPwdStep(0);
+        setModifyPwdData([]);
+        setModifyLoginPwd(JSON.parse(JSON.stringify(defaultModifyLoginPwd)));
+        toastSuccess({ content: "修改登录密码成功！" });
+      }, 1000);
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="window-header">
         <div className="window-header-title">
-          <div className="window-header-main-title">
+          <div
+            className={
+              "window-header-main-title " + styles["header-main-title"]
+            }
+          >
             {Locale.Settings.Title}
           </div>
-          <div className="window-header-sub-title">
+          <div
+            className={"window-header-sub-title " + styles["header-sub-title"]}
+          >
             {Locale.Settings.SubTitle}
           </div>
         </div>
         <div className="window-actions">
-          <div className="window-action-button">
+          {/* <div className="window-action-button">
             <IconButton
               icon={<ClearIcon />}
               onClick={() => {
@@ -328,11 +491,93 @@ export function Settings() {
               bordered
               title={Locale.Settings.Actions.Close}
             />
+          </div> */}
+          <div
+            className="window-action-button clickable"
+            onClick={() => navigate(Path.Home)}
+          >
+            <Icon classNames={["icon-customer", "icon-close"]} />
           </div>
+          {!isMobileScreen && (
+            <div
+              className="window-action-button clickable"
+              onClick={() => {
+                config.update(
+                  (config) => (config.tightBorder = !config.tightBorder),
+                );
+              }}
+            >
+              {config.tightBorder ? (
+                <Icon classNames={["icon-customer", "icon-narrow"]} />
+              ) : (
+                <Icon classNames={["icon-customer", "icon-enlarge"]} />
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className={styles["settings"]}>
+        {/* 修改登录密码 */}
+        <GPTModal
+          title="修改登录密码"
+          className="text-form"
+          btnSwitch={true}
+          hasFeedback
+          loading={modifyLoginPwd.loading}
+          formData={modifyLoginPwd.formData}
+          open={modifyLoginPwd.open}
+          okText={modifyLoginPwd.okText}
+          cancelText={modifyLoginPwd.cancelText}
+          onClose={closeModifyLoginPwd}
+          onCancel={cancelModifyLoginPwd}
+          onOk={sureModifyLoginPwd}
+        />
         <List>
+          <ListItem
+            title="会员昵称"
+            icon={<Icon name="icon-nickname-primary.png" />}
+          >
+            FantasyBoy
+          </ListItem>
+          <ListItem
+            title="绑定手机号"
+            icon={<Icon name="icon-phone-primary.png" />}
+          >
+            <span className={styles["setting-list-item-text"]}>
+              159****9999
+              <span className={styles["item-text-icon"]}>
+                <Icon name="icon-edit-folder-primary.png" />
+              </span>
+            </span>
+          </ListItem>
+          <ListItem
+            title="绑定邮箱"
+            icon={<Icon name="icon-email-primary.png" />}
+          >
+            <span className={styles["setting-list-item-text"]}>
+              159******@qq.com
+              <span className={styles["item-text-icon"]}>
+                <Icon name="icon-edit-folder-primary.png" />
+              </span>
+            </span>
+          </ListItem>
+          <ListItem
+            title="登录密码"
+            icon={<Icon name="icon-password-primary.png" />}
+          >
+            <Button
+              key="sure"
+              type="primary"
+              onClick={() => {
+                setModifyLoginPwd({ ...modifyLoginPwd, ...{ open: true } });
+              }}
+            >
+              修改
+            </Button>
+          </ListItem>
+        </List>
+
+        {/* <List>
           <ListItem title={Locale.Settings.Avatar}>
             <Popover
               onClose={() => setShowEmojiPicker(false)}
@@ -588,7 +833,7 @@ export function Settings() {
 
         {shouldShowPromptModal && (
           <UserPromptModal onClose={() => setShowPromptModal(false)} />
-        )}
+        )} */}
       </div>
     </ErrorBoundary>
   );

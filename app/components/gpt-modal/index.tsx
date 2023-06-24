@@ -14,8 +14,11 @@ import { IGPTModal, IGPTModalFormData } from "./types";
 import styles from "./index.module.scss";
 import { Icon } from "../tools/index";
 import { useMobileScreen } from "../../utils";
+import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 
 export const GPTModal = ({
+  loading,
+  className,
   title,
   titleIcon = "icon-wran-min.png",
   // inputType,
@@ -23,17 +26,32 @@ export const GPTModal = ({
   // placeholder,
   formData,
   // labelIconName,
+  btnSwitch,
+  hasFeedback,
   okText = "确认",
   cancelText = "取消",
   onOk,
   onCancel,
+  onClose,
 }: IGPTModal) => {
   const isMobileScreen = useMobileScreen();
   const [form] = Form.useForm();
+  const [cancelAttr, setCancelAttr] = useState<any>({});
+  const [okAttr, setOkAttr] = useState<any>({});
 
   useEffect(() => {
     form.setFieldsValue(formData);
   }, [formData]);
+
+  useEffect(() => {
+    if (btnSwitch) {
+      setOkAttr({ disabled: !!loading });
+      setCancelAttr({ loading });
+    } else {
+      setOkAttr({ loading });
+      setCancelAttr({ disabled: !!loading });
+    }
+  }, [loading]);
 
   const sureModify = () => {
     form.validateFields().then(async (res) => {
@@ -52,10 +70,18 @@ export const GPTModal = ({
     onCancel && onCancel();
   };
 
+  const closeModal = () => {
+    if (onClose) {
+      onClose();
+    } else if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
     <>
       {open ? (
-        <div className="modal-mask">
+        <div className={"modal-mask " + (className || "")}>
           <Modal
             title={
               <>
@@ -68,51 +94,64 @@ export const GPTModal = ({
                 {title}
               </>
             }
-            onClose={cancelModify}
+            close={!loading}
+            onClose={closeModal}
             actions={[
               <Button
-                key="sure"
-                type="primary"
-                onClick={sureModify}
+                key={btnSwitch ? "cancel" : "sure"}
+                type={btnSwitch ? "default" : "primary"}
+                onClick={btnSwitch ? cancelModify : sureModify}
                 style={
                   isMobileScreen
                     ? { width: "100%", height: "46px", borderRadius: "30px" }
                     : {}
                 }
+                {...okAttr}
               >
-                {okText}
+                {btnSwitch ? cancelText : okText}
               </Button>,
               <Button
-                key="cancel"
-                onClick={cancelModify}
+                key={btnSwitch ? "sure" : "cancel"}
+                type={btnSwitch ? "primary" : "default"}
+                onClick={btnSwitch ? sureModify : cancelModify}
                 style={
                   isMobileScreen
                     ? { width: "100%", height: "46px", borderRadius: "30px" }
                     : {}
                 }
+                {...cancelAttr}
               >
-                {cancelText}
+                {btnSwitch ? okText : cancelText}
               </Button>,
             ]}
           >
             <Form
               form={form}
+              key={Date.now()}
               requiredMark={false}
               labelCol={{ span: 1 }}
               wrapperCol={{ span: 2 }}
             >
               {formData?.map((fit: IGPTModalFormData, fidx: number) => {
+                let dependencies = fit.dependencies
+                  ? { dependencies: fit.dependencies }
+                  : {};
                 return (
                   <Form.Item
-                    name={[fidx, "value"]}
+                    name={fit.fieldName || [fidx, "value"]}
+                    // name={fidx + 'value'}
                     label={fit.label}
                     key={fidx}
-                    rules={[
-                      {
-                        required: true,
-                        message: fit.placeholder ?? "请输入",
-                      },
-                    ]}
+                    hasFeedback={hasFeedback}
+                    rules={
+                      fit.rules || [
+                        {
+                          required: true,
+                          message: fit.placeholder ?? "请输入",
+                        },
+                      ]
+                    }
+                    {...dependencies}
                   >
                     {fit.formItemType === "textarea" ? (
                       <TextArea
@@ -125,6 +164,7 @@ export const GPTModal = ({
                         }}
                         value={fit.value}
                         placeholder={fit.placeholder}
+                        disabled={loading}
                       />
                     ) : null}
                     {fit.formItemType === "input" ? (
@@ -136,6 +176,19 @@ export const GPTModal = ({
                         }}
                         placeholder={fit.placeholder}
                         value={fit.value}
+                        disabled={loading}
+                      />
+                    ) : null}
+                    {fit.formItemType === "password" ? (
+                      <Input.Password
+                        style={{
+                          fontSize: 14,
+                          maxWidth: "initial",
+                          textAlign: "left",
+                        }}
+                        placeholder={fit.placeholder}
+                        value={fit.value}
+                        disabled={loading}
                       />
                     ) : null}
                     {fit.formItemType === "text" ? fit.value : null}

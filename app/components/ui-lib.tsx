@@ -8,7 +8,7 @@ import DownIcon from "../icons/down.svg";
 import { createRoot } from "react-dom/client";
 import React, { HTMLProps, useEffect, useState } from "react";
 import { IconButton } from "./button";
-import { useMobileScreen as MobileScreen } from "../utils";
+import { useMobileScreen } from "../utils";
 
 export function Popover(props: {
   children: JSX.Element;
@@ -38,8 +38,8 @@ export function Card(props: { children: JSX.Element[]; className?: string }) {
 export function ListItem(props: {
   title: string;
   subTitle?: string;
-  children?: JSX.Element | JSX.Element[];
-  icon?: JSX.Element;
+  children?: React.ReactNode | JSX.Element | JSX.Element[];
+  icon?: React.ReactNode | JSX.Element;
   className?: string;
 }) {
   return (
@@ -90,6 +90,7 @@ interface ModalProps {
   title: React.ReactNode;
   children?: JSX.Element | JSX.Element[];
   actions?: JSX.Element[];
+  close?: boolean;
   onClose?: () => void;
 }
 export function Modal(props: ModalProps) {
@@ -112,10 +113,11 @@ export function Modal(props: ModalProps) {
     <div className={styles["modal-container"]}>
       <div className={styles["modal-header"]}>
         <div className={styles["modal-title"]}>{props.title}</div>
-
-        <div className={styles["modal-close-btn"]} onClick={props.onClose}>
-          <CloseIcon />
-        </div>
+        {props.close !== false ? (
+          <div className={styles["modal-close-btn"]} onClick={props.onClose}>
+            <CloseIcon />
+          </div>
+        ) : null}
       </div>
 
       <div className={styles["modal-content"]}>{props.children}</div>
@@ -246,7 +248,7 @@ export function showToastGPT(options: any) {
   let type = options.type;
   const div = document.createElement("div");
   div.className = styles.show;
-  const isMobileScreen = MobileScreen();
+  const isMobileScreen = useMobileScreen();
   if (isMobileScreen) {
     div.classList.add(styles.toastmobile);
   }

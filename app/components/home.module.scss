@@ -42,11 +42,13 @@
   width: var(--sidebar-width);
   box-sizing: border-box;
   padding: 20px;
-  background-color: var(--second);
+  background-color: var(--chat-body);
   display: flex;
   flex-direction: column;
-  box-shadow: inset -2px 0px 2px 0px rgb(0, 0, 0, 0.05);
+  // box-shadow: inset -2px 0px 2px 0px rgb(0, 0, 0, 0.05);
+  box-shadow: 10px 0px 15px 0px rgba(95,167,245,0.05);
   position: relative;
+  z-index: 1;
   transition: width ease 0.05s;
 
   .sidebar-header-bar {
