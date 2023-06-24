@@ -67,7 +67,7 @@ import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
-import { ModifyModal } from "./modify-modal";
+import { GPTModal } from "./gpt-modal";
 import { Popover } from "antd";
 // import { Markdown, Markdown as MarkdownUser } from './markdown'
 
@@ -497,7 +497,7 @@ export function ChatActions(props: {
           <span className={chatStyle["chat-action-text"]}>停止</span>
         </div>
       ) : // 刷新
-      currentChat.messages && currentChat.messages.length ? (
+      currentChat?.messages && currentChat?.messages.length ? (
         <div
           className={chatStyle["chat-input-action"]}
           onClick={() => {
@@ -843,8 +843,9 @@ export function Chat() {
           ]
         : [],
     );
+  // 找到最后一条用户信息index，设置可重新编辑
   let lastUserMsgIdx: number | null = null;
-  for (let i = 0; i < currentChat.messages.length; i += 1) {
+  for (let i = 0; i < currentChat?.messages?.length; i += 1) {
     const message = currentChat.messages[i];
     if (message.role === "user") {
       lastUserMsgIdx = i + 1;
@@ -862,19 +863,21 @@ export function Chat() {
     }
   };
 
+  // 确认修改分类
   const sureModify = (data: any) => {
     chatFolderStore.updateCurrentChat((chat: ChatSession) => {
-      chat.topic = data?.name;
+      chat.topic = data[0].value;
       // chat.mask?.name = data?.name
     });
     setModifyOpen(false);
   };
 
+  // 确认修改会话内容
   const sureModifyCont = (data: any) => {
     let currentIndex = chatFolderStore.currentIndex.slice();
-    currentIndex.push(data.index);
+    currentIndex.push(data[0].index);
     chatFolderStore.updateMessage(currentIndex, (message: any) => {
-      message.content = data.name;
+      message.content = data[0].value;
     });
     setModifyContOpen(false);
     onResend();
@@ -892,373 +895,407 @@ export function Chat() {
   });
 
   return (
-    <div className={styles.chat} key={currentChat?.id}>
-      <div className="window-header">
-        <div className="window-header-title">
-          <div
-            className={`window-header-main-title " ${styles["chat-body-title"]}`}
-            onClickCapture={renameSession}
-          >
-            {!currentChat?.topic ? DEFAULT_TOPIC : currentChat?.topic}
-          </div>
-          <div className="window-header-sub-title">
-            {Locale.Chat.SubTitle(currentChat?.messages?.length)}
-          </div>
-        </div>
-        <div className="window-actions">
-          {/* 修改分类弹窗 */}
-          <ModifyModal
-            title="修改会话名称"
-            placeholder="请输入会话名称"
-            formData={formData}
-            open={modifyOpen}
-            onCancel={() => {
-              setModifyOpen(false);
-            }}
-            onOk={sureModify}
-          />
-          {/* 修改会话内容 */}
-          <ModifyModal
-            title="修改会话内容"
-            placeholder="请输入会话内容"
-            labelIconName="icon-edit-folder-primary.png"
-            inputType="textarea"
-            formData={formDataCont}
-            open={modifyContOpen}
-            onCancel={() => {
-              setModifyContOpen(false);
-            }}
-            onOk={sureModifyCont}
-          />
-
-          <div
-            className={"window-action-button clickable" + " " + styles.mobile}
-            title={Locale.Chat.Actions.ChatList}
-            onClick={() => navigate(Path.Home)}
-          >
-            {/* <IconButton
-              icon={<ReturnIcon />}
-              bordered
-              title={Locale.Chat.Actions.ChatList}
-              onClick={() => navigate(Path.Home)}
-            /> */}
-            {/* <IconWrap className="icon-wrap-52">
-              <Icon name="icon-arrow-back-primary.png" />
-            </IconWrap> */}
-            <Icon classNames={["icon-customer", "icon-arrow-back"]} />
-          </div>
-          <div
-            className="window-action-button clickable"
-            onClick={() => {
-              setFormData({ name: currentChat?.topic });
-              setModifyOpen(true);
-            }}
-          >
-            {/* <IconButton
-              icon={<RenameIcon />}
-              bordered
-              onClick={renameSession}
-            /> */}
-            {/* <IconWrap className="icon-wrap-52">
-              <Icon name="icon-edit-folder-primary.png" />
-            </IconWrap> */}
-            <Icon classNames={["icon-customer", "icon-edit"]} />
-          </div>
-          <div
-            className="window-action-button clickable"
-            onClick={() => {
-              setShowExport(true);
-            }}
-          >
-            {/* <IconButton
-              icon={<ExportIcon />}
-              bordered
-              title={Locale.Chat.Actions.Export}
-              onClick={() => {
-                setShowExport(true);
-              }}
-            /> */}
-            {/* <IconWrap className="icon-wrap-52">
-              <Icon name="icon-export-primary.png" />
-            </IconWrap> */}
-            <Icon classNames={["icon-customer", "icon-export"]} />
-          </div>
-          {!isMobileScreen && (
-            <div
-              className="window-action-button clickable"
-              onClick={() => {
-                config.update(
-                  (config) => (config.tightBorder = !config.tightBorder),
-                );
-              }}
-            >
-              {/* <IconButton
-                icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
-                bordered
-                onClick={() => {
-                  config.update(
-                    (config) => (config.tightBorder = !config.tightBorder),
-                  );
-                }}
-              /> */}
-              {/* <IconWrap className="icon-wrap-52">
-                {config.tightBorder ? (
-                  <Icon name="icon-narrow-primary.png" />
-                ) : (
-                  <Icon name="icon-enlarge-primary.png" />
-                )}
-              </IconWrap> */}
-              {config.tightBorder ? (
-                <Icon classNames={["icon-customer", "icon-narrow"]} />
-              ) : (
-                <Icon classNames={["icon-customer", "icon-enlarge"]} />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* <PromptToast
-          showToast={!hitBottom}
-          showModal={showPromptModal}
-          setShowModal={setShowPromptModal}
-        /> */}
-      </div>
-
-      <div
-        className={styles["chat-body"]}
-        ref={scrollRef}
-        onScroll={(e) => onChatBodyScroll(e.currentTarget)}
-        onMouseDown={() => inputRef.current?.blur()}
-        onWheel={(e) => setAutoScroll(hitBottom && e.deltaY > 0)}
-        onTouchStart={() => {
-          inputRef.current?.blur();
-          setAutoScroll(false);
-        }}
-      >
-        {messages?.map((message, i) => {
-          const isUser = message.role === "user";
-          const showActions =
-            i > 0 && !(message.preview || message.content.length === 0);
-          const showTyping = message.preview || message.streaming;
-
-          const shouldShowClearContextDivider = i === clearContextIndex - 1;
-
-          return (
-            <>
+    <>
+      {currentChat ? (
+        <div className={styles.chat} key={currentChat?.id}>
+          <div className="window-header">
+            <div className="window-header-title">
               <div
-                key={i}
-                className={
-                  isUser ? styles["chat-message-user"] : styles["chat-message"]
-                }
+                className={`window-header-main-title " ${styles["chat-body-title"]}`}
+                onClickCapture={renameSession}
               >
-                <div className={styles["chat-message-container"]}>
-                  <div className={chatStyle["chat-message-wrap"]}>
-                    <div className={styles["chat-message-avatar"]}>
-                      {message.role === "user" ? null : ( // <Avatar avatar={config.avatar} />
-                        <MaskAvatar mask={currentChat.mask} />
-                      )}
-                    </div>
-                    {mdState}
-                    <div
-                      className={
-                        styles["chat-message-item"] +
-                        (isUser &&
-                        mdUserState &&
-                        showActions &&
-                        lastUserMsgIdx == i
-                          ? " " + styles["user-edit"]
-                          : "") +
-                        (!isUser && mdState && showActions
-                          ? " " + styles["system-copy"]
-                          : "")
-                      }
-                    >
-                      {/* {showActions && (
-                        <div className={styles["chat-message-top-actions"]}>
-                          {message.streaming ? (
-                            <div
-                              className={styles["chat-message-top-action"]}
-                              onClick={() => onUserStop(message.id ?? i)}
-                            >
-                              {Locale.Chat.Actions.Stop}
-                            </div>
-                          ) : (
-                            <>
-                              <div
-                                className={styles["chat-message-top-action"]}
-                                onClick={() => onDelete(message.id ?? i)}
-                              >
-                                {Locale.Chat.Actions.Delete}
-                              </div>
-                              <div
-                                className={styles["chat-message-top-action"]}
-                                onClick={() => onResend(message.id ?? i)}
-                              >
-                                {Locale.Chat.Actions.Retry}
-                              </div>
-                            </>
-                          )}
-
-                          <div
-                            className={styles["chat-message-top-action"]}
-                            onClick={() => copyToClipboard(message.content)}
-                          >
-                            {Locale.Chat.Actions.Copy}
-                          </div>
-                        </div>
-                      )} */}
-
-                      {isUser ? (
-                        <MarkdownUser
-                          className="chat-message-md-user"
-                          fontSize="16"
-                          followParent={true}
-                          followColor="rgba(183, 189, 203, 1)"
-                          content={message.content}
-                          loading={
-                            (message.preview || message.content.length === 0) &&
-                            !isUser
-                          }
-                          renderBack={() => {
-                            if (!mdUserState) {
-                              setMDUserState(true);
-                            }
-                          }}
-                          onContextMenu={(e) => onRightClick(e, message)}
-                          onDoubleClickCapture={() => {
-                            if (!isMobileScreen) return;
-                            setUserInput(message.content);
-                          }}
-                          parentRef={scrollRef}
-                          defaultShow={i >= messages.length - 10}
-                        />
+                {!currentChat?.topic ? DEFAULT_TOPIC : currentChat?.topic}
+              </div>
+              <div className="window-header-sub-title">
+                {Locale.Chat.SubTitle(currentChat?.messages?.length)}
+              </div>
+            </div>
+            <div className="window-actions">
+              {/* 修改分类弹窗 */}
+              <GPTModal
+                title="修改会话名称"
+                // placeholder="请输入会话名称"
+                formData={formData}
+                open={modifyOpen}
+                okText="修改"
+                onCancel={() => {
+                  setModifyOpen(false);
+                }}
+                onOk={sureModify}
+              />
+              {/* 修改会话内容 */}
+              <GPTModal
+                title="修改会话内容"
+                // placeholder="请输入会话内容"
+                // labelIconName="icon-edit-folder-primary.png"
+                // inputType="textarea"
+                formData={formDataCont}
+                open={modifyContOpen}
+                okText="修改"
+                onCancel={() => {
+                  setModifyContOpen(false);
+                }}
+                onOk={sureModifyCont}
+              />
+              {/* 返回首页 */}
+              <div
+                className={
+                  "window-action-button clickable" + " " + styles.mobile
+                }
+                title={Locale.Chat.Actions.ChatList}
+                onClick={() => navigate(Path.Home)}
+              >
+                {/* <IconButton
+                    icon={<ReturnIcon />}
+                    bordered
+                    title={Locale.Chat.Actions.ChatList}
+                    onClick={() => navigate(Path.Home)}
+                  /> */}
+                {/* <IconWrap className="icon-wrap-52">
+                    <Icon name="icon-arrow-back-primary.png" />
+                  </IconWrap> */}
+                <Icon classNames={["icon-customer", "icon-arrow-back"]} />
+              </div>
+              {/* 修改会话名称 */}
+              <div
+                className="window-action-button clickable"
+                onClick={() => {
+                  setFormData([
+                    {
+                      value: currentChat?.topic,
+                      placeholder: "请输入会话名称",
+                      label: <Icon name="icon-edit-folder-primary.png" />,
+                      formItemType: "input",
+                    },
+                  ]);
+                  setModifyOpen(true);
+                }}
+              >
+                {/* <IconButton
+                    icon={<RenameIcon />}
+                    bordered
+                    onClick={renameSession}
+                  /> */}
+                {/* <IconWrap className="icon-wrap-52">
+                    <Icon name="icon-edit-folder-primary.png" />
+                  </IconWrap> */}
+                <Icon classNames={["icon-customer", "icon-edit"]} />
+              </div>
+              {/* 导出 */}
+              <div
+                className="window-action-button clickable"
+                onClick={() => {
+                  setShowExport(true);
+                }}
+              >
+                {/* <IconButton
+                    icon={<ExportIcon />}
+                    bordered
+                    title={Locale.Chat.Actions.Export}
+                    onClick={() => {
+                      setShowExport(true);
+                    }}
+                  /> */}
+                {/* <IconWrap className="icon-wrap-52">
+                    <Icon name="icon-export-primary.png" />
+                  </IconWrap> */}
+                <Icon classNames={["icon-customer", "icon-export"]} />
+              </div>
+              {/* PC端放大缩小Chat */}
+              {!isMobileScreen && (
+                <div
+                  className="window-action-button clickable"
+                  onClick={() => {
+                    config.update(
+                      (config) => (config.tightBorder = !config.tightBorder),
+                    );
+                  }}
+                >
+                  {/* <IconButton
+                      icon={config.tightBorder ? <MinIcon /> : <MaxIcon />}
+                      bordered
+                      onClick={() => {
+                        config.update(
+                          (config) => (config.tightBorder = !config.tightBorder),
+                        );
+                      }}
+                    /> */}
+                  {/* <IconWrap className="icon-wrap-52">
+                      {config.tightBorder ? (
+                        <Icon name="icon-narrow-primary.png" />
                       ) : (
-                        <Markdown
-                          className="chat-message-md"
-                          fontSize="16"
-                          followParent={true}
-                          followColor="#FFF"
-                          content={message.content}
-                          loading={
-                            (message.preview || message.content.length === 0) &&
-                            !isUser
-                          }
-                          renderBack={() => {
-                            if (!mdState) {
-                              setMDState(true);
-                            }
-                          }}
-                          onContextMenu={(e) => onRightClick(e, message)}
-                          onDoubleClickCapture={() => {
-                            if (!isMobileScreen) return;
-                            setUserInput(message.content);
-                          }}
-                          parentRef={scrollRef}
-                          defaultShow={i >= messages.length - 10}
-                        />
+                        <Icon name="icon-enlarge-primary.png" />
                       )}
-                      {showActions && mdState && !isUser ? (
-                        <span className={styles["chat-message-handle"]}>
-                          <Icon
-                            name="icon-copy-white.png"
-                            onClick={() => copyToClipboard(message.content)}
-                          />
-                        </span>
-                      ) : null}
-                      {showActions &&
-                      mdUserState &&
-                      isUser &&
-                      lastUserMsgIdx == i ? (
-                        <span
-                          className={styles["chat-message-handle"]}
-                          onClick={() => {
-                            setFormDataCont({
-                              name: message.content,
-                              index: i - 1,
-                            });
-                            setModifyContOpen(true);
-                          }}
-                        >
-                          <Icon name="icon-edit-folder-primary.png" />
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                  {showTyping && (
-                    <div className={styles["chat-message-status"]}>
-                      {Locale.Chat.Typing}
-                    </div>
-                  )}
-                  {!message.preview && (
-                    <div className={styles["chat-message-actions"]}>
-                      <div className={styles["chat-message-action-date"]}>
-                        {message.date.toLocaleString()}
-                      </div>
-                    </div>
+                    </IconWrap> */}
+                  {config.tightBorder ? (
+                    <Icon classNames={["icon-customer", "icon-narrow"]} />
+                  ) : (
+                    <Icon classNames={["icon-customer", "icon-enlarge"]} />
                   )}
                 </div>
-              </div>
-              {shouldShowClearContextDivider && <ClearContextDivider />}
-            </>
-          );
-        })}
-      </div>
+              )}
+            </div>
+          </div>
 
-      <div
-        className={
-          styles["chat-input-panel"] +
-          (isMobileScreen ? " " + styles["chat-input-panel-mobile"] : "")
-        }
-      >
-        <PromptHints prompts={promptHints} onPromptSelect={onPromptSelect} />
-
-        <ChatActions
-          showPromptModal={() => setShowPromptModal(true)}
-          scrollToBottom={scrollToBottom}
-          hitBottom={hitBottom}
-          onResend={onResend}
-          showPromptHints={() => {
-            // Click again to close
-            if (promptHints.length > 0) {
-              setPromptHints([]);
-              return;
-            }
-
-            inputRef.current?.focus();
-            setUserInput("/");
-            onSearch("");
-          }}
-        />
-        <div className={styles["chat-input-panel-inner"]}>
-          <textarea
-            ref={inputRef}
-            className={styles["chat-input"]}
-            placeholder={Locale.Chat.Input(submitKey)}
-            onInput={(e) => onInput(e.currentTarget.value)}
-            value={userInput}
-            onKeyDown={onInputKeyDown}
-            onFocus={() => setAutoScroll(true)}
-            onBlur={() => setAutoScroll(false)}
-            rows={inputRows}
-            autoFocus={autoFocus}
-          />
           <div
-            className={styles["chat-input-send"]}
-            onClick={() => doSubmit(userInput)}
-          ></div>
-          {/* <IconButton
-            icon={<SendWhiteIcon />}
-            text={Locale.Chat.Send}
-            className={styles["chat-input-send"]}
-            type="primary"
-            onClick={() => doSubmit(userInput)}
-          /> */}
-        </div>
-      </div>
+            className={styles["chat-body"]}
+            ref={scrollRef}
+            onScroll={(e) => onChatBodyScroll(e.currentTarget)}
+            onMouseDown={() => inputRef.current?.blur()}
+            onWheel={(e) => setAutoScroll(hitBottom && e.deltaY > 0)}
+            onTouchStart={() => {
+              inputRef.current?.blur();
+              setAutoScroll(false);
+            }}
+          >
+            {messages?.map((message, i) => {
+              const isUser = message.role === "user";
+              const showActions =
+                i > 0 && !(message.preview || message.content.length === 0);
+              const showTyping = message.preview || message.streaming;
 
-      {showExport && (
-        <ExportMessageModal onClose={() => setShowExport(false)} />
-      )}
-    </div>
+              const shouldShowClearContextDivider = i === clearContextIndex - 1;
+
+              return (
+                <>
+                  <div
+                    key={i}
+                    className={
+                      isUser
+                        ? styles["chat-message-user"]
+                        : styles["chat-message"]
+                    }
+                  >
+                    <div className={styles["chat-message-container"]}>
+                      <div className={chatStyle["chat-message-wrap"]}>
+                        <div className={styles["chat-message-avatar"]}>
+                          {message.role === "user" ? null : ( // <Avatar avatar={config.avatar} />
+                            <MaskAvatar mask={currentChat.mask} />
+                          )}
+                        </div>
+                        {mdState}
+                        <div
+                          className={
+                            styles["chat-message-item"] +
+                            (isUser &&
+                            mdUserState &&
+                            showActions &&
+                            lastUserMsgIdx == i
+                              ? " " + styles["user-edit"]
+                              : "") +
+                            (!isUser && mdState && showActions
+                              ? " " + styles["system-copy"]
+                              : "")
+                          }
+                        >
+                          {/* {showActions && (
+                              <div className={styles["chat-message-top-actions"]}>
+                                {message.streaming ? (
+                                  <div
+                                    className={styles["chat-message-top-action"]}
+                                    onClick={() => onUserStop(message.id ?? i)}
+                                  >
+                                    {Locale.Chat.Actions.Stop}
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div
+                                      className={styles["chat-message-top-action"]}
+                                      onClick={() => onDelete(message.id ?? i)}
+                                    >
+                                      {Locale.Chat.Actions.Delete}
+                                    </div>
+                                    <div
+                                      className={styles["chat-message-top-action"]}
+                                      onClick={() => onResend(message.id ?? i)}
+                                    >
+                                      {Locale.Chat.Actions.Retry}
+                                    </div>
+                                  </>
+                                )}
+
+                                <div
+                                  className={styles["chat-message-top-action"]}
+                                  onClick={() => copyToClipboard(message.content)}
+                                >
+                                  {Locale.Chat.Actions.Copy}
+                                </div>
+                              </div>
+                            )} */}
+
+                          {isUser ? (
+                            <MarkdownUser
+                              className="chat-message-md-user"
+                              fontSize="16"
+                              followParent={true}
+                              followColor="rgba(183, 189, 203, 1)"
+                              content={message.content}
+                              loading={
+                                (message.preview ||
+                                  message.content.length === 0) &&
+                                !isUser
+                              }
+                              renderBack={() => {
+                                if (!mdUserState) {
+                                  setMDUserState(true);
+                                }
+                              }}
+                              onContextMenu={(e) => onRightClick(e, message)}
+                              onDoubleClickCapture={() => {
+                                if (!isMobileScreen) return;
+                                setUserInput(message.content);
+                              }}
+                              parentRef={scrollRef}
+                              defaultShow={i >= messages.length - 10}
+                            />
+                          ) : (
+                            <Markdown
+                              className="chat-message-md"
+                              fontSize="16"
+                              followParent={true}
+                              followColor="#FFF"
+                              content={message.content}
+                              loading={
+                                (message.preview ||
+                                  message.content.length === 0) &&
+                                !isUser
+                              }
+                              renderBack={() => {
+                                if (!mdState) {
+                                  setMDState(true);
+                                }
+                              }}
+                              onContextMenu={(e) => onRightClick(e, message)}
+                              onDoubleClickCapture={() => {
+                                if (!isMobileScreen) return;
+                                setUserInput(message.content);
+                              }}
+                              parentRef={scrollRef}
+                              defaultShow={i >= messages.length - 10}
+                            />
+                          )}
+                          {showActions && mdState && !isUser ? (
+                            <span className={styles["chat-message-handle"]}>
+                              <Icon
+                                name="icon-copy-white.png"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    message.content,
+                                    "对话复制成功！",
+                                  )
+                                }
+                              />
+                            </span>
+                          ) : null}
+                          {showActions &&
+                          mdUserState &&
+                          isUser &&
+                          lastUserMsgIdx == i ? (
+                            <span
+                              className={styles["chat-message-handle"]}
+                              onClick={() => {
+                                setFormDataCont([
+                                  {
+                                    value: message.content,
+                                    index: i - 1,
+                                    placeholder: "请输入会话内容",
+                                    label: (
+                                      <Icon name="icon-edit-folder-primary.png" />
+                                    ),
+                                    formItemType: "textarea",
+                                  },
+                                ]);
+                                setModifyContOpen(true);
+                              }}
+                            >
+                              <Icon name="icon-edit-folder-primary.png" />
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {showTyping && (
+                        <div className={styles["chat-message-status"]}>
+                          {Locale.Chat.Typing}
+                        </div>
+                      )}
+                      {!message.preview && (
+                        <div className={styles["chat-message-actions"]}>
+                          <div className={styles["chat-message-action-date"]}>
+                            {message.date.toLocaleString()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {shouldShowClearContextDivider && <ClearContextDivider />}
+                </>
+              );
+            })}
+          </div>
+
+          <div
+            className={
+              styles["chat-input-panel"] +
+              (isMobileScreen ? " " + styles["chat-input-panel-mobile"] : "")
+            }
+          >
+            <PromptHints
+              prompts={promptHints}
+              onPromptSelect={onPromptSelect}
+            />
+
+            <ChatActions
+              showPromptModal={() => setShowPromptModal(true)}
+              scrollToBottom={scrollToBottom}
+              hitBottom={hitBottom}
+              onResend={onResend}
+              showPromptHints={() => {
+                // Click again to close
+                if (promptHints.length > 0) {
+                  setPromptHints([]);
+                  return;
+                }
+
+                inputRef.current?.focus();
+                setUserInput("/");
+                onSearch("");
+              }}
+            />
+            <div className={styles["chat-input-panel-inner"]}>
+              <textarea
+                ref={inputRef}
+                className={styles["chat-input"]}
+                placeholder={Locale.Chat.Input(submitKey)}
+                onInput={(e) => onInput(e.currentTarget.value)}
+                value={userInput}
+                onKeyDown={onInputKeyDown}
+                onFocus={() => setAutoScroll(true)}
+                onBlur={() => setAutoScroll(false)}
+                rows={inputRows}
+                autoFocus={autoFocus}
+              />
+              <div
+                className={
+                  styles["chat-input-send"] +
+                  (userInput.trim() ? "" : " " + styles["send-disabled"])
+                }
+                onClick={() => doSubmit(userInput)}
+              ></div>
+              {/* <IconButton
+                  icon={<SendWhiteIcon />}
+                  text={Locale.Chat.Send}
+                  className={styles["chat-input-send"]}
+                  type="primary"
+                  onClick={() => doSubmit(userInput)}
+                /> */}
+            </div>
+          </div>
+
+          {showExport && (
+            <ExportMessageModal onClose={() => setShowExport(false)} />
+          )}
+        </div>
+      ) : null}
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import styles from "./home.module.scss";
 
@@ -20,6 +20,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
 import { showToast } from "./ui-lib";
+import { GPTModal } from "./gpt-modal";
 
 const ChatList = dynamic(async () => (await import("./chat-list")).ChatList, {
   loading: () => null,
@@ -94,6 +95,10 @@ function useDragSideBar() {
 }
 
 export function SideBar(props: { className?: string }) {
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [formData, setFormData] = useState<Array<any>>([]);
+  const [modalOpenClear, setModalOpenClear] = useState<boolean>(false);
+  const [formDataClear, setFormDataClear] = useState<Array<any>>([]);
   const chatStore = useChatFolderStore();
 
   // drag side bar
@@ -103,6 +108,17 @@ export function SideBar(props: { className?: string }) {
   const isMobileScreen = useMobileScreen();
 
   // useHotKey();
+  // 确认新增分类
+  const sureAddFolder = (res: any) => {
+    chatStore.newFolder({ name: res[0].value });
+    setModalOpen(false);
+  };
+
+  // 清空会话
+  const sureClear = (res: any) => {
+    chatStore.clearFolder();
+    setModalOpenClear(false);
+  };
 
   return (
     <div
@@ -110,6 +126,27 @@ export function SideBar(props: { className?: string }) {
         shouldNarrow && styles["narrow-sidebar"]
       }`}
     >
+      {/* 新增分类弹窗 */}
+      <GPTModal
+        title="新增分类"
+        formData={formData}
+        open={modalOpen}
+        onCancel={() => {
+          setModalOpen(false);
+        }}
+        onOk={sureAddFolder}
+      />
+      {/* 清空会话 */}
+      <GPTModal
+        title="清空会话"
+        titleIcon="icon-status-error.png"
+        formData={formDataClear}
+        open={modalOpenClear}
+        onCancel={() => {
+          setModalOpenClear(false);
+        }}
+        onOk={sureClear}
+      />
       <div className={styles["sidebar-header"]}>
         <div className={styles["sidebar-header-wrap"]}>
           <div className={styles["sidebar-title"]}>
@@ -132,12 +169,20 @@ export function SideBar(props: { className?: string }) {
                 <span
                   className={styles["tools-item"]}
                   onClick={() => {
-                    if (confirm(Locale.Home.DeleteChat)) {
-                      chatStore.deleteChat(
-                        chatStore.currentIndex[0],
-                        chatStore.currentIndex[1],
-                      );
-                    }
+                    // if (confirm(Locale.Home.DeleteChat)) {
+                    //   chatStore.deleteChat(
+                    //     chatStore.currentIndex[0],
+                    //     chatStore.currentIndex[1],
+                    //   );
+                    // }
+                    setFormData([
+                      {
+                        value: "是否清空当前所有会话？清空后将不可恢复！",
+                        label: <Icon name="icon-delete-primary.png" />,
+                        formItemType: "text",
+                      },
+                    ]);
+                    setModalOpenClear(true);
                   }}
                 >
                   {/* <IconDelWhite /> */}
@@ -147,7 +192,16 @@ export function SideBar(props: { className?: string }) {
                 <span
                   className={styles["tools-item"]}
                   onClick={() => {
-                    chatStore.newFolder({ name: "新分类" });
+                    // chatStore.newFolder({ name: "新分类" });
+                    setFormDataClear([
+                      {
+                        // value: folder[folderIdx].name,
+                        placeholder: "请输入新建分类目录名称",
+                        label: <Icon name="icon-folder-primary.png" />,
+                        formItemType: "input",
+                      },
+                    ]);
+                    setModalOpen(true);
                   }}
                 >
                   {/* <IconAddWhite /> */}
@@ -162,7 +216,22 @@ export function SideBar(props: { className?: string }) {
               //   }}>
               //     <Icon name="icon-add-primary.png" />
               // </span>
-              <Icon classNames={["icon-customer icon-add"]} />
+              <span
+                onClick={() => {
+                  // chatStore.newFolder({ name: "新分类" });
+                  setFormData([
+                    {
+                      // value: folder[folderIdx].name,
+                      placeholder: "请输入新建分类目录名称",
+                      label: <Icon name="icon-folder-primary.png" />,
+                      formItemType: "input",
+                    },
+                  ]);
+                  setModalOpen(true);
+                }}
+              >
+                <Icon classNames={["icon-customer icon-add"]} />
+              </span>
             )}
           </div>
         </div>
@@ -239,12 +308,20 @@ export function SideBar(props: { className?: string }) {
             <span
               className={styles["tools-item"]}
               onClick={() => {
-                if (confirm(Locale.Home.DeleteChat)) {
-                  chatStore.deleteChat(
-                    chatStore.currentIndex[0],
-                    chatStore.currentIndex[1],
-                  );
-                }
+                // if (confirm(Locale.Home.DeleteChat)) {
+                //   chatStore.deleteChat(
+                //     chatStore.currentIndex[0],
+                //     chatStore.currentIndex[1],
+                //   );
+                // }
+                setFormDataClear([
+                  {
+                    value: "是否清空当前所有会话？清空后将不可恢复！",
+                    label: <Icon name="icon-delete-primary.png" />,
+                    formItemType: "text",
+                  },
+                ]);
+                setModalOpenClear(true);
               }}
             >
               {/* <IconDelWhite /> */}

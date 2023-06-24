@@ -714,6 +714,10 @@
   top: 50%;
   margin-top: -24px;
   border-radius: 100%;
+  &.send-disabled {
+    background: url('../icons/png/btn-send-disabled.png') 0 0 no-repeat;
+    background-size: 100%;
+  }
 }
 
 @media only screen and (max-width: 600px) {

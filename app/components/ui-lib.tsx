@@ -8,6 +8,7 @@ import DownIcon from "../icons/down.svg";
 import { createRoot } from "react-dom/client";
 import React, { HTMLProps, useEffect, useState } from "react";
 import { IconButton } from "./button";
+import { useMobileScreen as MobileScreen } from "../utils";
 
 export function Popover(props: {
   children: JSX.Element;
@@ -86,7 +87,7 @@ export function Loading() {
 }
 
 interface ModalProps {
-  title: string;
+  title: React.ReactNode;
   children?: JSX.Element | JSX.Element[];
   actions?: JSX.Element[];
   onClose?: () => void;
@@ -153,7 +154,29 @@ export function showModal(props: ModalProps) {
   root.render(<Modal {...props} onClose={closeModal}></Modal>);
 }
 
+export function showModalGPT(props: ModalProps) {
+  const div = document.createElement("div");
+  div.className = "modal-mask";
+  document.body.appendChild(div);
+
+  const root = createRoot(div);
+  const closeModal = () => {
+    props.onClose?.();
+    root.unmount();
+    div.remove();
+  };
+
+  div.onclick = (e) => {
+    if (e.target === div) {
+      closeModal();
+    }
+  };
+
+  root.render(<Modal {...props} onClose={closeModal}></Modal>);
+}
+
 export type ToastProps = {
+  type?: string;
   content: string;
   action?: {
     text: string;
@@ -164,9 +187,13 @@ export type ToastProps = {
 
 export function Toast(props: ToastProps) {
   return (
-    <div className={styles["toast-container"]}>
+    <div
+      className={
+        styles["toast-container"] + (props.type ? " " + styles[props.type] : "")
+      }
+    >
       <div className={styles["toast-content"]}>
-        <span>{props.content}</span>
+        <span className={styles["toast-content-text"]}>{props.content}</span>
         {props.action && (
           <button
             onClick={() => {
@@ -187,6 +214,7 @@ export function showToast(
   content: string,
   action?: ToastProps["action"],
   delay = 3000,
+  type?: string,
 ) {
   const div = document.createElement("div");
   div.className = styles.show;
@@ -206,7 +234,72 @@ export function showToast(
     close();
   }, delay);
 
-  root.render(<Toast content={content} action={action} onClose={close} />);
+  root.render(
+    <Toast content={content} action={action} onClose={close} type={type} />,
+  );
+}
+
+export function showToastGPT(options: any) {
+  let content = options.content;
+  let action = options.action;
+  let delay = options.delay ?? 3000;
+  let type = options.type;
+  const div = document.createElement("div");
+  div.className = styles.show;
+  const isMobileScreen = MobileScreen();
+  if (isMobileScreen) {
+    div.classList.add(styles.toastmobile);
+  }
+  document.body.appendChild(div);
+
+  const root = createRoot(div);
+  const close = () => {
+    div.classList.add(styles.hide);
+
+    setTimeout(() => {
+      root.unmount();
+      div.remove();
+    }, 300);
+  };
+
+  setTimeout(() => {
+    close();
+  }, delay);
+
+  root.render(
+    <Toast content={content} action={action} onClose={close} type={type} />,
+  );
+}
+export function toast(options: any) {
+  showToastGPT({
+    content: options.content,
+    action: options.action,
+    delay: options.delay,
+  });
+}
+export function toastSuccess(options: any) {
+  showToastGPT({
+    content: options.content,
+    action: options.action,
+    delay: options.delay,
+    type: "success",
+  });
+}
+export function toastFail(options: any) {
+  showToastGPT({
+    content: options.content,
+    action: options.action,
+    delay: options.delay,
+    type: "fail",
+  });
+}
+export function toastWran(options: any) {
+  showToastGPT({
+    content: options.content,
+    action: options.action,
+    delay: options.delay,
+    type: "wran",
+  });
 }
 
 export type InputProps = React.HTMLProps<HTMLTextAreaElement> & {

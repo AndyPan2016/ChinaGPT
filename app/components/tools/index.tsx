@@ -46,7 +46,6 @@ export const Icon = ({
     let a = classNames.map((it: any) => {
       return " " + styles[it];
     });
-    console.info(a);
   }
 
   return img ? (

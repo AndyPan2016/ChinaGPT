@@ -11,7 +11,7 @@ import { persist } from "zustand/middleware";
 import { trimTopic } from "../utils";
 
 import Locale from "../locales";
-import { showToast } from "../components/ui-lib";
+import { showToast, showToastGPT } from "../components/ui-lib";
 import { ModelType } from "./config";
 import { createEmptyMask, Mask } from "./mask";
 import { StoreKey } from "../constant";
@@ -215,16 +215,17 @@ export const useChatStore = create<ChatStore>()(
           sessions,
         }));
 
-        showToast(
-          Locale.Home.DeleteToast,
-          {
+        showToastGPT({
+          content: Locale.Home.DeleteToast,
+          action: {
             text: Locale.Home.Revert,
             onClick() {
               set(() => restoreState);
             },
           },
-          5000,
-        );
+          delay: 5000,
+          type: "success",
+        });
       },
 
       currentSession() {
@@ -724,16 +725,17 @@ export const useChatFolderStore = create<any>()(
         get().setNextSelect(folder);
         set({ folder });
 
-        showToast(
-          Locale.Home.DeleteToast,
-          {
+        showToastGPT({
+          content: Locale.Home.DeleteToast,
+          action: {
             text: Locale.Home.Revert,
             onClick() {
               set(() => restoreState);
             },
           },
-          5000,
-        );
+          delay: 5000,
+          type: "success",
+        });
       },
       // 选中chat项
       selectChat(folderIdx: number, chatIdx: number) {
@@ -1186,16 +1188,12 @@ export const useChatFolderStore = create<any>()(
           }
           return theIndex;
         };
-        console.info(currentFolder);
         if (currentFolder) {
-          console.info(1);
           // 如果当前目录存在
           if (currentFolderChat && currentFolderChat.length) {
-            console.info(11);
             // 当前目录下存在chat，选中第一个
             newCurrentIndex = [currentIndex[0], 0];
           } else {
-            console.info(12);
             // 当前目录已不存在chat项了(空目录)
             if (currentFolder.type == "chat") {
               // 如果为chat类型，删除该目录
@@ -1205,10 +1203,8 @@ export const useChatFolderStore = create<any>()(
             newCurrentIndex = findNextSelect();
           }
         } else {
-          console.info(2);
           // 当前目录已不存在，选中folder下面的第一个chat
           newCurrentIndex = findNextSelect();
-          console.info(newCurrentIndex);
         }
         set({ currentIndex: newCurrentIndex });
       },
@@ -1247,8 +1243,20 @@ export const useChatFolderStore = create<any>()(
         // }));
         let staticFolderIndex = get().getStaticFolderIndex();
         let folder = get().folder;
-        let staticFolderChat = folder[staticFolderIndex].chat;
-        folder[staticFolderIndex].chat = [chat, ...staticFolderChat];
+        if (staticFolderIndex === -1) {
+          staticFolderIndex = 0;
+          folder = [
+            createEmptyFolder({
+              name: "",
+              type: "static",
+              id: "folder0",
+              folderId: "folder-0",
+            }),
+          ];
+        } else {
+          let staticFolderChat = folder[staticFolderIndex].chat;
+          folder[staticFolderIndex].chat = [chat, ...staticFolderChat];
+        }
         set({ currentIndex: [0, 0], folder });
       },
       // 新建folder
@@ -1308,6 +1316,9 @@ export const useChatFolderStore = create<any>()(
         set({
           folder: [],
           folderCount: 0,
+          currentIndex: [0, 0],
+          globalChatId: 1,
+          globalFolderId: 1,
         });
       },
       // 删除Folder
@@ -1321,16 +1332,17 @@ export const useChatFolderStore = create<any>()(
         get().setNextSelect(folder);
         set({ folder });
 
-        showToast(
-          Locale.Home.DeleteToastFolder,
-          {
+        showToastGPT({
+          content: Locale.Home.DeleteToastFolder,
+          action: {
             text: Locale.Home.Revert,
             onClick() {
               set(() => restoreState);
             },
           },
-          5000,
-        );
+          delay: 5000,
+          type: "success",
+        });
       },
       // 清除所有缓存
       clearAllData() {
