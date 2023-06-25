@@ -21,6 +21,12 @@ export interface IGPTModalFormData {
   dependencies?: any;
   // 字段名
   fieldName?: string;
+  // form.item后缀
+  suffix?: React.ReactNode;
+  // 是否需要发送验证码按钮
+  sendCode?: boolean;
+  // 发送验证码按钮关联的其他item项，用于判断按钮是否可用
+  association?: any;
 }
 
 // 弹窗类型
@@ -51,9 +57,12 @@ export interface IGPTModal {
   // 取消按钮文本
   cancelText?: string;
   // 确定事件
-  onOk?: (data: any) => void;
+  onOk?: (data?: any) => void;
   // 取消事件
   onCancel?: () => void;
   // 关闭事件
   onClose?: () => void;
+  children?: React.ReactNode | any;
+  // 是否显示取消按钮
+  showCancel?: boolean;
 }

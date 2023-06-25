@@ -16,3 +16,24 @@
     height: 22px;
     align-items: center;
 }
+.send-code {
+    display: flex;
+    margin-left: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    height: 32px;
+    width: 110px;
+    background: rgba(112, 124, 151, 1);
+    font-size: 14px;
+    color: #FFF;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    float: right;
+    margin-top: -60px;
+    &.disabled {
+      background: rgba(221, 221, 221, 1);
+      box-shadow: 10px 10px 50px 0px rgba(42,139,242,0.1);
+      cursor: not-allowed;
+    }
+}

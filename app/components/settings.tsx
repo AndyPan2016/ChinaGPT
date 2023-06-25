@@ -23,7 +23,7 @@ import {
 import { ModelConfigList } from "./model-config";
 
 import { IconButton } from "./button";
-import { Button, Form } from "antd";
+import { Button, Form, Input as InputAT } from "antd";
 import {
   SubmitKey,
   useChatStore,
@@ -39,7 +39,7 @@ import Locale, {
   changeLang,
   getLang,
 } from "../locales";
-import { copyToClipboard, useMobileScreen } from "../utils";
+import { copyToClipboard, countDown, useMobileScreen } from "../utils";
 import { Icon } from "./tools";
 import Link from "next/link";
 import { Path, UPDATE_URL } from "../constant";
@@ -219,6 +219,7 @@ export function Settings() {
   const navigate = useNavigate();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const config = useAppConfig();
+  const theme = config.theme;
   const updateConfig = config.update;
   const resetConfig = config.reset;
   const chatStore = useChatStore();
@@ -268,25 +269,6 @@ export function Settings() {
   const builtinCount = SearchService.count.builtin;
   const customCount = promptStore.getUserPrompts().length ?? 0;
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
-  let defaultModifyLoginPwd = {
-    open: false,
-    loading: false,
-    formData: [
-      {
-        label: "原密码",
-        placeholder: "请输入原密码",
-        value: "",
-        formItemType: "password",
-      },
-    ],
-    cancelText: "取消",
-    okText: "下一步",
-  };
-  const [modifyLoginPwd, setModifyLoginPwd] = useState<any>(
-    JSON.parse(JSON.stringify(defaultModifyLoginPwd)),
-  );
-  const [modifyPwdStep, setModifyPwdStep] = useState<number>(0);
-  const [modifyPwdData, setModifyPwdData] = useState<Array<any>>([]);
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
@@ -309,153 +291,300 @@ export function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 修改密码关闭
-  const closeModifyLoginPwd = () => {
-    setModifyLoginPwd({
-      ...modifyLoginPwd,
-      ...{ open: false },
-    });
+  const [modifyPasswordFirst, setModifyPasswordFirst] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "原密码",
+        placeholder: "请输入原密码",
+        value: "",
+        formItemType: "password",
+      },
+    ],
+    cancelText: "取消",
+    okText: "下一步",
+  });
+  const [modifyPasswordSecond, setModifyPasswordSecond] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "新密码",
+        placeholder: "请输入新登录密码",
+        value: "",
+        formItemType: "password",
+        rules: [
+          (forms: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(
+                  /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
+                ).test(value);
+                if (status) {
+                  status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
+                  if (status) {
+                    // forms.validateFields([1, 'value'])
+                    return Promise.resolve();
+                  } else {
+                    return Promise.reject("不能包含特殊字符或中文");
+                  }
+                } else {
+                  return Promise.reject("密码格式不正确");
+                }
+              }
+              return Promise.reject("请输入新登录密码");
+            },
+          }),
+        ],
+      },
+      {
+        label: "确认密码",
+        placeholder: "请再次输入新登录密码",
+        value: "",
+        formItemType: "password",
+        // dependencies: ['0', 'value'],
+        rules: [
+          ({ getFieldValue }: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(
+                  /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
+                ).test(value);
+                if (status) {
+                  status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
+                  if (status) {
+                    let value0 = getFieldValue([0, "value"]);
+                    // let value0 = getFieldValue('password')
+                    if (value0 !== value) {
+                      return Promise.reject("两次密码输入不一致");
+                    }
+                    return Promise.resolve();
+                  } else {
+                    return Promise.reject("不能包含特殊字符或中文");
+                  }
+                } else {
+                  return Promise.reject("密码格式不正确");
+                }
+              }
+              return Promise.reject("请再次输入新登录密码");
+            },
+          }),
+        ],
+      },
+      {
+        value: (
+          <span className={styles["value-text"]}>
+            登录密码长度为8~14个字符，字母/数字2种，不允许有空格、中文、特殊字符（字母不区分大小写）
+          </span>
+        ),
+        formItemType: "text",
+      },
+    ],
+    cancelText: "上一步",
+    okText: "修改登录密码",
+  });
+  // 绑定修改手机号 - 第一步
+  const closeModifyPasswordFirst = () => {
+    setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ open: false } });
   };
-
-  // 修改密码取消
-  const cancelModifyLoginPwd = () => {
-    if (modifyPwdStep === 0) {
-      // 第一步的取消，关闭
-      closeModifyLoginPwd();
-    } else if (modifyPwdStep === 1) {
-      // 第二步的上一步，显示第一步
-      setModifyPwdStep(0);
-      setModifyLoginPwd({
-        ...modifyPwdData[0],
-        ...{ open: true },
+  const cancelModifyPasswordFirst = () => {
+    setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ open: false } });
+  };
+  const sureModifyPasswordFirst = () => {
+    setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ loading: true } });
+    setTimeout(() => {
+      setModifyPasswordFirst({
+        ...modifyPasswordFirst,
+        ...{ open: false, loading: false },
       });
-    }
+      setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: true } });
+    }, 1000);
+  };
+  // 绑定修改手机号 - 第二步
+  const closeModifyPasswordSecond = () => {
+    setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: false } });
+  };
+  const cancelModifyPasswordSecond = () => {
+    setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: false } });
+    setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ open: true } });
+  };
+  const sureModifyPasswordSecond = () => {
+    setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: false } });
   };
 
-  // 修改密码确定
-  const sureModifyLoginPwd = (res: any) => {
-    setModifyLoginPwd({
-      ...modifyLoginPwd,
-      ...{ loading: true },
-      // ...{formData: res, open: false}
-    });
-    let tempModifyLoginPwd = {
-      ...modifyLoginPwd,
-      ...{ formData: res },
-    };
-    modifyPwdData[modifyPwdStep] = tempModifyLoginPwd;
-    setModifyPwdData(modifyPwdData);
-    if (modifyPwdStep === 0) {
-      // 第一步的下一步
-      setTimeout(() => {
-        setModifyPwdStep(1);
-        setModifyLoginPwd(
-          modifyPwdData[1] || {
-            open: true,
-            loading: false,
-            formData: [
-              {
-                label: "新密码",
-                placeholder: "请输入新登录密码",
-                value: "",
-                formItemType: "password",
-                rules: [
-                  (forms: any) => ({
-                    validator: (_: any, value: any) => {
-                      if (value) {
-                        let status = new RegExp(
-                          /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
-                        ).test(value);
-                        if (status) {
-                          status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
-                          if (status) {
-                            // forms.validateFields([1, 'value'])
-                            return Promise.resolve();
-                          } else {
-                            return Promise.reject("不能包含特殊字符或中文");
-                          }
-                        } else {
-                          return Promise.reject("密码格式不正确");
-                        }
-                      }
-                      return Promise.reject("请输入新登录密码");
-                    },
-                  }),
-                ],
-              },
-              {
-                label: "确认密码",
-                placeholder: "请再次输入新登录密码",
-                value: "",
-                formItemType: "password",
-                // dependencies: ['0', 'value'],
-                rules: [
-                  ({ getFieldValue }: any) => ({
-                    validator: (_: any, value: any) => {
-                      if (value) {
-                        let status = new RegExp(
-                          /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,14}$/,
-                        ).test(value);
-                        if (status) {
-                          status = new RegExp(/^[a-zA-Z0-9_]{0,}$/).test(value);
-                          if (status) {
-                            let value0 = getFieldValue([0, "value"]);
-                            if (value0 !== value) {
-                              return Promise.reject("两次密码输入不一致");
-                            }
-                            return Promise.resolve();
-                          } else {
-                            return Promise.reject("不能包含特殊字符或中文");
-                          }
-                        } else {
-                          return Promise.reject("密码格式不正确");
-                        }
-                      }
-                      return Promise.reject("请再次输入新登录密码");
-                    },
-                  }),
-                ],
-              },
-              {
-                value: (
-                  <span className={styles["value-text"]}>
-                    登录密码长度为8~14个字符，字母/数字2种，不允许有空格、中文、特殊字符（字母不区分大小写）
-                  </span>
-                ),
-                formItemType: "text",
-              },
-            ],
-            cancelText: "上一步",
-            okText: "修改登录密码",
-          },
-        );
-      }, 1000);
-    } else if (modifyPwdStep === 1) {
-      // 修改登录密码
-      setTimeout(() => {
-        console.info(res);
-        setModifyPwdStep(0);
-        setModifyPwdData([]);
-        setModifyLoginPwd(JSON.parse(JSON.stringify(defaultModifyLoginPwd)));
-        toastSuccess({ content: "修改登录密码成功！" });
-      }, 1000);
-    }
+  const [bindPhoneFirst, setBindPhoneFirst] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "手机号",
+        value: "133****3333",
+        // fieldName: 'phone',
+        formItemType: "text",
+      },
+      {
+        label: "验证码",
+        value: "",
+        // fieldName: 'phoneCode',
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+      },
+    ],
+    cancelText: "取消",
+    okText: "下一步",
+  });
+  const [bindPhoneSecond, setBindPhoneSecond] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "新手机",
+        value: "",
+        // fieldName: 'phone',
+        formItemType: "input",
+        placeholder: "请输入新手机号",
+        rules: [
+          (forms: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(/^1\d{10}$/).test(value);
+                if (status) {
+                  return Promise.resolve();
+                }
+                return Promise.reject("手机格式不正确");
+              }
+              return Promise.reject("请输入新手机号");
+            },
+          }),
+        ],
+      },
+      {
+        label: "验证码",
+        value: "",
+        // fieldName: 'phoneCode',
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+        association: 0,
+      },
+    ],
+    cancelText: "上一步",
+    okText: "确认",
+  });
+  // 绑定修改手机号 - 第一步
+  const closeBindPhoneFirst = () => {
+    setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
+  };
+  const cancelBindPhoneFirst = () => {
+    setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
+  };
+  const sureBindPhoneFirst = () => {
+    setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
+    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: true } });
+  };
+  // 绑定修改手机号 - 第二步
+  const closeBindPhoneSecond = () => {
+    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: false } });
+  };
+  const cancelBindPhoneSecond = () => {
+    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: false } });
+    setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: true } });
+  };
+  const sureBindPhoneSecond = () => {
+    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: false } });
+  };
+
+  const [bindEMailFirst, setBindEMailFirst] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "邮箱",
+        value: "test@qq.com",
+        formItemType: "text",
+      },
+      {
+        label: "验证码",
+        value: "",
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+      },
+    ],
+    cancelText: "取消",
+    okText: "下一步",
+  });
+  const [bindEMailSecond, setBindEMailSecond] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "新邮箱",
+        value: "",
+        formItemType: "input",
+        placeholder: "请输入新邮箱",
+        rules: [
+          (forms: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(
+                  /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/,
+                ).test(value);
+                if (status) {
+                  return Promise.resolve();
+                }
+                return Promise.reject("邮箱格式不正确");
+              }
+              return Promise.reject("请输入新邮箱");
+            },
+          }),
+        ],
+      },
+      {
+        label: "验证码",
+        value: "",
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+        association: 0,
+      },
+    ],
+    cancelText: "上一步",
+    okText: "确认",
+  });
+  // 绑定修改邮箱 - 第一步
+  const closeBindEMailFirst = () => {
+    setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
+  };
+  const cancelBindEMailFirst = () => {
+    setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
+  };
+  const sureBindEMailFirst = () => {
+    setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
+    setBindEMailSecond({ ...bindEMailSecond, ...{ open: true } });
+  };
+  // 绑定修改邮箱 - 第二步
+  const closeBindEMailSecond = () => {
+    setBindEMailSecond({ ...bindEMailSecond, ...{ open: false } });
+  };
+  const cancelBindEMailSecond = () => {
+    setBindEMailSecond({ ...bindEMailSecond, ...{ open: false } });
+    setBindEMailFirst({ ...bindEMailFirst, ...{ open: true } });
+  };
+  const sureBindEMailSecond = () => {
+    setBindEMailSecond({ ...bindEMailSecond, ...{ open: false } });
   };
 
   return (
     <ErrorBoundary>
       <div className="window-header">
         <div className="window-header-title">
-          <div
-            className={
-              "window-header-main-title " + styles["header-main-title"]
-            }
-          >
+          <div className="window-header-main-title header-main-title">
             {Locale.Settings.Title}
           </div>
-          <div
-            className={"window-header-sub-title " + styles["header-sub-title"]}
-          >
+          <div className="window-header-sub-title header-sub-title">
             {Locale.Settings.SubTitle}
           </div>
         </div>
@@ -517,59 +646,192 @@ export function Settings() {
         </div>
       </div>
       <div className={styles["settings"]}>
-        {/* 修改登录密码 */}
+        {/* 修改登录密码 - 第一步 */}
         <GPTModal
           title="修改登录密码"
           className="text-form"
+          open={modifyPasswordFirst.open}
+          formData={modifyPasswordFirst.formData}
           btnSwitch={true}
           hasFeedback
-          loading={modifyLoginPwd.loading}
-          formData={modifyLoginPwd.formData}
-          open={modifyLoginPwd.open}
-          okText={modifyLoginPwd.okText}
-          cancelText={modifyLoginPwd.cancelText}
-          onClose={closeModifyLoginPwd}
-          onCancel={cancelModifyLoginPwd}
-          onOk={sureModifyLoginPwd}
-        />
+          loading={modifyPasswordFirst.loading}
+          okText={modifyPasswordFirst.okText}
+          cancelText={modifyPasswordFirst.cancelText}
+          onClose={closeModifyPasswordFirst}
+          onCancel={cancelModifyPasswordFirst}
+          onOk={sureModifyPasswordFirst}
+        ></GPTModal>
+        {/* 修改登录密码 - 第二步 */}
+        <GPTModal
+          title="修改登录密码"
+          className="text-form"
+          open={modifyPasswordSecond.open}
+          formData={modifyPasswordSecond.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={modifyPasswordSecond.loading}
+          okText={modifyPasswordSecond.okText}
+          cancelText={modifyPasswordSecond.cancelText}
+          onClose={closeModifyPasswordSecond}
+          onCancel={cancelModifyPasswordSecond}
+          onOk={sureModifyPasswordSecond}
+        ></GPTModal>
+        {/* 修改绑定手机号 - 第一步 */}
+        <GPTModal
+          title="修改绑定手机号"
+          className="text-form"
+          open={bindPhoneFirst.open}
+          formData={bindPhoneFirst.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindPhoneFirst.loading}
+          okText={bindPhoneFirst.okText}
+          cancelText={bindPhoneFirst.cancelText}
+          onClose={closeBindPhoneFirst}
+          onCancel={cancelBindPhoneFirst}
+          onOk={sureBindPhoneFirst}
+        ></GPTModal>
+        {/* 修改绑定手机号 - 第二步 */}
+        <GPTModal
+          title="修改绑定手机号"
+          className="text-form"
+          open={bindPhoneSecond.open}
+          formData={bindPhoneSecond.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindPhoneSecond.loading}
+          okText={bindPhoneSecond.okText}
+          cancelText={bindPhoneSecond.cancelText}
+          onClose={closeBindPhoneSecond}
+          onCancel={cancelBindPhoneSecond}
+          onOk={sureBindPhoneSecond}
+        ></GPTModal>
+        {/* 修改绑定邮箱 - 第一步 */}
+        <GPTModal
+          title="修改绑定邮箱"
+          className="text-form"
+          open={bindEMailFirst.open}
+          formData={bindEMailFirst.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindEMailFirst.loading}
+          okText={bindEMailFirst.okText}
+          cancelText={bindEMailFirst.cancelText}
+          onClose={closeBindEMailFirst}
+          onCancel={cancelBindEMailFirst}
+          onOk={sureBindEMailFirst}
+        ></GPTModal>
+        {/* 修改绑定邮箱 - 第二步 */}
+        <GPTModal
+          title="修改绑定邮箱"
+          className="text-form"
+          open={bindEMailSecond.open}
+          formData={bindEMailSecond.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindEMailSecond.loading}
+          okText={bindEMailSecond.okText}
+          cancelText={bindEMailSecond.cancelText}
+          onClose={closeBindEMailSecond}
+          onCancel={cancelBindEMailSecond}
+          onOk={sureBindEMailSecond}
+        ></GPTModal>
         <List>
           <ListItem
             title="会员昵称"
-            icon={<Icon name="icon-nickname-primary.png" />}
+            icon={
+              <Icon
+                name={
+                  theme === Theme.Dark
+                    ? "icon-nickname-white.png"
+                    : "icon-nickname-primary.png"
+                }
+              />
+            }
           >
             FantasyBoy
           </ListItem>
           <ListItem
             title="绑定手机号"
-            icon={<Icon name="icon-phone-primary.png" />}
+            icon={
+              <Icon
+                name={
+                  theme === Theme.Dark
+                    ? "icon-phone-white.png"
+                    : "icon-phone-primary.png"
+                }
+              />
+            }
           >
             <span className={styles["setting-list-item-text"]}>
               159****9999
-              <span className={styles["item-text-icon"]}>
-                <Icon name="icon-edit-folder-primary.png" />
+              <span
+                className={styles["item-text-icon"]}
+                onClick={() => {
+                  setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: true } });
+                }}
+              >
+                <Icon
+                  name={
+                    theme === Theme.Dark
+                      ? "icon-edit-folder-white.png"
+                      : "icon-edit-folder-primary.png"
+                  }
+                />
               </span>
             </span>
           </ListItem>
           <ListItem
             title="绑定邮箱"
-            icon={<Icon name="icon-email-primary.png" />}
+            icon={
+              <Icon
+                name={
+                  theme === Theme.Dark
+                    ? "icon-email-white.png"
+                    : "icon-email-primary.png"
+                }
+              />
+            }
           >
             <span className={styles["setting-list-item-text"]}>
               159******@qq.com
-              <span className={styles["item-text-icon"]}>
-                <Icon name="icon-edit-folder-primary.png" />
+              <span
+                className={styles["item-text-icon"]}
+                onClick={() => {
+                  setBindEMailFirst({ ...bindEMailFirst, ...{ open: true } });
+                }}
+              >
+                <Icon
+                  name={
+                    theme === Theme.Dark
+                      ? "icon-edit-folder-white.png"
+                      : "icon-edit-folder-primary.png"
+                  }
+                />
               </span>
             </span>
           </ListItem>
           <ListItem
             title="登录密码"
-            icon={<Icon name="icon-password-primary.png" />}
+            icon={
+              <Icon
+                name={
+                  theme === Theme.Dark
+                    ? "icon-password-white.png"
+                    : "icon-password-primary.png"
+                }
+              />
+            }
           >
             <Button
               key="sure"
               type="primary"
               onClick={() => {
-                setModifyLoginPwd({ ...modifyLoginPwd, ...{ open: true } });
+                // setModifyLoginPwd({ ...modifyLoginPwd, ...{ open: true } });
+                setModifyPasswordFirst({
+                  ...modifyPasswordFirst,
+                  ...{ open: true },
+                });
               }}
             >
               修改

@@ -395,6 +395,15 @@ export function ChatActions(props: {
     setRoleP(visible);
   };
 
+  const [lackOpen, setLackOpen] = useState<boolean>(false);
+  const lackFormData = [
+    {
+      label: <Icon name="icon-version-primary.png" transTheme={true} />,
+      value: "当前GPT-4.0 剩余配额不足，请明天再试",
+      formItemType: "text",
+    },
+  ];
+
   return (
     <div
       className={
@@ -402,14 +411,33 @@ export function ChatActions(props: {
         (isMobileScreen ? " " + chatStyle["chat-input-actions-mobile"] : "")
       }
     >
+      <GPTModal
+        open={lackOpen}
+        title="配额不足"
+        titleIcon="icon-status-error.png"
+        formData={lackFormData}
+        showCancel={false}
+        onClose={() => {
+          setLackOpen(false);
+        }}
+        onOk={() => {
+          setLackOpen(false);
+        }}
+      />
       {/* GPT版本 */}
       <Popover
         content={
           <ActionSelectList
             data={dataList}
-            onSelect={(item: ISelectItem[]) => {
-              setCurrentGPT(item[0]);
-              setGPTVersionP(false);
+            onSelect={(item: ISelectItem[], callBack: any) => {
+              if (item[0].value == 1) {
+                setGPTVersionP(false);
+                setLackOpen(true);
+              } else {
+                setCurrentGPT(item[0]);
+                setGPTVersionP(false);
+                callBack && callBack();
+              }
             }}
           />
         }
@@ -446,7 +474,12 @@ export function ChatActions(props: {
               setRoleP(false);
             }}
           >
-            <div className={chatStyle["customer-role"]}>
+            <div
+              className={chatStyle["customer-role"]}
+              onClick={() => {
+                navigate(Path.Role);
+              }}
+            >
               <Icon
                 name="icon-add-primary.png"
                 width="14px"
@@ -964,7 +997,12 @@ export function Chat() {
                     {
                       value: currentChat?.topic,
                       placeholder: "请输入会话名称",
-                      label: <Icon name="icon-edit-folder-primary.png" />,
+                      label: (
+                        <Icon
+                          name="icon-edit-folder-primary.png"
+                          transTheme={true}
+                        />
+                      ),
                       formItemType: "input",
                     },
                   ]);
@@ -1200,7 +1238,10 @@ export function Chat() {
                                     index: i - 1,
                                     placeholder: "请输入会话内容",
                                     label: (
-                                      <Icon name="icon-edit-folder-primary.png" />
+                                      <Icon
+                                        name="icon-edit-folder-primary.png"
+                                        transTheme={true}
+                                      />
                                     ),
                                     formItemType: "textarea",
                                   },

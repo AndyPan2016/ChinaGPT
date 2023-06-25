@@ -16,7 +16,7 @@ import {
 import styles from "./tools.module.scss";
 import "./tools.scss";
 import { useMobileScreen } from "../../utils";
-import { useAppConfig } from "../../store";
+import { useAppConfig, Theme } from "../../store";
 
 // 图标
 export const Icon = ({
@@ -30,10 +30,32 @@ export const Icon = ({
   className,
   classNames,
   style,
+  transTheme,
   onClick,
 }: IIcon) => {
+  const config = useAppConfig();
+  const theme = config.theme;
   let img;
   if (name) {
+    if (transTheme) {
+      if (Theme.Dark === theme) {
+        if (name.indexOf("primary")) {
+          let tempName = name.replace("primary", "white");
+          try {
+            require("../../icons/png/" + tempName).default.src;
+            name = tempName;
+          } catch (error) {}
+        }
+      } else {
+        if (name.indexOf("white")) {
+          let tempName = name.replace("white", "primary");
+          try {
+            require("../../icons/png/" + tempName).default.src;
+            name = tempName;
+          } catch (error) {}
+        }
+      }
+    }
     img = require("../../icons/png/" + name).default.src;
   } else if (src) {
     img = import(src);
@@ -106,24 +128,37 @@ export function ActionSelectList({
   }, [data]);
 
   const onSelectItem = (item: ISelectItem, index: number) => {
-    let tempDataList = dataList.slice();
-    tempDataList.map((it: ISelectItem, idx: number) => {
-      if (type === "multiple") {
-        // 多选
-        it.active = !!it.active;
-      } else {
-        // 单选
-        it.active = index == idx;
-      }
-    });
-    setDataList(tempDataList);
+    let tempDataList = JSON.parse(JSON.stringify(dataList));
     let theSelect: Array<ISelectItem> = [];
-    tempDataList.map((it: ISelectItem, idx: number) => {
-      if (it.active) {
-        theSelect.push(it);
-      }
-    });
-    onSelect && onSelect(theSelect);
+    let renderActive = () => {
+      tempDataList.map((it: ISelectItem, idx: number) => {
+        if (type === "multiple") {
+          // 多选
+          it.active = !!it.active;
+        } else {
+          // 单选
+          it.active = index == idx;
+        }
+        if (it.active) {
+          theSelect.push(it);
+        }
+      });
+      // tempDataList.map((it: ISelectItem, idx: number) => {
+      //   if (it.active) {
+      //     theSelect.push(it);
+      //   }
+      // });
+    };
+    if (onSelect) {
+      renderActive();
+      onSelect(theSelect, () => {
+        setDataList(tempDataList);
+      });
+    } else {
+      renderActive();
+      setDataList(tempDataList);
+    }
+    // onSelect && onSelect(theSelect);
   };
 
   return (

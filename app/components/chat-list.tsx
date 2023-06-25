@@ -144,7 +144,9 @@ export function QuoteItem(props: any) {
             let chatName = folder[folderIndex].chat[chatIndex].topic;
             setDeleteFormData([
               {
-                label: <Icon name="icon-version-primary.png" />,
+                label: (
+                  <Icon name="icon-version-primary.png" transTheme={true} />
+                ),
                 // value: '是否删除会话<span>' + chatName + '</span>？删除后将不可恢复',
                 value: (
                   <span className={listStyles["delete-confirm-text"]}>
@@ -369,7 +371,12 @@ export function ChatList() {
                       {
                         value: folder[folderIdx].name,
                         placeholder: "请输入类型名称",
-                        label: <Icon name="icon-folder-primary.png" />,
+                        label: (
+                          <Icon
+                            name="icon-folder-primary.png"
+                            transTheme={true}
+                          />
+                        ),
                         formItemType: "input",
                       },
                     ]);
@@ -486,7 +493,12 @@ export function Groups(props: any) {
                           let folderName = folder[folderIndex].name;
                           setDeleteFormData([
                             {
-                              label: <Icon name="icon-version-primary.png" />,
+                              label: (
+                                <Icon
+                                  name="icon-version-primary.png"
+                                  transTheme={true}
+                                />
+                              ),
                               value: (
                                 <span
                                   className={listStyles["delete-confirm-text"]}

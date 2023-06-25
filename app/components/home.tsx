@@ -35,17 +35,32 @@ export function Loading(props: { noLogo?: boolean }) {
 }
 
 // 登录
-const Login = dynamic(async () => (await import("../views/login/index")).Login, {
-  loading: () => <Loading noLogo />,
-});
+const Login = dynamic(
+  async () => (await import("../views/login/index")).Login,
+  {
+    loading: () => <Loading noLogo />,
+  },
+);
 
 // 注册
-const Register = dynamic(async () => (await import("../views/register/index")).Register, {
-  loading: () => <Loading noLogo />,
-});
+const Register = dynamic(
+  async () => (await import("../views/register/index")).Register,
+  {
+    loading: () => <Loading noLogo />,
+  },
+);
 
 // 找回密码
-const RetrievePassword = dynamic(async () => (await import("../views/retrieve-password/index")).RetrievePassword, {
+const RetrievePassword = dynamic(
+  async () =>
+    (await import("../views/retrieve-password/index")).RetrievePassword,
+  {
+    loading: () => <Loading noLogo />,
+  },
+);
+
+// 角色
+const Role = dynamic(async () => (await import("./role")).MaskPage, {
   loading: () => <Loading noLogo />,
 });
 
@@ -151,7 +166,11 @@ function Screen() {
               {/* 注册 */}
               <Route path={Path.Register} element={<Register />} />
               {/* 找回密码 */}
-              <Route path={Path.RetrievePassword} element={<RetrievePassword />} />
+              <Route
+                path={Path.RetrievePassword}
+                element={<RetrievePassword />}
+              />
+              <Route path={Path.Role} element={<Role />} />
               <Route path={Path.Home} element={<Chat />} />
               <Route path={Path.NewChat} element={<NewChat />} />
               <Route path={Path.Masks} element={<MaskPage />} />

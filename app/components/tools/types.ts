@@ -34,6 +34,8 @@ export interface IIcon extends IProps {
   height?: string | number;
   // 点击事件
   onClick?: (e: any) => void;
+  // 跟随主题变化
+  transTheme?: boolean;
 }
 
 export interface IIconWrap extends IProps {}
@@ -47,7 +49,7 @@ export interface IActionSelectList extends IProps {
   // 选项类型(radio.单选 multiple.多选)
   type?: string;
   // 选中事件
-  onSelect?: (item: Array<ISelectItem>) => void;
+  onSelect?: (item: Array<ISelectItem>, callBack?: () => void) => void;
 }
 
 // 列表选项

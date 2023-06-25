@@ -28,6 +28,7 @@ type MaskStore = MaskState & {
   create: (mask?: Partial<Mask>) => Mask;
   update: (id: number, updater: (mask: Mask) => void) => void;
   delete: (id: number) => void;
+  deleteMask: (id: number) => void;
   search: (text: string) => Mask[];
   get: (id?: number) => Mask | null;
   getAll: () => Mask[];
@@ -80,6 +81,13 @@ export const useMaskStore = create<MaskStore>()(
         const masks = get().masks;
         delete masks[id];
         set(() => ({ masks }));
+      },
+      deleteMask(id?: any) {
+        const masks = get().masks;
+        console.info(masks);
+        // let tempMasks = []
+        // masks.map((m: any, idx: number) => {
+        // })
       },
 
       get(id) {

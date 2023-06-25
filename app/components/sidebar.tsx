@@ -175,10 +175,15 @@ export function SideBar(props: { className?: string }) {
                     //     chatStore.currentIndex[1],
                     //   );
                     // }
-                    setFormData([
+                    setFormDataClear([
                       {
                         value: "是否清空当前所有会话？清空后将不可恢复！",
-                        label: <Icon name="icon-delete-primary.png" />,
+                        label: (
+                          <Icon
+                            name="icon-delete-primary.png"
+                            transTheme={true}
+                          />
+                        ),
                         formItemType: "text",
                       },
                     ]);
@@ -193,11 +198,16 @@ export function SideBar(props: { className?: string }) {
                   className={styles["tools-item"]}
                   onClick={() => {
                     // chatStore.newFolder({ name: "新分类" });
-                    setFormDataClear([
+                    setFormData([
                       {
                         // value: folder[folderIdx].name,
                         placeholder: "请输入新建分类目录名称",
-                        label: <Icon name="icon-folder-primary.png" />,
+                        label: (
+                          <Icon
+                            name="icon-folder-primary.png"
+                            transTheme={true}
+                          />
+                        ),
                         formItemType: "input",
                       },
                     ]);
@@ -223,7 +233,12 @@ export function SideBar(props: { className?: string }) {
                     {
                       // value: folder[folderIdx].name,
                       placeholder: "请输入新建分类目录名称",
-                      label: <Icon name="icon-folder-primary.png" />,
+                      label: (
+                        <Icon
+                          name="icon-folder-primary.png"
+                          transTheme={true}
+                        />
+                      ),
                       formItemType: "input",
                     },
                   ]);
@@ -317,7 +332,9 @@ export function SideBar(props: { className?: string }) {
                 setFormDataClear([
                   {
                     value: "是否清空当前所有会话？清空后将不可恢复！",
-                    label: <Icon name="icon-delete-primary.png" />,
+                    label: (
+                      <Icon name="icon-delete-primary.png" transTheme={true} />
+                    ),
                     formItemType: "text",
                   },
                 ]);

@@ -174,3 +174,48 @@ export function autoGrowTextArea(dom: HTMLTextAreaElement) {
 export function getCSSVar(varName: string) {
   return getComputedStyle(document.body).getPropertyValue(varName).trim();
 }
+
+/**
+ * 倒计时
+ * @param {Object} options 参数选项
+ */
+export function countDown(options: any) {
+  let defaults = {
+    // 倒计时秒数
+    timer: options?.timer || 10,
+    // 倒计时函数
+    fn: options?.fn,
+    // 倒计时完成回调函数
+    callBack: options?.callBack,
+  };
+  let stop = false;
+
+  let down = function () {
+    if (defaults.fn) {
+      defaults.fn(defaults.timer);
+    }
+    setTimeout(function () {
+      if (stop) {
+        return false;
+      }
+      defaults.timer--;
+      if (defaults.timer === 0) {
+        if (defaults.callBack) {
+          defaults.callBack(defaults.timer);
+        }
+      } else {
+        if (defaults.fn) {
+          defaults.fn(defaults.timer);
+        }
+        down();
+      }
+    }, 1000);
+  };
+  down();
+
+  return {
+    clear() {
+      stop = true;
+    },
+  };
+}
