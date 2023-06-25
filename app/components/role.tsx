@@ -348,7 +348,12 @@ export function MaskPage() {
 
   return (
     <ErrorBoundary>
-      <div className={styles["mask-page"]}>
+      <div
+        className={
+          styles["mask-page"] +
+          (isMobileScreen ? " " + styles["mask-page-mobile"] : "")
+        }
+      >
         <div className="window-header">
           <div className="window-header-title">
             <div className="window-header-main-title header-main-title">

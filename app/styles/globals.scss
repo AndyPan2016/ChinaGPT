@@ -454,6 +454,9 @@ pre {
       }
     }
     .ant-form-item-label {
+      >label {
+        color: var(--black);
+      }
       &.ant-col-1 {
         max-width: 24px;
         width: 24px;
@@ -481,9 +484,13 @@ pre {
         display: flex;
         .ant-input-affix-wrapper {
           padding: 0 10px;
+          background: var(--chat-input);
+          border: var(--chat-input-border);
           .ant-input {
             max-width: initial;
             text-align: left;
+            background: transparent;
+            border: none;
           }
         }
       }

@@ -4,6 +4,12 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  &.mask-page-mobile {
+    .mask-page-body {
+      margin: 0;
+      border-radius: 0;
+    }
+  }
 
   .icon-wrap {
     margin-left: 10px;
@@ -131,10 +137,10 @@
       }
 
       @media screen and (max-width: 600px) {
-        display: flex;
-        flex-direction: column;
-        padding-bottom: 10px;
-        border-radius: 10px;
+        // display: flex;
+        // flex-direction: column;
+        // padding-bottom: 10px;
+        // border-radius: 10px;
         margin-bottom: 20px;
         box-shadow: var(--card-shadow);
 
@@ -142,11 +148,11 @@
           border-bottom: var(--border-in-light);
         }
 
-        .mask-actions {
-          width: 100%;
-          justify-content: space-between;
-          padding-top: 10px;
-        }
+        // .mask-actions {
+        //   width: 100%;
+        //   justify-content: space-between;
+        //   padding-top: 10px;
+        // }
       }
     }
   }

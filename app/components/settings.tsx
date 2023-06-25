@@ -645,7 +645,12 @@ export function Settings() {
           )}
         </div>
       </div>
-      <div className={styles["settings"]}>
+      <div
+        className={
+          styles["settings"] +
+          (isMobileScreen ? " " + styles["settings-mobile"] : "")
+        }
+      >
         {/* 修改登录密码 - 第一步 */}
         <GPTModal
           title="修改登录密码"
