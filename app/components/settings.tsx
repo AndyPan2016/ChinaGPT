@@ -49,6 +49,7 @@ import { InputRange } from "./input-range";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarPicker } from "./emoji";
 import { GPTModal } from "./gpt-modal";
+import { apiFetch } from "../api/api.fetch";
 
 function EditPromptModal(props: { id: number; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -223,6 +224,22 @@ export function Settings() {
   const updateConfig = config.update;
   const resetConfig = config.reset;
   const chatStore = useChatStore();
+  // fetch('/acooly/portal/customer/register', {
+  //   method: 'post',
+  //   body: JSON.stringify({
+  //     "nickName": "三千尺",
+  //     "mobile": 13320207070,
+  //     "email": "13320207070@189.com",
+  //     "loginPassword": "xxdawER2e$#rwe==",
+  //     "registerType": "MOBILE",
+  //     "captchaToken": 2020123456789,
+  //     "captchaValue": 123456
+  //   }),
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //     "x-requested-with": "XMLHttpRequest",
+  //   }
+  // })
 
   const updateStore = useUpdateStore();
   const [checkingUpdate, setCheckingUpdate] = useState(false);
@@ -272,6 +289,20 @@ export function Settings() {
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
+    apiFetch({
+      url: "/acooly/portal/customer/register",
+      params: {
+        nickName: "三千尺",
+        mobile: 13320207070,
+        email: "13320207070@189.com",
+        loginPassword: "xxdawER2e$#rwe==",
+        registerType: "MOBILE",
+        captchaToken: 2020123456789,
+        captchaValue: 123456,
+      },
+    }).then((res: any) => {
+      console.info(res);
+    });
     // checks per minutes
     checkUpdate();
     showUsage && checkUsage();

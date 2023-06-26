@@ -29,6 +29,10 @@ if (mode !== "export") {
         source: "/sharegpt",
         destination: "https://sharegpt.com/api/conversations",
       },
+      {
+        source: '/acooly/:path*',
+        destination: 'http://119.13.101.192:8680/:path*'
+      }
     ];
 
     const apiUrl = process.env.API_URL;
