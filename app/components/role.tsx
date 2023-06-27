@@ -35,6 +35,7 @@ import { FileName, Path } from "../constant";
 import { BUILTIN_MASK_STORE } from "../masks";
 import { Icon, IconGroup } from "./tools";
 import { GPTModal } from "./gpt-modal";
+import { apiFetch } from "../api/api.fetch";
 
 export function MaskAvatar(props: { mask: Mask }) {
   return props.mask.avatar !== DEFAULT_MASK_AVATAR ? (
@@ -344,7 +345,12 @@ export function MaskPage() {
   const sureAdd = (res: any) => {
     console.info(res);
     setAddOpen(false);
+    let params = { role: "system", title: res[0].value, content: res[1].value };
+    apiFetch({ url: "/portal/prompt/save", params }).then((res: any) => {
+      console.info(res);
+    });
   };
+  // console.info(process)
 
   return (
     <ErrorBoundary>
