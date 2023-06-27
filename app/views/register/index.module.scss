@@ -1,0 +1,80 @@
+
+
+.register-wrap {
+    display: flex;
+    height: 100%;
+    .register-thumb {
+        flex: 1.7;
+        // width: 840px;
+        max-width: 650px;
+        height: 100%;
+        background: url(../../icons/bg/login-bg.png) center center no-repeat;
+        background-size: 100% 100%;
+    }
+    .register-form-container {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 410px;
+        .register-form-wrap {
+            max-width: 350px;
+            min-width: 300px;
+        }
+        .register-wrap-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            height: 60px;
+            .title {
+                font-size: 50px;
+                color: var(--chat-item-title);
+            }
+            .title-remark {
+                font-size: 16px;
+                color: var(--chat-item-info-active);
+                .to-login {
+                    color: var(--primary);
+                    outline: none;
+                    text-decoration: none;
+                }
+            }
+        }
+        .form-text {
+            font-size: 12px;
+            color: var(--chat-item-info-active);
+            margin-bottom: 10px;
+            line-height: 16px;
+        }
+        .customer-form-item {
+            font-size: 14px;
+            color: var(--chat-item-info-active);
+            margin-bottom: 18px;
+        }
+        .form-item-label {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .send-text {
+            line-height: 24px;
+            color: var(--primary);
+            min-width: 72px;
+            cursor: pointer;
+            &.disabled {
+                color: var(--primary-tint);
+                cursor: not-allowed;
+            }
+        }
+        .regist-agreement {
+            color: var(--chat-item-info-active);
+            font-size: 16px;
+            .agreement-item {
+                color: var(--primary);
+            }
+        }
+    }
+}
