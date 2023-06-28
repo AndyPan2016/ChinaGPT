@@ -1,0 +1,41 @@
+/**
+ * 登录
+ * @authors AndyPan (pye-mail@163.com)
+ * @remark 无
+ * @log 2023年6月10日16:26:45 - 创建
+ */
+
+.login-wrap {
+    display: flex;
+    height: 100%;
+    .login-thumb {
+        flex: 1.7;
+        width: 840px;
+        height: 100%;
+        background: url(../../icons/bg/login-bg.png) center center no-repeat;
+        background-size: 100% 100%;
+    }
+    .login-form-container {
+        flex: 1;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 17%;
+        .login-wrap-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .title {
+                font-size: 50px;
+                color: var(--chat-item-title);
+            }
+            .title-remark {
+                font-size: 16px;
+                color: rgba(112, 124, 151, 1);
+                .to-login {
+                    color: rgba(42, 139, 242, 1);
+                }
+            }
+        }
+    }
+}

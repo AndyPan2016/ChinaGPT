@@ -40,6 +40,10 @@
   --chat-input-color: rgba(51, 51, 51, 1);
   --chat-input-border: 1px solid rgba(215, 229, 245, 1);
   --modal-head-boder: rgba(238, 238, 238, 1);
+  // 页脚字体颜色
+  --gpt-footer-color: rgba(61, 61, 61, 1);
+  // 头部背景
+  --gpt-header-bg: #FFF;
 
   /* shadow */
   --shadow: 50px 50px 100px 10px rgb(0, 0, 0, 0.1);
@@ -82,6 +86,10 @@
   --bar-color: rgba(255, 255, 255, 0.1);
 
   --border-in-light: 1px solid rgba(255, 255, 255, 0.192);
+  // 页脚字体颜色
+  --gpt-footer-color: rgba(255, 255, 255, 1);
+  // 头部背景
+  --gpt-header-bg: rgba(32, 33, 36, 1);
 
   --theme-color: var(--gray);
   --chat-input-panel: rgba(73, 76, 84, 1);
@@ -115,7 +123,7 @@
   @include light;
 
   --window-width: 90vw;
-  --window-height: 90vh;
+  --window-height: 74vh;
   --sidebar-width: 300px;
   --window-content-width: calc(100% - var(--sidebar-width));
   --message-max-width: 95%;
@@ -493,6 +501,10 @@ pre {
             border: none;
           }
         }
+        .ant-input-group-addon {
+          background: var(--chat-input);
+          border: var(--chat-input-border);
+        }
       }
     }
   }
@@ -526,5 +538,27 @@ pre {
 }
 .header-sub-title {
   color: var(--chat-item-info-active);
+}
+
+.regist-radio {
+  &.ant-radio-group {
+    .ant-radio-wrapper {
+      color: var(--chat-item-info-active);
+      font-size: 16px;
+    }
+  }
+}
+.regist-checkbox {
+  color: var(--chat-item-info-active);
+  span {
+    font-size: 16px;
+  }
+}
+.register-form {
+  .ant-form {
+    .ant-form-item {
+      margin-bottom: 18px;
+    }
+  }
 }
 

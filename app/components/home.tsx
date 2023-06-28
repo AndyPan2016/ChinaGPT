@@ -8,6 +8,7 @@ import styles from "./home.module.scss";
 
 import BotIcon from "../icons/bot.svg";
 import LoadingIcon from "../icons/three-dots.svg";
+import LogoIcon from "../icons/three-dots.svg";
 
 import { getCSSVar, useMobileScreen } from "../utils";
 
@@ -24,6 +25,7 @@ import {
 import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
 import { AuthPage } from "./auth";
+import { Icon } from "./tools";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -129,58 +131,123 @@ const loadAsyncGoogleFont = () => {
   document.head.appendChild(linkEl);
 };
 
+/**
+ * 头部
+ */
+const GPTWindowHeader = () => {
+  const config = useAppConfig();
+  const isMobileScreen = useMobileScreen();
+  return (
+    <div
+      className={
+        styles["gpt-window-header"] +
+        (config.tightBorder && !isMobileScreen ? " " + styles["full"] : "")
+      }
+    >
+      <div className={styles["gpt-header-wrap"]}>
+        <Icon name="icon-role-primary.png" width="48px" height="48px" />
+        <span className={styles["gpt-logp-text"]}>CHINAGPT</span>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 底部
+ */
+const GPTWindowFooter = () => {
+  const config = useAppConfig();
+  const isMobileScreen = useMobileScreen();
+  return (
+    <div
+      className={
+        styles["gpt-window-footer"] +
+        (config.tightBorder && !isMobileScreen ? " " + styles["full"] : "")
+      }
+    >
+      <a href="javascript:;" className={styles["footer-item"]}>
+        京公网安备 110000002000001 号
+      </a>
+      <a href="javascript:;" className={styles["footer-item"]}>
+        京ICP证 030173 号
+      </a>
+    </div>
+  );
+};
+
 function Screen() {
   const config = useAppConfig();
   const location = useLocation();
   const isHome = location.pathname === Path.Home;
   const isAuth = location.pathname === Path.Auth;
   const isMobileScreen = useMobileScreen();
+  const [isFullCont, setIsFullCont] = useState<boolean>(false);
 
   useEffect(() => {
     loadAsyncGoogleFont();
   }, []);
+  useEffect(() => {
+    setIsFullCont(
+      ["/login", "/register", "/retrieve-password"].includes(location.pathname),
+    );
+  }, [location.pathname]);
 
   return (
-    <div
-      className={
-        styles.container +
-        ` ${
-          config.tightBorder && !isMobileScreen
-            ? styles["tight-container"]
-            : styles.container
-        }`
-      }
-    >
-      {isAuth ? (
-        <>
-          <AuthPage />
-        </>
-      ) : (
-        <>
-          <SideBar className={isHome ? styles["sidebar-show"] : ""} />
-
-          <div className={styles["window-content"]} id={SlotID.AppBody}>
-            <Routes>
-              {/* 登录 */}
-              <Route path={Path.Login} element={<Login />} />
-              {/* 注册 */}
-              <Route path={Path.Register} element={<Register />} />
-              {/* 找回密码 */}
-              <Route
-                path={Path.RetrievePassword}
-                element={<RetrievePassword />}
-              />
-              <Route path={Path.Role} element={<Role />} />
-              <Route path={Path.Home} element={<Chat />} />
-              <Route path={Path.NewChat} element={<NewChat />} />
-              <Route path={Path.Masks} element={<MaskPage />} />
-              <Route path={Path.Chat} element={<Chat />} />
-              <Route path={Path.Settings} element={<Settings />} />
-            </Routes>
-          </div>
-        </>
-      )}
-    </div>
+    <>
+      {/* 头部 */}
+      <GPTWindowHeader />
+      {/* chat 内容主容器 */}
+      <div
+        className={
+          styles.container +
+          (isFullCont ? " " + styles["full-cont"] : "") +
+          ` ${
+            config.tightBorder && !isMobileScreen
+              ? styles["tight-container"]
+              : styles.container
+          }`
+        }
+      >
+        {isAuth ? (
+          <>
+            <AuthPage />
+          </>
+        ) : (
+          <>
+            {!isFullCont ? (
+              <SideBar className={isHome ? styles["sidebar-show"] : ""} />
+            ) : null}
+            <div
+              className={
+                styles["window-content"] +
+                (isFullCont ? " " + styles["full"] : "")
+              }
+              id={SlotID.AppBody}
+            >
+              <Routes>
+                {/* 登录 */}
+                <Route path={Path.Login} element={<Login />} />
+                {/* 注册 */}
+                <Route path={Path.Register} element={<Register />} />
+                {/* 找回密码 */}
+                <Route
+                  path={Path.RetrievePassword}
+                  element={<RetrievePassword />}
+                />
+                <Route path={Path.Role} element={<Role />} />
+                <Route path={Path.Home} element={<Chat />} />
+                <Route path={Path.NewChat} element={<NewChat />} />
+                <Route path={Path.Masks} element={<MaskPage />} />
+                <Route path={Path.Chat} element={<Chat />} />
+                <Route path={Path.Settings} element={<Settings />} />
+              </Routes>
+            </div>
+          </>
+        )}
+      </div>
+      {/* 底部 */}
+      <GPTWindowFooter />
+    </>
   );
 }
 
