@@ -14,6 +14,7 @@ import { useAppConfig, Theme } from "../../store";
 import { Icon } from "../../components/tools";
 import { toastSuccess, toastFail } from "../../components/ui-lib";
 import styles from "./index.module.scss";
+import { apiFetch } from "../../api/api.fetch";
 
 export const Register = () => {
   const isMobileScreen = useMobileScreen();
@@ -23,10 +24,14 @@ export const Register = () => {
   const [sendStatus, setSendStatus] = useState<boolean>(false);
   const [radioStatus, setRadioStatus] = useState<boolean>(false);
   const [sendText, setSendText] = useState<string>("发送验证码");
-  // 验证方式
-  const [verifyType, setVerifyType] = useState<any>("phone");
+  // 验证方式(MOBILE|EMAIL)
+  const [verifyType, setVerifyType] = useState<any>("MOBILE");
   // 同意协议
   const [agreeWith, setAgreeWite] = useState<boolean>(false);
+  // 验证码token
+  const [captchaToken, setCaptchaToken] = useState<any>("");
+  // 注册按钮状态
+  const [registStatus, setRegistStatus] = useState<boolean>(false);
 
   // 获取字节数
   const strByteSize = (str: string) => {
@@ -38,13 +43,59 @@ export const Register = () => {
 
   // 注册提交
   const onRegister = () => {
-    form.validateFields().then(async (res) => {
-      if (agreeWith) {
-        console.info(res);
-      } else {
-        toastFail({ content: "请阅读协议" });
-      }
-    });
+    setRegistStatus(true);
+    form
+      .validateFields()
+      .then(async (res) => {
+        if (agreeWith) {
+          console.info(res);
+          // 验证码校验
+          apiFetch({
+            url: "/portal/customer/captchaCheck",
+            params: {
+              sendType: verifyType,
+              businessType: "REGISTER",
+              captchaToken,
+              captchaValue: res.code,
+            },
+          })
+            .then((capCheck) => {
+              if (capCheck.success) {
+                // 注册
+                apiFetch({
+                  url: "/portal/customer/captchaCheck",
+                  params: {
+                    nickName: res.nickName,
+                    mobile: res.mobile,
+                    email: res.email,
+                    loginPassword: res.loginPassword,
+                    registerType: verifyType,
+                    captchaToken,
+                    captchaValue: res.code,
+                  },
+                })
+                  .then((loginRes) => {
+                    if (loginRes.success) {
+                      // 注册成功
+                      setRegistStatus(true);
+                    }
+                  })
+                  .catch(() => {
+                    setRegistStatus(false);
+                  });
+              }
+            })
+            .catch(() => {
+              setRegistStatus(false);
+            });
+        } else {
+          setRegistStatus(false);
+          toastFail({ content: "请阅读协议" });
+        }
+      })
+      .catch(() => {
+        setRegistStatus(false);
+      });
   };
 
   // 发送验证码
@@ -53,20 +104,47 @@ export const Register = () => {
       setRadioStatus(true);
       setSendStatus(true);
       setSendText("发送中");
-      setTimeout(() => {
-        toastSuccess({ content: "发送成功" });
-        countDown({
-          timer: 10,
-          fn(timer: any) {
-            setSendText("已发送 " + timer + "s");
-          },
-          callBack() {
-            setRadioStatus(false);
-            setSendStatus(false);
-            setSendText("发送验证码");
-          },
-        });
-      }, 1000);
+      apiFetch({
+        url: "/portal/customer/captchaSend",
+        params: {
+          sendType: verifyType,
+          businessType: "REGISTER",
+          sendTo:
+            verifyType == "MOBILE"
+              ? form.getFieldValue("mobile")
+              : form.getFieldValue("email"),
+        },
+      }).then((res) => {
+        if (res.success) {
+          setCaptchaToken(res?.entity?.captchaToken);
+          toastSuccess({ content: "发送成功" });
+          countDown({
+            timer: 59,
+            fn(timer: any) {
+              setSendText("已发送 " + timer + "s");
+            },
+            callBack() {
+              setRadioStatus(false);
+              setSendStatus(false);
+              setSendText("发送验证码");
+            },
+          });
+        }
+      });
+      //   setTimeout(() => {
+      //     toastSuccess({ content: "发送成功" });
+      //     countDown({
+      //       timer: 10,
+      //       fn(timer: any) {
+      //         setSendText("已发送 " + timer + "s");
+      //       },
+      //       callBack() {
+      //         setRadioStatus(false);
+      //         setSendStatus(false);
+      //         setSendText("发送验证码");
+      //       },
+      //     });
+      //   }, 1000);
     }
   };
 
@@ -132,18 +210,18 @@ export const Register = () => {
             <Form.Item
               className={styles["regist-form"]}
               hasFeedback
-              name="phone"
+              name="mobile"
               rules={[
                 (forms: any) => ({
                   validator: (_: any, value: any) => {
-                    if (verifyType === "phone") {
+                    if (verifyType === "MOBILE") {
                       // 不允许发送验证码
                       setSendStatus(false);
                     }
                     if (value) {
                       let status = new RegExp(/^1\d{10}$/).test(value);
                       if (status) {
-                        if (verifyType === "phone") {
+                        if (verifyType === "MOBILE") {
                           // 允许发送验证码
                           setSendStatus(true);
                         }
@@ -182,7 +260,7 @@ export const Register = () => {
               rules={[
                 (forms: any) => ({
                   validator: (_: any, value: any) => {
-                    if (verifyType === "email") {
+                    if (verifyType === "EMAIL") {
                       // 不允许发送验证码
                       setSendStatus(false);
                     }
@@ -191,7 +269,7 @@ export const Register = () => {
                         /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/,
                       ).test(value);
                       if (status) {
-                        if (verifyType === "email") {
+                        if (verifyType === "EMAIL") {
                           // 允许发送验证码
                           setSendStatus(true);
                         }
@@ -228,7 +306,7 @@ export const Register = () => {
             <Form.Item
               className={styles["regist-form"]}
               hasFeedback
-              name="password"
+              name="loginPassword"
               rules={[
                 (forms: any) => ({
                   validator: (_: any, value: any) => {
@@ -277,16 +355,16 @@ export const Register = () => {
                 onChange={(e) => {
                   let value = e.target.value;
                   setVerifyType(value);
-                  if (value === "phone") {
+                  if (value === "MOBILE") {
                     if (
-                      form.getFieldError("phone").length ||
-                      !form.getFieldValue("phone")
+                      form.getFieldError("mobile").length ||
+                      !form.getFieldValue("mobile")
                     ) {
                       setSendStatus(false);
                     } else {
                       setSendStatus(true);
                     }
-                  } else if (value === "email") {
+                  } else if (value === "EMAIL") {
                     if (
                       form.getFieldError("email").length ||
                       !form.getFieldValue("email")
@@ -300,8 +378,8 @@ export const Register = () => {
                 disabled={radioStatus}
                 value={verifyType}
               >
-                <Radio value="phone">手机号</Radio>
-                <Radio value="email">电子邮箱</Radio>
+                <Radio value="MOBILE">手机号</Radio>
+                <Radio value="EMAIL">电子邮箱</Radio>
               </Radio.Group>
             </div>
             <Form.Item
@@ -345,7 +423,13 @@ export const Register = () => {
               />
             </Form.Item>
             <div className={styles["customer-form-item"]}>
-              <Button type="primary" block size="large" onClick={onRegister}>
+              <Button
+                type="primary"
+                block
+                size="large"
+                onClick={onRegister}
+                loading={registStatus}
+              >
                 注册
               </Button>
             </div>
