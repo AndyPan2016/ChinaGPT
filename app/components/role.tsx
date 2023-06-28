@@ -21,7 +21,16 @@ import {
   Theme,
 } from "../store";
 import { ROLES } from "../client/api";
-import { Input, List, ListItem, Modal, Popover, Select } from "./ui-lib";
+import {
+  Input,
+  List,
+  ListItem,
+  Modal,
+  Popover,
+  Select,
+  showToastGPT,
+  toastSuccess,
+} from "./ui-lib";
 import { Avatar, AvatarPicker } from "./emoji";
 import Locale, { AllLangs, ALL_LANG_OPTIONS, Lang } from "../locales";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +45,7 @@ import { BUILTIN_MASK_STORE } from "../masks";
 import { Icon, IconGroup } from "./tools";
 import { GPTModal } from "./gpt-modal";
 import { apiFetch } from "../api/api.fetch";
+import { Empty } from "antd";
 
 export function MaskAvatar(props: { mask: Mask }) {
   return props.mask.avatar !== DEFAULT_MASK_AVATAR ? (
@@ -323,6 +333,19 @@ export function MaskPage() {
     });
   };
 
+  const [chatRoles, setChatRole] = useState<Array<any>>([]);
+  const getChatRoles = () => {
+    let params = { pageNo: 1, pageSize: 30 };
+    apiFetch({ url: "/portal/prompt/list", params }).then((res: any) => {
+      if (res.success) {
+        setChatRole(res?.rows || []);
+      }
+    });
+  };
+  useEffect(() => {
+    getChatRoles();
+  }, []);
+
   // 删除会话确认弹窗打开|关闭
   const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
   // 删除会话数据
@@ -331,23 +354,42 @@ export function MaskPage() {
   const sureDelete = (res: any) => {
     // maskStore.deleteMask(res[0].id);
     setDeleteOpen(false);
+    let params = { id: res[0].id };
+    apiFetch({ url: "/portal/prompt/delete", params }).then((res: any) => {
+      if (res.success) {
+        toastSuccess({ content: "删除成功" });
+        getChatRoles();
+      }
+    });
   };
 
   const [modifyOpen, setModifyOpen] = useState<boolean>(false);
   const [modifyFormData, setModifyFormData] = useState<Array<any>>([]);
   const sureModify = (res: any) => {
-    console.info(res);
     setModifyOpen(false);
+    let params = {
+      id: res[0].id,
+      role: res[0].role,
+      title: res[0].value,
+      content: res[1].value,
+    };
+    apiFetch({ url: "/portal/prompt/save", params }).then((res: any) => {
+      if (res.success) {
+        toastSuccess({ content: "创建成功" });
+        getChatRoles();
+      }
+    });
   };
 
   const [addOpen, setAddOpen] = useState<boolean>(false);
   const [addFormData, setAddFormData] = useState<Array<any>>([]);
   const sureAdd = (res: any) => {
-    console.info(res);
     setAddOpen(false);
-    let params = { role: "system", title: res[0].value, content: res[1].value };
+    let params = { role: "user", title: res[0].value, content: res[1].value };
     apiFetch({ url: "/portal/prompt/save", params }).then((res: any) => {
-      console.info(res);
+      if (res.success) {
+        toastSuccess({ content: "创建成功" });
+      }
     });
   };
   // console.info(process)
@@ -366,7 +408,7 @@ export function MaskPage() {
               自定义预设角色
             </div>
             <div className="window-header-sub-title header-sub-title">
-              您有 {allMasks.length}个 自定义角色
+              您有 {chatRoles.length}个 自定义角色
             </div>
           </div>
 
@@ -489,8 +531,9 @@ export function MaskPage() {
             }}
             onOk={sureAdd}
           />
+          {!chatRoles.length ? <Empty /> : null}
           <div>
-            {masks.map((m: any, idx: number) => (
+            {chatRoles.map((m: any, idx: number) => (
               <div className={styles["mask-item"]} key={m.id}>
                 <div className={styles["mask-header"]}>
                   <div className={styles["mask-icon"]}>
@@ -519,6 +562,7 @@ export function MaskPage() {
                       setModifyFormData([
                         {
                           id: m.id,
+                          role: m.role,
                           label: (
                             <Icon
                               name="icon-role-primary.png"
@@ -531,6 +575,7 @@ export function MaskPage() {
                         },
                         {
                           id: m.id,
+                          role: m.role,
                           label: (
                             <Icon
                               name="icon-edit-folder-primary.png"
@@ -559,6 +604,7 @@ export function MaskPage() {
                     onClick={() => {
                       setDeleteFormData([
                         {
+                          id: m.id,
                           label: (
                             <Icon
                               name="icon-version-primary.png"
@@ -568,7 +614,6 @@ export function MaskPage() {
                           value:
                             "是否删除预设角色？删除预设角色后，不会影响历史会话内容，但后续不可在使用该预设角色。",
                           formItemType: "text",
-                          id: m.id,
                         },
                       ]);
                       setDeleteOpen(true);

@@ -5,9 +5,22 @@
  * @log 2023年6月10日16:43:18 - 创建
  */
 
-export const Register = () => {
+import { Form } from "antd";
+import styles from "./index.module.scss";
 
-    return (
-        <>注册</>
-    )
-}
+export const Register = () => {
+  const [registForm] = Form.useForm();
+
+  return (
+    <div className={styles["regist-main"]}>
+      <Form
+        form={registForm}
+        requiredMark={false}
+        labelCol={{ span: 1 }}
+        wrapperCol={{ span: 2 }}
+      >
+        <Form.Item name=""></Form.Item>
+      </Form>
+    </div>
+  );
+};
