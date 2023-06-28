@@ -122,7 +122,7 @@ export const Register = () => {
   const sendCode = () => {
     if (sendStatus) {
       setRadioStatus(true);
-      setSendStatus(true);
+      setSendStatus(false);
       setSendText("发送中");
       apiFetch({
         url: "/portal/customer/captchaSend",
@@ -145,7 +145,7 @@ export const Register = () => {
             },
             callBack() {
               setRadioStatus(false);
-              setSendStatus(false);
+              setSendStatus(true);
               setSendText("发送验证码");
             },
           });

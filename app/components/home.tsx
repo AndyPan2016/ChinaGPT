@@ -134,7 +134,7 @@ const loadAsyncGoogleFont = () => {
 /**
  * 头部
  */
-const GPTWindowHeader = () => {
+export const GPTWindowHeader = () => {
   const config = useAppConfig();
   const isMobileScreen = useMobileScreen();
   return (

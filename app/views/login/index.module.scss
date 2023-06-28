@@ -8,6 +8,41 @@
  .register-wrap {
     display: flex;
     height: 100%;
+    &.register-wrap-mobile {
+        justify-content: center;
+        .register-form-container {
+            min-width: inherit;
+            max-width: 80%;
+            .register-form-wrap {
+                min-width: inherit;
+                max-width: 100%;
+                position: relative;
+            }
+            .register-wrap-head {
+                margin-bottom: 120px;
+                .title {
+                    font-size: 30px;
+                }
+            }
+            .login-type {
+                top: 100px;
+                justify-content: flex-start;
+                .login-type-item {
+                    font-size: 14px;
+                    height: 30px;
+                    margin: 0;
+                    margin-right: 30px;
+                }
+            }
+            .to-register {
+                position: fixed;
+                bottom: 20px;
+                left: 30px;
+                right: 30px;
+                width: initial;
+            }
+        }
+    }
     .register-thumb {
         flex: 1.7;
         // width: 840px;
@@ -16,16 +51,28 @@
         background: url(../../icons/bg/login-bg.png) center center no-repeat;
         background-size: 100% 100%;
     }
+    .gpt-login-head {
+        position: absolute;
+        top: 70px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        .gpt-login-head-wrap {
+            position: relative;
+        }
+    }
     .register-form-container {
         flex: 1;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        min-width: 410px;
+        min-width: 420px;
         .register-form-wrap {
-            max-width: 350px;
-            min-width: 300px;
+            max-width: 400px;
+            min-width: 380px;
+            position: relative;
         }
         .register-wrap-head {
             display: flex;
@@ -34,7 +81,7 @@
             margin-bottom: 30px;
             height: 60px;
             .title {
-                font-size: 50px;
+                font-size: 42px;
                 color: var(--chat-item-title);
             }
             .title-remark {
@@ -44,6 +91,65 @@
                     color: var(--primary);
                     outline: none;
                     text-decoration: none;
+                }
+            }
+        }
+        .to-register {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            bottom: -90px;
+            left: 0;
+            width: 100%;
+            .to-register-text {
+                font-size: 16px;
+                color: var(--primary);
+                padding: 30px;
+                position: relative;
+                z-index: 1;
+                background: var(--chat-input);
+                outline: none;
+                text-decoration: none;
+            }
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 50%;
+                height: 1px;
+                background: var(--chat-item-info);
+            }
+        }
+        .login-type {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: -120px;
+            left: 0;
+            width: 100%;
+            .login-type-item {
+                color: var(--chat-item-info);
+                font-size: 18px;
+                margin: 0 20px;
+                height: 42px;
+                position: relative;
+                cursor: pointer;
+                &.login-type-item-active {
+                    color: var(--primary);
+                    font-weight: bold;
+                    &::after {
+                        content: '';
+                        display: inline-block;
+                        height: 2px;
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: var(--primary);
+                    }
                 }
             }
         }
@@ -58,6 +164,7 @@
             color: var(--chat-item-info-active);
             margin-bottom: 18px;
             position: relative;
+            padding-top: 10px;
             &.customer-form-shadow {
                 &::after {
                     content: '';
@@ -66,7 +173,7 @@
                     right: 20px;
                     bottom: 0;
                     position: absolute;
-                    height: 20px;
+                    height: 2px;
                     box-shadow: 0px 0px 20px rgba(0, 77, 226, 1);
                 }
             }
