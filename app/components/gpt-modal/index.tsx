@@ -15,6 +15,7 @@ import styles from "./index.module.scss";
 import { Icon } from "../tools/index";
 import { useMobileScreen, countDown } from "../../utils";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { apiFetch } from "../../api/api.fetch";
 
 export const GPTModal = ({
   loading,
@@ -35,6 +36,7 @@ export const GPTModal = ({
   onClose,
   children,
   showCancel = true,
+  onSend,
 }: IGPTModal) => {
   const isMobileScreen = useMobileScreen();
   const [form] = Form.useForm();
@@ -108,6 +110,13 @@ export const GPTModal = ({
     } else if (onCancel) {
       onCancel();
     }
+  };
+
+  const sendCode = (callBack: any) => {
+    onSend &&
+      onSend(() => {
+        callBack();
+      });
   };
 
   return (
@@ -275,7 +284,7 @@ export const GPTModal = ({
                             if (!sendStatus) {
                               setSendStatus(true);
                               setSendText("发送中");
-                              setTimeout(() => {
+                              sendCode(() => {
                                 toastSuccess({ content: "发送成功" });
                                 countDown({
                                   timer: 10,
@@ -287,7 +296,7 @@ export const GPTModal = ({
                                     setSendText("发送验证码");
                                   },
                                 });
-                              }, 1000);
+                              });
                             }
                           }}
                         >

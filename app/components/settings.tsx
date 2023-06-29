@@ -277,6 +277,10 @@ export function Settings() {
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
   // 用户信息
   const [userInfo, setUserInfo] = useState<any>({});
+  // 手机号(省略)
+  const [userMobileOmit, setUserMobileOmit] = useState<string>("");
+  // 邮箱(省略)
+  const [userEMailOmit, setUserEMailOmit] = useState<string>("");
 
   const queryUserInfo = () => {
     apiFetch({
@@ -289,6 +293,21 @@ export function Settings() {
       }
     });
   };
+
+  useEffect(() => {
+    // 手机号掩码
+    let mobileOmit =
+      userInfo.mobile?.indexOf("*") > -1
+        ? userInfo.mobile
+        : stringEncryption({ str: userInfo.mobile });
+    setUserMobileOmit(mobileOmit);
+    // 邮箱掩码
+    let emailOmit =
+      userInfo.email.indexOf("*") > -1
+        ? userInfo.email
+        : stringEncryption({ str: userInfo.email });
+    setUserEMailOmit(emailOmit);
+  }, [userInfo]);
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
@@ -441,7 +460,7 @@ export function Settings() {
     formData: [
       {
         label: "手机号",
-        value: "133****3333",
+        value: "",
         formItemType: "text",
       },
       {
@@ -455,6 +474,7 @@ export function Settings() {
     cancelText: "取消",
     okText: "下一步",
   });
+  const [mobileTokenFirst, setMobileTokenFirst] = useState<any>();
   const [bindPhoneSecond, setBindPhoneSecond] = useState<any>({
     open: false,
     loading: false,
@@ -493,6 +513,7 @@ export function Settings() {
     cancelText: "上一步",
     okText: "确认",
   });
+  const [mobileTokenSecond, setMobileTokenSecond] = useState<any>();
   // 绑定修改手机号 - 第一步
   const closeBindPhoneFirst = () => {
     setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
@@ -501,8 +522,59 @@ export function Settings() {
     setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
   };
   const sureBindPhoneFirst = () => {
-    setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
-    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: true } });
+    // 设置加载中
+    setBindPhoneFirst({ ...bindPhoneFirst, ...{ loading: true } });
+    // 验证短信
+    apiFetch({
+      url: "/portal/customer/captchaCheck",
+      params: {
+        businessType: "",
+        sendType: "MOBILE",
+        captchaToken: mobileTokenFirst,
+        captchaValue: bindPhoneFirst.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        // 关闭第一步，去下一步
+        setBindPhoneFirst({
+          ...bindPhoneFirst,
+          ...{ loading: false, open: false },
+        });
+        setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: true } });
+      }
+    });
+  };
+  // 发送验证码
+  const sendPhoneCode = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "",
+        sendType: "MOBILE",
+        sendTo: userInfo.mobile,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setMobileTokenFirst(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
+  };
+  // 绑定新手机，发送验证
+  const sendPhoneCodeNew = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "",
+        sendType: "MOBILE",
+        sendTo: bindPhoneSecond.formData[0].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setMobileTokenSecond(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
   };
   // 绑定修改手机号 - 第二步
   const closeBindPhoneSecond = () => {
@@ -513,7 +585,23 @@ export function Settings() {
     setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: true } });
   };
   const sureBindPhoneSecond = () => {
-    setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: false } });
+    setBindPhoneSecond({ ...bindPhoneSecond, ...{ loading: true } });
+    apiFetch({
+      url: "/portal/customer/modifyInfo",
+      params: {
+        modifyType: "MOBILE",
+        captchaToken: mobileTokenSecond,
+        modifyValue: bindPhoneSecond.formData[0].value,
+        captchaValue: bindPhoneSecond.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setBindPhoneSecond({
+          ...bindPhoneSecond,
+          ...{ loading: false, open: false },
+        });
+      }
+    });
   };
 
   const [bindEMailFirst, setBindEMailFirst] = useState<any>({
@@ -536,6 +624,7 @@ export function Settings() {
     cancelText: "取消",
     okText: "下一步",
   });
+  const [tokenEMailFirst, setTokenEMailFirst] = useState<any>();
   const [bindEMailSecond, setBindEMailSecond] = useState<any>({
     open: false,
     loading: false,
@@ -574,6 +663,7 @@ export function Settings() {
     cancelText: "上一步",
     okText: "确认",
   });
+  const [tokenEMailSecond, setTokenEMailSecond] = useState<any>();
   // 绑定修改邮箱 - 第一步
   const closeBindEMailFirst = () => {
     setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
@@ -582,8 +672,59 @@ export function Settings() {
     setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
   };
   const sureBindEMailFirst = () => {
-    setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
-    setBindEMailSecond({ ...bindEMailSecond, ...{ open: true } });
+    // 设置加载中
+    setBindPhoneFirst({ ...bindEMailFirst, ...{ loading: true } });
+    // 验证短信
+    apiFetch({
+      url: "/portal/customer/captchaCheck",
+      params: {
+        businessType: "",
+        sendType: "EMAIL",
+        captchaToken: tokenEMailFirst,
+        captchaValue: bindEMailFirst.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        // 关闭第一步，去下一步
+        setBindEMailFirst({
+          ...bindEMailFirst,
+          ...{ loading: false, open: false },
+        });
+        setBindEMailSecond({ ...bindEMailSecond, ...{ open: true } });
+      }
+    });
+  };
+  // 发送验证码
+  const sendEMailCode = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "",
+        sendType: "EMAIL",
+        sendTo: userInfo.email,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setTokenEMailFirst(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
+  };
+  // 绑定新手机，发送验证
+  const sendEMailCodeNew = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "",
+        sendType: "EMAIL",
+        sendTo: bindEMailSecond.formData[0].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setTokenEMailSecond(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
   };
   // 绑定修改邮箱 - 第二步
   const closeBindEMailSecond = () => {
@@ -594,7 +735,23 @@ export function Settings() {
     setBindEMailFirst({ ...bindEMailFirst, ...{ open: true } });
   };
   const sureBindEMailSecond = () => {
-    setBindEMailSecond({ ...bindEMailSecond, ...{ open: false } });
+    setBindPhoneSecond({ ...bindEMailSecond, ...{ loading: true } });
+    apiFetch({
+      url: "/portal/customer/modifyInfo",
+      params: {
+        modifyType: "EMAIL",
+        captchaToken: tokenEMailSecond,
+        modifyValue: bindEMailSecond.formData[0].value,
+        captchaValue: bindEMailSecond.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setBindEMailSecond({
+          ...bindEMailSecond,
+          ...{ loading: false, open: false },
+        });
+      }
+    });
   };
 
   return (
@@ -715,6 +872,7 @@ export function Settings() {
           onClose={closeBindPhoneFirst}
           onCancel={cancelBindPhoneFirst}
           onOk={sureBindPhoneFirst}
+          onSend={sendPhoneCode}
         ></GPTModal>
         {/* 修改绑定手机号 - 第二步 */}
         <GPTModal
@@ -730,6 +888,7 @@ export function Settings() {
           onClose={closeBindPhoneSecond}
           onCancel={cancelBindPhoneSecond}
           onOk={sureBindPhoneSecond}
+          onSend={sendPhoneCodeNew}
         ></GPTModal>
         {/* 修改绑定邮箱 - 第一步 */}
         <GPTModal
@@ -745,6 +904,7 @@ export function Settings() {
           onClose={closeBindEMailFirst}
           onCancel={cancelBindEMailFirst}
           onOk={sureBindEMailFirst}
+          onSend={sendEMailCode}
         ></GPTModal>
         {/* 修改绑定邮箱 - 第二步 */}
         <GPTModal
@@ -760,6 +920,7 @@ export function Settings() {
           onClose={closeBindEMailSecond}
           onCancel={cancelBindEMailSecond}
           onOk={sureBindEMailSecond}
+          onSend={sendEMailCodeNew}
         ></GPTModal>
         <List>
           <ListItem
@@ -774,7 +935,7 @@ export function Settings() {
               />
             }
           >
-            FantasyBoy
+            {userInfo.nickName || ""}
           </ListItem>
           <ListItem
             title="绑定手机号"
@@ -789,13 +950,16 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userInfo.mobile.indexOf("*") > -1
-                ? userInfo.mobile
-                : stringEncryption({ str: userInfo.mobile })}
+              {userMobileOmit}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
-                  setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: true } });
+                  let tempBindPhoneFirst = JSON.parse(
+                    JSON.stringify(bindPhoneFirst),
+                  );
+                  tempBindPhoneFirst.open = true;
+                  tempBindPhoneFirst.formData[0].value = userMobileOmit;
+                  setBindPhoneFirst(tempBindPhoneFirst);
                 }}
               >
                 <Icon
@@ -821,9 +985,7 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userInfo.email.indexOf("*") > -1
-                ? userInfo.email
-                : stringEncryption({ str: userInfo.email })}
+              {userEMailOmit}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {

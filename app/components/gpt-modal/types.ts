@@ -65,4 +65,6 @@ export interface IGPTModal {
   children?: React.ReactNode | any;
   // 是否显示取消按钮
   showCancel?: boolean;
+  // 发送验证码
+  onSend?: (callBack: any) => void;
 }
