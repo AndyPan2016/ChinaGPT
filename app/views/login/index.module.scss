@@ -108,7 +108,7 @@
                 padding: 30px;
                 position: relative;
                 z-index: 1;
-                background: var(--chat-input);
+                // background: var(--chat-input);
                 outline: none;
                 text-decoration: none;
             }
@@ -116,10 +116,19 @@
                 content: '';
                 position: absolute;
                 left: 0;
+                top: 50%;
+                height: 1px;
+                background: var(--chat-item-info);
+                width: 30%;
+            }
+            &::after {
+                content: '';
+                position: absolute;
                 right: 0;
                 top: 50%;
                 height: 1px;
                 background: var(--chat-item-info);
+                width: 30%;
             }
         }
         .login-type {
@@ -165,6 +174,10 @@
             margin-bottom: 18px;
             position: relative;
             padding-top: 10px;
+            &.content-right {
+                display: flex;
+                justify-content: flex-end;
+            }
             &.customer-form-shadow {
                 &::after {
                     content: '';

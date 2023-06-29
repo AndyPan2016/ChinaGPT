@@ -373,6 +373,15 @@ export const Login = () => {
                 </Button>
               </div>
             </div>
+            <div
+              className={
+                styles["customer-form-item"] + (" " + styles["content-right"])
+              }
+            >
+              <span className={styles["forget-password"]} onClick={() => {}}>
+                忘记密码
+              </span>
+            </div>
           </Form>
           <div className={styles["to-register"]}>
             <Link className={styles["to-register-text"]} to={Path.Register}>

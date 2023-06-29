@@ -219,3 +219,75 @@ export function countDown(options: any) {
     },
   };
 }
+
+// 获取字符长度
+export function getByteLength(str: string | number) {
+  str = str.toString();
+  let strLen = str.length;
+  let len = 0;
+  for (let i = 0; i < strLen; i++) {
+    len += str.charCodeAt(i) < 256 ? 1 : 2;
+  }
+
+  return len;
+}
+
+// 获取字节数
+export const strByteSize = (str: string) => {
+  if (!str) {
+    return 0;
+  }
+  return new Blob([str]).size;
+};
+
+/**
+ * 字符串隐藏中间位数
+ * @param {String} str 字符串
+ */
+export const stringEncryption = (options: any) => {
+  options = options || {};
+  let str: any;
+  if (typeof options === "string" || typeof options === "number") {
+    str = options;
+    options = {};
+  } else {
+    str = options.str;
+  }
+  let defaults = {
+    begin: options.begin || 4,
+    end: options.end || 4,
+    placeholder: options.placeholder || "*",
+    phLength: options.phLength || 4,
+    // 多少个字符加一个splitString字符，以作为分隔
+    split: options.split || false,
+    splitStr: options.splitStr || " ",
+  };
+
+  let result: any;
+  if (str) {
+    str = str + "";
+    result =
+      str.substr(0, defaults.begin) +
+      " " +
+      Array(defaults.phLength + 1).join(defaults.placeholder) +
+      " " +
+      str.substr(str.length - defaults.end, str.length);
+  }
+  if (defaults.split) {
+    let temp = "";
+    let count = 0;
+    for (let i = 0, len = result.length; i < len; i++) {
+      if (result[i] !== " ") {
+        temp += result[i];
+        count++;
+        if (count === defaults.split) {
+          count = 0;
+          temp += defaults.splitStr;
+        }
+      }
+    }
+    result = temp;
+  }
+
+  return result;
+};

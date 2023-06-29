@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Radio, Checkbox } from "antd";
 import { Path } from "../../constant";
-import { useMobileScreen, countDown } from "../../utils";
+import { useMobileScreen, countDown, getByteLength } from "../../utils";
 import { useAppConfig, Theme } from "../../store";
 import { Icon } from "../../components/tools";
 import { toastSuccess, toastFail } from "../../components/ui-lib";
@@ -37,14 +37,6 @@ export const Register = () => {
   const [registSuccess, setRegistSuccess] = useState<boolean>(false);
   // 注册成功跳转倒计时
   const [countDownTimer, setCountDownTimer] = useState<number>(5);
-
-  // 获取字节数
-  const strByteSize = (str: string) => {
-    if (!str) {
-      return 0;
-    }
-    return new Blob([str]).size;
-  };
 
   // 跳转倒计时
   const jumpCountDown = () => {
@@ -210,7 +202,7 @@ export const Register = () => {
                   (forms: any) => ({
                     validator: (_: any, value: any) => {
                       if (value) {
-                        let byte = strByteSize(value);
+                        let byte = getByteLength(value);
                         if (byte > 14) {
                           return Promise.reject("最长14英文或7个汉字");
                         }

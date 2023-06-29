@@ -39,7 +39,12 @@ import Locale, {
   changeLang,
   getLang,
 } from "../locales";
-import { copyToClipboard, countDown, useMobileScreen } from "../utils";
+import {
+  copyToClipboard,
+  countDown,
+  useMobileScreen,
+  stringEncryption,
+} from "../utils";
 import { Icon } from "./tools";
 import Link from "next/link";
 import { Path, UPDATE_URL } from "../constant";
@@ -270,13 +275,29 @@ export function Settings() {
   const builtinCount = SearchService.count.builtin;
   const customCount = promptStore.getUserPrompts().length ?? 0;
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
+  // 用户信息
+  const [userInfo, setUserInfo] = useState<any>({});
+
+  const queryUserInfo = () => {
+    apiFetch({
+      url: "/portal/customer/queryInfo",
+      method: "get",
+    }).then((res) => {
+      if (res.success) {
+        let entity = res.entity || {};
+        setUserInfo(entity);
+      }
+    });
+  };
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
     // checks per minutes
-    checkUpdate();
-    showUsage && checkUsage();
+    // checkUpdate();
+    // showUsage && checkUsage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    queryUserInfo();
   }, []);
 
   useEffect(() => {
@@ -421,7 +442,6 @@ export function Settings() {
       {
         label: "手机号",
         value: "133****3333",
-        // fieldName: 'phone',
         formItemType: "text",
       },
       {
@@ -769,7 +789,9 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              159****9999
+              {userInfo.mobile.indexOf("*") > -1
+                ? userInfo.mobile
+                : stringEncryption({ str: userInfo.mobile })}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
@@ -799,7 +821,9 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              159******@qq.com
+              {userInfo.email.indexOf("*") > -1
+                ? userInfo.email
+                : stringEncryption({ str: userInfo.email })}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {

@@ -375,7 +375,7 @@ export function MaskPage() {
     };
     apiFetch({ url: "/portal/prompt/save", params }).then((res: any) => {
       if (res.success) {
-        toastSuccess({ content: "创建成功" });
+        toastSuccess({ content: "修改成功" });
         getChatRoles();
       }
     });
