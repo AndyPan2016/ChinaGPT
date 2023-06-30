@@ -73,7 +73,7 @@ export const Register = () => {
               if (capCheck.success) {
                 // 注册
                 apiFetch({
-                  url: "/portal/customer/captchaCheck",
+                  url: "/portal/customer/register",
                   params: {
                     nickName: res.nickName,
                     mobile: res.mobile,

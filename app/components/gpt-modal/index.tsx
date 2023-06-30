@@ -47,6 +47,7 @@ export const GPTModal = ({
 
   useEffect(() => {
     form.setFieldsValue(formData);
+    form.resetFields();
     renderSendStatus();
   }, [formData]);
 
