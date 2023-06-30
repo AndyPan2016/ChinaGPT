@@ -296,18 +296,20 @@ export function Settings() {
   };
 
   useEffect(() => {
-    // 手机号掩码
-    let mobileOmit =
-      userInfo.mobile?.indexOf("*") > -1
-        ? userInfo.mobile
-        : stringEncryption({ str: userInfo.mobile });
-    setUserMobileOmit(mobileOmit);
-    // 邮箱掩码
-    let emailOmit =
-      userInfo.email.indexOf("*") > -1
-        ? userInfo.email
-        : stringEncryption({ str: userInfo.email });
-    setUserEMailOmit(emailOmit);
+    if (userInfo?.customerNo) {
+      // 手机号掩码
+      let mobileOmit =
+        userInfo?.mobile?.indexOf("*") > -1
+          ? userInfo.mobile
+          : stringEncryption({ str: userInfo?.mobile });
+      setUserMobileOmit(mobileOmit);
+      // 邮箱掩码
+      let emailOmit =
+        userInfo.email.indexOf("*") > -1
+          ? userInfo.email
+          : stringEncryption({ str: userInfo.email });
+      setUserEMailOmit(emailOmit);
+    }
   }, [userInfo]);
 
   const showUsage = accessStore.isAuthorized();
@@ -316,8 +318,7 @@ export function Settings() {
     // checkUpdate();
     // showUsage && checkUsage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    queryUserInfo();
+    // queryUserInfo();
   }, []);
 
   useEffect(() => {

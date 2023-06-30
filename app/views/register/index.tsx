@@ -88,13 +88,17 @@ export const Register = () => {
                     if (loginRes.success) {
                       // 注册成功
                       setRegistSuccess(true);
-                      setRegistStatus(true);
+                      setRegistStatus(false);
                       jumpCountDown();
+                    } else {
+                      setRegistStatus(false);
                     }
                   })
                   .catch(() => {
                     setRegistStatus(false);
                   });
+              } else {
+                setRegistStatus(false);
               }
             })
             .catch(() => {
@@ -358,7 +362,6 @@ export const Register = () => {
               >
                 <Input.Password
                   placeholder="请设置登录密码"
-                  visibilityToggle={false}
                   prefix={
                     <Icon
                       name={

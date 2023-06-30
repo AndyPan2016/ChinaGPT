@@ -168,35 +168,6 @@
             margin-bottom: 10px;
             line-height: 16px;
         }
-        .customer-form-item {
-            font-size: 14px;
-            color: var(--chat-item-info-active);
-            margin-bottom: 18px;
-            position: relative;
-            padding-top: 10px;
-            &.content-right {
-                display: flex;
-                justify-content: flex-end;
-            }
-            &.customer-form-shadow {
-                &::after {
-                    content: '';
-                    display: inline-block;
-                    left: 20px;
-                    right: 20px;
-                    bottom: 0;
-                    position: absolute;
-                    height: 2px;
-                    box-shadow: 0px 0px 20px rgba(0, 77, 226, 1);
-                }
-            }
-        }
-        .form-item-label {
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: bold;
-            margin-right: 15px;
-        }
         .send-text {
             line-height: 24px;
             color: var(--primary);
@@ -219,5 +190,39 @@
             position: relative;
             z-index: 2;
         }
+    }
+    
+    .customer-form-item {
+        font-size: 14px;
+        color: var(--chat-item-info-active);
+        margin-bottom: 18px;
+        position: relative;
+        padding-top: 10px;
+        &.content-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+        &.customer-form-shadow {
+            &::after {
+                content: '';
+                display: inline-block;
+                left: 20px;
+                right: 20px;
+                bottom: 0;
+                position: absolute;
+                height: 2px;
+                box-shadow: 0px 0px 20px rgba(0, 77, 226, 1);
+            }
+        }
+        .forget-password {
+            cursor: pointer;
+            font-size: 16px;
+        }
+    }
+    .form-item-label {
+        color: var(--black);
+        font-size: 14px;
+        // font-weight: bold;
+        margin-right: 15px;
     }
 }

@@ -180,6 +180,7 @@ export const GPTModal = ({
                 labelCol={{ span: 1 }}
                 wrapperCol={{ span: 2 }}
               >
+                {children?.formFirst}
                 {formData?.map((fit: IGPTModalFormData, fidx: number) => {
                   let dependencies = fit.dependencies
                     ? { dependencies: fit.dependencies }
