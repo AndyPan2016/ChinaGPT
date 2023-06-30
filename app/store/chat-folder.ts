@@ -1361,3 +1361,43 @@ export const useChatFolderStore = create<any>()(
     },
   ),
 );
+
+// (接口返回的)会话类型
+export interface ChatSessionStore {
+  // 会话使用字符总数
+  charCount: number;
+  // 节点id
+  nodeId: number;
+  // 父节点id
+  nodeParent: number;
+  // 会话使用token总数
+  tokenCount: number;
+  // 会话流水号
+  sessionNo: string;
+  // 主题
+  topic: string;
+  // 模型
+  model: string;
+  // 频率惩罚
+  frequencyPenalty: number;
+  // 随机性
+  temperature: number;
+  // 话题新鲜度
+  presencePenalty: number;
+  // 单次回复限制
+  maxTokens: number;
+  // 会话消息数
+  messageCount: number;
+}
+
+export interface ChatMessageStore {
+  // 数据库流水号
+  id: number;
+  blackWord: string;
+  charCount: number;
+  content: string;
+  role: string;
+  seqNo: number;
+  sessionId: number;
+  tokenCount: number;
+}

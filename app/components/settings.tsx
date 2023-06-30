@@ -487,7 +487,7 @@ export function Settings() {
       },
     })
       .then((res) => {
-        if (ress.success) {
+        if (res.success) {
           toastSuccess({ content: "修改成功" });
           setModifyPasswordSecond({
             ...modifyPasswordSecond,
@@ -582,7 +582,7 @@ export function Settings() {
     apiFetch({
       url: "/portal/customer/captchaCheck",
       params: {
-        businessType: "",
+        businessType: "MODIFY_MOBILE",
         sendType: "MOBILE",
         captchaToken: mobileTokenFirst,
         captchaValue: bindPhoneFirst.formData[1].value,
@@ -609,7 +609,7 @@ export function Settings() {
     apiFetch({
       url: "/portal/customer/captchaSend",
       params: {
-        businessType: "",
+        businessType: "MODIFY_MOBILE",
         sendType: "MOBILE",
         sendTo: userInfo.mobile,
       },
@@ -625,7 +625,7 @@ export function Settings() {
     apiFetch({
       url: "/portal/customer/captchaSend",
       params: {
-        businessType: "",
+        businessType: "MODIFY_MOBILE",
         sendType: "MOBILE",
         sendTo: bindPhoneSecond.formData[0].value,
       },
@@ -745,7 +745,7 @@ export function Settings() {
     apiFetch({
       url: "/portal/customer/captchaCheck",
       params: {
-        businessType: "",
+        businessType: "MODIFY_EMAIL",
         sendType: "EMAIL",
         captchaToken: tokenEMailFirst,
         captchaValue: bindEMailFirst.formData[1].value,
@@ -772,7 +772,7 @@ export function Settings() {
     apiFetch({
       url: "/portal/customer/captchaSend",
       params: {
-        businessType: "",
+        businessType: "MODIFY_EMAIL",
         sendType: "EMAIL",
         sendTo: userInfo.email,
       },
@@ -783,12 +783,12 @@ export function Settings() {
       }
     });
   };
-  // 绑定新手机，发送验证
+  // 绑定邮箱，发送验证
   const sendEMailCodeNew = (callBack?: any) => {
     apiFetch({
       url: "/portal/customer/captchaSend",
       params: {
-        businessType: "",
+        businessType: "MODIFY_EMAIL",
         sendType: "EMAIL",
         sendTo: bindEMailSecond.formData[0].value,
       },

@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Radio, Checkbox } from "antd";
 import { Path } from "../../constant";
 import { useMobileScreen, countDown } from "../../utils";
-import { useAppConfig, Theme } from "../../store";
+import { useAppConfig, Theme, useUserInfo } from "../../store";
 import { Icon } from "../../components/tools";
 import { toastSuccess, toastFail } from "../../components/ui-lib";
 import { GPTWindowHeader } from "../../components/home";
@@ -87,6 +87,58 @@ export const Login = () => {
     }
   };
 
+  // // 列出当前用户所有会话
+  // const queryChatList = (callBack?: any) => {
+  //   apiFetch({
+  //     url: '/portal/session/list',
+  //     params: {
+  //       pageNo: 1,
+  //       pageSize: 100
+  //     }
+  //   }).then(res => {
+  //     if (res.success) {
+  //       let rows = res.rows || []
+  //       if (rows.length) {
+  //         // 有数据，打开第一条聊天
+
+  //       } else {
+  //         // 没得数据，就创建一条
+  //       }
+  //       callBack && callBack()
+  //     } else {
+  //       setLoginStatus(false)
+  //     }
+  //   }).catch(() => {
+  //     setLoginStatus(false)
+  //   })
+  // }
+
+  // 登录后，获取用户信息
+  const queryInfo = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/queryInfo",
+      method: "get",
+    })
+      .then((res) => {
+        if (res.success) {
+          // 查询用户信息
+          let entity = res.entity || {};
+          // 保存用户信息
+          useUserInfo.set({ ...entity });
+          // 进入聊天界面
+          navigate(Path.Chat);
+          // 查询当前用户所有会话列表
+          // queryChatList()
+          callBack && callBack();
+        } else {
+          setLoginStatus(false);
+        }
+      })
+      .catch(() => {
+        setLoginStatus(false);
+      });
+  };
+
   // 登录
   const onLogin = () => {
     form.validateFields().then(async (res: any) => {
@@ -104,9 +156,11 @@ export const Login = () => {
         params,
       })
         .then((res) => {
-          setLoginStatus(false);
           if (res.success) {
-            navigate(Path.Chat);
+            // 登录成功后，查询用户信息，并缓存
+            queryInfo();
+          } else {
+            setLoginStatus(false);
           }
         })
         .catch(() => {
