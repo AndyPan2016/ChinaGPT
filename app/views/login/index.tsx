@@ -89,8 +89,8 @@ export const Login = () => {
 
   // 登录
   const onLogin = () => {
-    setLoginStatus(true);
     form.validateFields().then(async (res: any) => {
+      setLoginStatus(true);
       console.info(res);
       let params = {
         userName: res.mobile || res.email || res.userName,
@@ -270,6 +270,7 @@ export const Login = () => {
                     }
                     style={{
                       fontSize: 14,
+                      minWidth: "300px",
                       maxWidth: "initial",
                       textAlign: "left",
                     }}
@@ -305,6 +306,7 @@ export const Login = () => {
                     }
                     style={{
                       fontSize: 14,
+                      minWidth: "300px",
                       maxWidth: "initial",
                       textAlign: "left",
                     }}
@@ -373,15 +375,17 @@ export const Login = () => {
                 </Button>
               </div>
             </div>
-            <div
-              className={
-                styles["customer-form-item"] + (" " + styles["content-right"])
-              }
-            >
-              <span className={styles["forget-password"]} onClick={() => {}}>
-                忘记密码
-              </span>
-            </div>
+            {currentLoginType !== "MOBILE" && currentLoginType !== "EMAIL" ? (
+              <div
+                className={
+                  styles["customer-form-item"] + (" " + styles["content-right"])
+                }
+              >
+                <span className={styles["forget-password"]} onClick={() => {}}>
+                  忘记密码
+                </span>
+              </div>
+            ) : null}
           </Form>
           <div className={styles["to-register"]}>
             <Link className={styles["to-register-text"]} to={Path.Register}>

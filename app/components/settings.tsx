@@ -282,6 +282,7 @@ export function Settings() {
   // 邮箱(省略)
   const [userEMailOmit, setUserEMailOmit] = useState<string>("");
 
+  // 查询用户信息
   const queryUserInfo = () => {
     apiFetch({
       url: "/portal/customer/queryInfo",
@@ -425,7 +426,7 @@ export function Settings() {
     cancelText: "上一步",
     okText: "修改登录密码",
   });
-  // 绑定修改手机号 - 第一步
+  // 修改密码 - 第一步
   const closeModifyPasswordFirst = () => {
     setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ open: false } });
   };
@@ -434,15 +435,39 @@ export function Settings() {
   };
   const sureModifyPasswordFirst = () => {
     setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ loading: true } });
-    setTimeout(() => {
-      setModifyPasswordFirst({
-        ...modifyPasswordFirst,
-        ...{ open: false, loading: false },
+    // 检测原始密码
+    apiFetch({
+      url: "/portal/customer/checkPassword",
+      params: {
+        // 原始密码
+        password: modifyPasswordFirst.formData[0].value,
+      },
+    })
+      .then((res) => {
+        if (res.success) {
+          setModifyPasswordFirst({
+            ...modifyPasswordFirst,
+            ...{ open: false, loading: false },
+          });
+          setModifyPasswordSecond({
+            ...modifyPasswordSecond,
+            ...{ open: true },
+          });
+        } else {
+          setModifyPasswordFirst({
+            ...modifyPasswordFirst,
+            ...{ loading: false },
+          });
+        }
+      })
+      .catch(() => {
+        setModifyPasswordFirst({
+          ...modifyPasswordFirst,
+          ...{ loading: false },
+        });
       });
-      setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: true } });
-    }, 1000);
   };
-  // 绑定修改手机号 - 第二步
+  // 修改密码 - 第二步
   const closeModifyPasswordSecond = () => {
     setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: false } });
   };
@@ -451,7 +476,36 @@ export function Settings() {
     setModifyPasswordFirst({ ...modifyPasswordFirst, ...{ open: true } });
   };
   const sureModifyPasswordSecond = () => {
-    setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ open: false } });
+    setModifyPasswordSecond({ ...modifyPasswordSecond, ...{ loading: true } });
+    apiFetch({
+      url: "/portal/customer/changePassword",
+      params: {
+        // 原始密码
+        password: modifyPasswordFirst.formData[0].value,
+        // 新密码
+        newPassword: modifyPasswordSecond.formData[0].value,
+      },
+    })
+      .then((res) => {
+        if (ress.success) {
+          toastSuccess({ content: "修改成功" });
+          setModifyPasswordSecond({
+            ...modifyPasswordSecond,
+            ...{ loading: false, open: false },
+          });
+        } else {
+          setModifyPasswordSecond({
+            ...modifyPasswordSecond,
+            ...{ loading: false },
+          });
+        }
+      })
+      .catch(() => {
+        setModifyPasswordSecond({
+          ...modifyPasswordSecond,
+          ...{ loading: false },
+        });
+      });
   };
 
   const [bindPhoneFirst, setBindPhoneFirst] = useState<any>({
@@ -533,16 +587,22 @@ export function Settings() {
         captchaToken: mobileTokenFirst,
         captchaValue: bindPhoneFirst.formData[1].value,
       },
-    }).then((res) => {
-      if (res.success) {
-        // 关闭第一步，去下一步
-        setBindPhoneFirst({
-          ...bindPhoneFirst,
-          ...{ loading: false, open: false },
-        });
-        setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: true } });
-      }
-    });
+    })
+      .then((res) => {
+        if (res.success) {
+          // 关闭第一步，去下一步
+          setBindPhoneFirst({
+            ...bindPhoneFirst,
+            ...{ loading: false, open: false },
+          });
+          setBindPhoneSecond({ ...bindPhoneSecond, ...{ open: true } });
+        } else {
+          setBindPhoneFirst({ ...bindPhoneFirst, ...{ loading: false } });
+        }
+      })
+      .catch(() => {
+        setBindPhoneFirst({ ...bindPhoneFirst, ...{ loading: false } });
+      });
   };
   // 发送验证码
   const sendPhoneCode = (callBack?: any) => {
@@ -594,14 +654,21 @@ export function Settings() {
         modifyValue: bindPhoneSecond.formData[0].value,
         captchaValue: bindPhoneSecond.formData[1].value,
       },
-    }).then((res) => {
-      if (res.success) {
-        setBindPhoneSecond({
-          ...bindPhoneSecond,
-          ...{ loading: false, open: false },
-        });
-      }
-    });
+    })
+      .then((res) => {
+        if (res.success) {
+          toastSuccess({ content: "修改成功" });
+          setBindPhoneSecond({
+            ...bindPhoneSecond,
+            ...{ loading: false, open: false },
+          });
+        } else {
+          setBindPhoneSecond({ ...bindPhoneSecond, ...{ loading: false } });
+        }
+      })
+      .catch(() => {
+        setBindPhoneSecond({ ...bindPhoneSecond, ...{ loading: false } });
+      });
   };
 
   const [bindEMailFirst, setBindEMailFirst] = useState<any>({
@@ -683,16 +750,22 @@ export function Settings() {
         captchaToken: tokenEMailFirst,
         captchaValue: bindEMailFirst.formData[1].value,
       },
-    }).then((res) => {
-      if (res.success) {
-        // 关闭第一步，去下一步
-        setBindEMailFirst({
-          ...bindEMailFirst,
-          ...{ loading: false, open: false },
-        });
-        setBindEMailSecond({ ...bindEMailSecond, ...{ open: true } });
-      }
-    });
+    })
+      .then((res) => {
+        if (res.success) {
+          // 关闭第一步，去下一步
+          setBindEMailFirst({
+            ...bindEMailFirst,
+            ...{ loading: false, open: false },
+          });
+          setBindEMailSecond({ ...bindEMailSecond, ...{ open: true } });
+        } else {
+          setBindEMailSecond({ ...bindEMailSecond, ...{ loading: false } });
+        }
+      })
+      .catch(() => {
+        setBindEMailSecond({ ...bindEMailSecond, ...{ loading: false } });
+      });
   };
   // 发送验证码
   const sendEMailCode = (callBack?: any) => {
@@ -744,14 +817,21 @@ export function Settings() {
         modifyValue: bindEMailSecond.formData[0].value,
         captchaValue: bindEMailSecond.formData[1].value,
       },
-    }).then((res) => {
-      if (res.success) {
-        setBindEMailSecond({
-          ...bindEMailSecond,
-          ...{ loading: false, open: false },
-        });
-      }
-    });
+    })
+      .then((res) => {
+        if (res.success) {
+          toastSuccess({ content: "修改成功" });
+          setBindEMailSecond({
+            ...bindEMailSecond,
+            ...{ loading: false, open: false },
+          });
+        } else {
+          setBindPhoneSecond({ ...bindEMailSecond, ...{ loading: false } });
+        }
+      })
+      .catch(() => {
+        setBindPhoneSecond({ ...bindEMailSecond, ...{ loading: false } });
+      });
   };
 
   return (
