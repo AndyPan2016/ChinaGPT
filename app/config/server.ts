@@ -40,6 +40,7 @@ export const getServerSideConfig = () => {
     codes: ACCESS_CODES,
     needCode: ACCESS_CODES.size > 0,
     baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
+    baseUrlSocket: process.env.NEXT_PUBLIC_BASE_URL_SOCKET,
     nodeEnv: process.env.NODE_ENV,
     title: process.env.NEXT_PUBLIC_TITLE,
     proxyUrl: process.env.PROXY_URL,

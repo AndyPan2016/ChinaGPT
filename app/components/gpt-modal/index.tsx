@@ -47,7 +47,7 @@ export const GPTModal = ({
 
   useEffect(() => {
     form.setFieldsValue(formData);
-    form.resetFields();
+    // form.resetFields();
     renderSendStatus();
   }, [formData]);
 
@@ -182,10 +182,12 @@ export const GPTModal = ({
                 wrapperCol={{ span: 2 }}
               >
                 {children?.formFirst}
-                {formData?.map((fit: IGPTModalFormData, fidx: number) => {
+                {formData?.map((fit: any, fidx: number) => {
                   let dependencies = fit.dependencies
                     ? { dependencies: fit.dependencies }
                     : {};
+                  // console.info(fit.fieldName || "value")
+                  // console.info(fit[fit?.fieldName || 'value'])
                   return (
                     <>
                       <Form.Item
@@ -195,13 +197,14 @@ export const GPTModal = ({
                             ? [fidx, fit.fieldName]
                             : [fidx, "value"]
                         }
+                        // name={fit.fieldName || "value"}
                         label={fit.label}
                         key={fidx}
                         hasFeedback={hasFeedback}
                         rules={
                           fit.rules || [
                             {
-                              required: true,
+                              required: fit.formItemType !== 'text',
                               message: fit.placeholder ?? "请输入",
                             },
                           ]
@@ -230,8 +233,8 @@ export const GPTModal = ({
                               textAlign: "left",
                             }}
                             placeholder={fit.placeholder}
-                            // value={fit[fit?.fieldName || 'value']}
-                            value={fit.value}
+                            value={fit[fit?.fieldName || 'value']}
+                            // value={fit.value}
                             disabled={loading}
                             onChange={(e) => {
                               let association;
@@ -289,7 +292,7 @@ export const GPTModal = ({
                               sendCode(() => {
                                 toastSuccess({ content: "发送成功" });
                                 countDown({
-                                  timer: 10,
+                                  timer: 59,
                                   fn(timer: any) {
                                     setSendText(timer + "s后重发");
                                   },
@@ -317,56 +320,4 @@ export const GPTModal = ({
       ) : null}
     </>
   );
-
-  // return (
-  //   <Modal
-  //     title={<span className={styles["modify-modal-title"]}>{title}</span>}
-  //     centered
-  //     open={open}
-  //     onCancel={cancelModify}
-  //     footer={[
-  //       <Button key="modify" type="primary" onClick={sureModify}>
-  //         修改
-  //       </Button>,
-  //       <Button key="cancel" onClick={cancelModify}>
-  //         取消
-  //       </Button>,
-  //     ]}
-  //   >
-  //     <Form
-  //       form={form}
-  //       requiredMark={false}
-  //       labelCol={{ span: 1 }}
-  //       wrapperCol={{ span: 2 }}
-  //     >
-  //       <Form.Item
-  //         name="name"
-  //         label={<Icon name={labelIconName || "icon-folder-primary.png"} />}
-  //         rules={[
-  //           {
-  //             required: true,
-  //             message: placeholder,
-  //           },
-  //         ]}
-  //       >
-  //         {inputType === "textarea" ? (
-  //           <TextArea
-  //             style={{
-  //               fontSize: 14,
-  //               maxWidth: "initial",
-  //               textAlign: "left",
-  //               height: 90,
-  //             }}
-  //             placeholder={placeholder}
-  //           />
-  //         ) : (
-  //           <Input
-  //             style={{ fontSize: 14, maxWidth: "initial", textAlign: "left" }}
-  //             placeholder={placeholder}
-  //           />
-  //         )}
-  //       </Form.Item>
-  //     </Form>
-  //   </Modal>
-  // );
 };

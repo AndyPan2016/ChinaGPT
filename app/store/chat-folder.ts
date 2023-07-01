@@ -685,12 +685,12 @@ export const useChatFolderStore = create<any>()(
       globalFolderId: 0,
       globalChatId: 0,
       folder: [
-        createEmptyFolder({
-          name: "",
-          type: "static",
-          id: "folder0",
-          folderId: "folder-0",
-        }),
+        // createEmptyFolder({
+        //   name: "",
+        //   type: "static",
+        //   id: "folder0",
+        //   folderId: "folder-0",
+        // }),
       ],
       // 初始化folder
       initFolder() {
@@ -1013,7 +1013,7 @@ export const useChatFolderStore = create<any>()(
         let folder = get().folder.slice();
         let chats = folder[index[0]].chat || [];
         let messages = chats[index[1]]?.messages;
-        updater && updater(messages[index[2]]);
+        updater && updater(index[2] ? messages[index[2]] : messages);
 
         chats[index[1]].messages = messages;
         folder[index[0]].chat = chats;
@@ -1227,7 +1227,7 @@ export const useChatFolderStore = create<any>()(
         chat.id = "chat" + get().globalChatId;
 
         if (mask) {
-          chat.mask = { ...mask };
+          chat.mask = { ...chat.mask, ...mask };
           chat.topic = mask.name;
         }
 
@@ -1251,6 +1251,7 @@ export const useChatFolderStore = create<any>()(
               type: "static",
               id: "folder0",
               folderId: "folder-0",
+              chat: [chat]
             }),
           ];
         } else {
@@ -1363,7 +1364,7 @@ export const useChatFolderStore = create<any>()(
 );
 
 // (接口返回的)会话类型
-export interface ChatSessionStore {
+export interface IChatSessionStore {
   // 会话使用字符总数
   charCount: number;
   // 节点id
@@ -1390,7 +1391,7 @@ export interface ChatSessionStore {
   messageCount: number;
 }
 
-export interface ChatMessageStore {
+export interface IChatMessageStore {
   // 数据库流水号
   id: number;
   blackWord: string;
@@ -1401,3 +1402,4 @@ export interface ChatMessageStore {
   sessionId: number;
   tokenCount: number;
 }
+

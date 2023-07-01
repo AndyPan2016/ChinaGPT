@@ -1,27 +1,27 @@
 import { useDebouncedCallback } from "use-debounce";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 
-import SendWhiteIcon from "../icons/send-white.svg";
+import ResetIcon from "../icons/reload.svg";
 import BrainIcon from "../icons/brain.svg";
-import RenameIcon from "../icons/rename.svg";
-import ExportIcon from "../icons/share.svg";
-import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
 import LoadingParentIcon from "../icons/three-dots-parent.svg";
-import LoadingIcon from "../icons/three-dots.svg";
-import PromptIcon from "../icons/prompt.svg";
-import MaskIcon from "../icons/mask.svg";
-import MaxIcon from "../icons/max.svg";
-import MinIcon from "../icons/min.svg";
-import ResetIcon from "../icons/reload.svg";
-import BreakIcon from "../icons/break.svg";
-import SettingsIcon from "../icons/chat-settings.svg";
 
-import LightIcon from "../icons/light.svg";
-import DarkIcon from "../icons/dark.svg";
-import AutoIcon from "../icons/auto.svg";
-import BottomIcon from "../icons/bottom.svg";
-import StopIcon from "../icons/pause.svg";
+// import SendWhiteIcon from "../icons/send-white.svg";
+// import RenameIcon from "../icons/rename.svg";
+// import ExportIcon from "../icons/share.svg";
+// import ReturnIcon from "../icons/return.svg";
+// import LoadingIcon from "../icons/three-dots.svg";
+// import PromptIcon from "../icons/prompt.svg";
+// import MaskIcon from "../icons/mask.svg";
+// import MaxIcon from "../icons/max.svg";
+// import MinIcon from "../icons/min.svg";
+// import BreakIcon from "../icons/break.svg";
+// import SettingsIcon from "../icons/chat-settings.svg";
+// import LightIcon from "../icons/light.svg";
+// import DarkIcon from "../icons/dark.svg";
+// import AutoIcon from "../icons/auto.svg";
+// import BottomIcon from "../icons/bottom.svg";
+// import StopIcon from "../icons/pause.svg";
 
 import {
   ChatMessage,
@@ -35,6 +35,7 @@ import {
   Theme,
   useAppConfig,
   DEFAULT_TOPIC,
+  useUserInfoStore
 } from "../store";
 
 import {
@@ -43,6 +44,7 @@ import {
   selectOrCopy,
   autoGrowTextArea,
   useMobileScreen,
+  hasLoginRedirect,
 } from "../utils";
 
 import { Icon, IconWrap, IconGroup, ActionSelectList } from "./tools";
@@ -68,7 +70,8 @@ import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { GPTModal } from "./gpt-modal";
-import { Popover } from "antd";
+import { Popover, Empty } from "antd";
+import { apiFetch, apiSocket } from "../api/api.fetch";
 // import { Markdown, Markdown as MarkdownUser } from './markdown'
 
 const Markdown = dynamic(
@@ -363,15 +366,17 @@ export function ChatActions(props: {
     { text: "GPT-3.0（无限制）", value: 3 },
   ]);
   let [gptVersionP, setGPTVersionP] = useState<boolean>(false);
-  let [currentGPT, setCurrentGPT] = useState<ISelectItem>(dataList[0]);
+  let [currentGPT, setCurrentGPT] = useState<any>(dataList[0]);
 
   let [roleList, setRoleList] = useState<Array<ISelectItem>>([
-    { text: "大学生", value: 1, active: true },
-    { text: "建筑工人", value: 2 },
-    { text: "证券分析师", value: 3 },
+    // { text: "大学生", value: 1, active: true },
+    // { text: "建筑工人", value: 2 },
+    // { text: "证券分析师", value: 3 },
   ]);
   let [roleP, setRoleP] = useState<boolean>(false);
-  let [currentRole, setCurrentRole] = useState<ISelectItem>(roleList[0]);
+  let [currentRole, setCurrentRole] = useState<any>({});
+  // 刷新纪录最后一条message，停止时还原
+  let [lastMessage, setLastMessage] = useState<any>()
 
   // switch themes
   const theme = config.theme;
@@ -403,6 +408,33 @@ export function ChatActions(props: {
       formItemType: "text",
     },
   ];
+
+  // 获取角色列表
+  const getRoleList = () => {
+    apiFetch({
+      url: '/portal/prompt/list',
+      params: {
+        pageNo: 1,
+        pageSize: 50
+      }
+    }).then(res => {
+      if (res.success) {
+        let rows = res.rows || []
+        if (rows.length) {
+          let roleList: any = []
+          rows.map((it: any) => {
+            roleList.push({ text: it.title, value: it.id, role: it.role, active: false })
+          })
+          setCurrentRole(roleList[0])
+          setRoleList(roleList)
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    getRoleList()
+  }, [])
 
   return (
     <div
@@ -459,7 +491,7 @@ export function ChatActions(props: {
             }
           />
           <span className={chatStyle["chat-action-text"]}>
-            {currentGPT.text}
+            {currentGPT?.text}
           </span>
           {/* <span className={chatStyle["chat-action-primarytext"]}>(20次)</span> */}
         </div>
@@ -504,7 +536,7 @@ export function ChatActions(props: {
             name={roleP ? "icon-role-white.png" : "icon-role-default.png"}
           />
           <span className={chatStyle["chat-action-text"]}>
-            {currentRole.text}
+            {currentRole?.text}
           </span>
         </div>
       </Popover>
@@ -525,7 +557,26 @@ export function ChatActions(props: {
       </div>
       {couldStop ? (
         // 停止
-        <div className={chatStyle["chat-input-action"]} onClick={stopAll}>
+        <div className={chatStyle["chat-input-action"]} onClick={() => {
+          // let currentIndex = chatFolderStore.currentIndex.slice()
+          // let lastMessageIdx = currentChat?.messages.length - 1
+          // if (lastMessage) {
+          //   chatFolderStore.updateMessage(currentIndex, (messages: any) => {
+          //     messages[lastMessageIdx] = lastMessage
+          //   })
+          //   setLastMessage(null)
+          // } else {
+          //   chatFolderStore.updateMessage(currentIndex, (messages: any) => {
+          //     // console.info(messages)
+          //     let last = messages[lastMessageIdx]
+          //     // if (last.role !== 'user') {
+          //     //   messages.splice(lastMessageIdx, 1)
+          //     // }
+          //     console.info(last)
+          //   })
+          // }
+          stopAll()
+        }}>
           <Icon name="icon-message-stop-default.png" />
           <span className={chatStyle["chat-action-text"]}>停止</span>
         </div>
@@ -534,6 +585,10 @@ export function ChatActions(props: {
         <div
           className={chatStyle["chat-input-action"]}
           onClick={() => {
+            let lastMsg = currentChat?.messages[currentChat?.messages.length - 1]
+            if (lastMsg && lastMsg.role !== 'user') {
+              setLastMessage(lastMsg)
+            }
             props.onResend && props.onResend();
           }}
         >
@@ -623,6 +678,10 @@ export function Chat() {
   //   state.currentSession(),
   //   state.currentSessionIndex,
   // ]);
+  const useUserInfo = useUserInfoStore()
+  const navigate = useNavigate();
+  hasLoginRedirect({ useUserInfo, navigate })
+
   const chatFolderStore = useChatFolderStore();
   const [currentChat, currentIndex] = useChatFolderStore((state) => [
     state.currentChat(),
@@ -647,7 +706,18 @@ export function Chat() {
   const [mdState, setMDState] = useState<boolean>(false);
   const [mdUserState, setMDUserState] = useState<boolean>(false);
   const isMobileScreen = useMobileScreen();
-  const navigate = useNavigate();
+  const couldStop = ChatControllerPool.hasPending();
+  let [socket, setSocket] = useState<any>({})
+
+  useEffect(() => {
+    let theSocket = apiSocket({
+      sessionNo: '230701223741001E0001',
+      onMessage: (msg: any) => {
+        console.info(msg)
+      }
+    })
+    setSocket(theSocket)
+  }, [])
 
   const onChatBodyScroll = (e: HTMLElement) => {
     const isTouchBottom = e.scrollTop + e.clientHeight >= e.scrollHeight - 100;
@@ -711,10 +781,11 @@ export function Chat() {
   };
 
   const doSubmit = (userInput: string) => {
-    if (userInput.trim() === "") return;
+    if (userInput.trim() === "" || couldStop) return;
     setIsLoading(true);
-    chatFolderStore.onUserInput(userInput).then(() => setIsLoading(false));
-    localStorage.setItem(LAST_INPUT_KEY, userInput);
+    socket.send(userInput)
+    // chatFolderStore.onUserInput(userInput).then(() => setIsLoading(false));
+    // localStorage.setItem(LAST_INPUT_KEY, userInput);
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -1318,7 +1389,7 @@ export function Chat() {
               <div
                 className={
                   styles["chat-input-send"] +
-                  (userInput.trim() ? "" : " " + styles["send-disabled"])
+                  (userInput.trim() && !couldStop ? "" : " " + styles["send-disabled"])
                 }
                 onClick={() => doSubmit(userInput)}
               ></div>
@@ -1336,7 +1407,7 @@ export function Chat() {
             <ExportMessageModal onClose={() => setShowExport(false)} />
           )}
         </div>
-      ) : null}
+      ) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无聊天" />}
     </>
   );
 }

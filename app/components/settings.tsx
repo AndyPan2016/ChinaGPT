@@ -31,6 +31,7 @@ import {
   useUpdateStore,
   useAccessStore,
   useAppConfig,
+  useUserInfoStore,
 } from "../store";
 
 import Locale, {
@@ -44,6 +45,7 @@ import {
   countDown,
   useMobileScreen,
   stringEncryption,
+  hasLoginRedirect,
 } from "../utils";
 import { Icon } from "./tools";
 import Link from "next/link";
@@ -221,8 +223,10 @@ function formatVersionDate(t: string) {
 }
 
 export function Settings() {
-  const isMobileScreen = useMobileScreen();
+  const useUserInfo = useUserInfoStore()
   const navigate = useNavigate();
+  hasLoginRedirect({ useUserInfo, navigate })
+  const isMobileScreen = useMobileScreen();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const config = useAppConfig();
   const theme = config.theme;
@@ -295,22 +299,22 @@ export function Settings() {
     });
   };
 
-  useEffect(() => {
-    if (userInfo?.customerNo) {
-      // 手机号掩码
-      let mobileOmit =
-        userInfo?.mobile?.indexOf("*") > -1
-          ? userInfo.mobile
-          : stringEncryption({ str: userInfo?.mobile });
-      setUserMobileOmit(mobileOmit);
-      // 邮箱掩码
-      let emailOmit =
-        userInfo.email.indexOf("*") > -1
-          ? userInfo.email
-          : stringEncryption({ str: userInfo.email });
-      setUserEMailOmit(emailOmit);
-    }
-  }, [userInfo]);
+  // useEffect(() => {
+  //   if (userInfo?.customerNo) {
+  //     // 手机号掩码
+  //     let mobileOmit =
+  //       userInfo?.mobile?.indexOf("*") > -1
+  //         ? userInfo.mobile
+  //         : stringEncryption({ str: userInfo?.mobile });
+  //     setUserMobileOmit(mobileOmit);
+  //     // 邮箱掩码
+  //     let emailOmit =
+  //       userInfo.email.indexOf("*") > -1
+  //         ? userInfo.email
+  //         : stringEncryption({ str: userInfo.email });
+  //     setUserEMailOmit(emailOmit);
+  //   }
+  // }, [userInfo]);
 
   const showUsage = accessStore.isAuthorized();
   useEffect(() => {
@@ -318,7 +322,7 @@ export function Settings() {
     // checkUpdate();
     // showUsage && checkUsage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // queryUserInfo();
+    queryUserInfo();
   }, []);
 
   useEffect(() => {
@@ -678,7 +682,7 @@ export function Settings() {
     formData: [
       {
         label: "邮箱",
-        value: "test@qq.com",
+        value: "",
         formItemType: "text",
       },
       {
@@ -1031,7 +1035,7 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userMobileOmit}
+              {userInfo.mobile}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
@@ -1039,7 +1043,7 @@ export function Settings() {
                     JSON.stringify(bindPhoneFirst),
                   );
                   tempBindPhoneFirst.open = true;
-                  tempBindPhoneFirst.formData[0].value = userMobileOmit;
+                  tempBindPhoneFirst.formData[0].value = userInfo.mobile;
                   setBindPhoneFirst(tempBindPhoneFirst);
                 }}
               >
@@ -1066,11 +1070,16 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userEMailOmit}
+              {userInfo.email}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
-                  setBindEMailFirst({ ...bindEMailFirst, ...{ open: true } });
+                  let tempBindEMailFirst = JSON.parse(
+                    JSON.stringify(bindEMailFirst),
+                  );
+                  tempBindEMailFirst.open = true;
+                  tempBindEMailFirst.formData[0].value = userInfo.email;
+                  setBindEMailFirst(tempBindEMailFirst);
                 }}
               >
                 <Icon

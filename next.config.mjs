@@ -32,7 +32,11 @@ if (mode !== "export") {
       {
         source: '/acooly/:path*',
         destination: 'http://119.13.101.192:8680/:path*'
-      }
+      },
+      // {
+      //   source: '/socket/:path*',
+      //   destination: 'ws://119.13.101.192:8680/:path*'
+      // }
     ];
 
     const apiUrl = process.env.API_URL;

@@ -19,6 +19,7 @@ import {
   useAppConfig,
   useChatStore,
   Theme,
+  useUserInfoStore,
 } from "../store";
 import { ROLES } from "../client/api";
 import {
@@ -37,7 +38,7 @@ import { useNavigate } from "react-router-dom";
 
 import chatStyle from "./chat.module.scss";
 import { useEffect, useState } from "react";
-import { downloadAs, readFromFile, useMobileScreen } from "../utils";
+import { downloadAs, hasLoginRedirect, readFromFile, useMobileScreen } from "../utils";
 import { Updater } from "../typing";
 import { ModelConfigList } from "./model-config";
 import { FileName, Path } from "../constant";
@@ -275,10 +276,13 @@ export function ContextPrompts(props: {
 }
 
 export function MaskPage() {
+  
+  const useUserInfo = useUserInfoStore()
+  const navigate = useNavigate();
+  hasLoginRedirect({ useUserInfo, navigate })
   const isMobileScreen = useMobileScreen();
   const config = useAppConfig();
   const theme = config.theme;
-  const navigate = useNavigate();
 
   const maskStore = useMaskStore();
   const chatStore = useChatStore();
@@ -389,6 +393,7 @@ export function MaskPage() {
     apiFetch({ url: "/portal/prompt/save", params }).then((res: any) => {
       if (res.success) {
         toastSuccess({ content: "创建成功" });
+        getChatRoles();
       }
     });
   };
@@ -547,7 +552,7 @@ export function MaskPage() {
                     />
                   </div>
                   <div className={styles["mask-title"]}>
-                    <div className={styles["mask-name"]}>{m.name}</div>
+                    <div className={styles["mask-name"]}>{m.title}</div>
                     {/* <div className={styles["mask-info"] + " one-line"}>
                       {`${Locale.Mask.Item.Info(m.context.length)} / ${
                         ALL_LANG_OPTIONS[m.lang]
@@ -569,7 +574,7 @@ export function MaskPage() {
                               transTheme={true}
                             />
                           ),
-                          value: m.name,
+                          value: m.title,
                           placeholder: "请输入预设角色名称",
                           formItemType: "input",
                         },
@@ -582,7 +587,7 @@ export function MaskPage() {
                               transTheme={true}
                             />
                           ),
-                          value: m.context[0].content,
+                          value: m.content,
                           placeholder:
                             "请对预设角色进行详细描述 如：我想让你扮演医生的角色，想出创造性的治疗方法来治疗疾病。您应该能够推荐常规药物、草药和其他天然替代品。",
                           formItemType: "textarea",

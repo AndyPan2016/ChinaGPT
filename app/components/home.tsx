@@ -26,6 +26,9 @@ import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
 import { AuthPage } from "./auth";
 import { Icon } from "./tools";
+import { useUserInfoStore } from "../store";
+import { toastFail } from "./ui-lib";
+import { useNavigate, Navigate } from 'react-router-dom';
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -70,7 +73,9 @@ const Settings = dynamic(async () => (await import("./settings")).Settings, {
   loading: () => <Loading noLogo />,
 });
 
-const Chat = dynamic(async () => (await import("./chat")).Chat, {
+const Chat = dynamic(async () => {
+  return (await import("./chat")).Chat
+}, {
   loading: () => <Loading noLogo />,
 });
 
@@ -176,6 +181,7 @@ const GPTWindowFooter = () => {
 };
 
 function Screen() {
+  const useUserInfo = useUserInfoStore()
   const config = useAppConfig();
   const location = useLocation();
   const isHome = location.pathname === Path.Home;
@@ -253,6 +259,24 @@ function Screen() {
 
 export function Home() {
   useSwitchTheme();
+  const useUserInfo = useUserInfoStore()
+  const [customerStatus, setCustomerStatus] = useState<any>(0)
+
+
+  useEffect(() => {
+    if (customerStatus == 0) {
+      if (useUserInfo?.customerNo) {
+        if (useUserInfo?.customerStatus === 'enable') {
+          setCustomerStatus(true)
+        } else {
+          toastFail({ content: '账号异常' })
+          setCustomerStatus(false)
+        }
+      } else {
+        setCustomerStatus(false)
+      }
+    }
+  }, [useUserInfo?.customerNo]);
 
   if (!useHasHydrated()) {
     return <Loading />;
@@ -262,6 +286,11 @@ export function Home() {
     <ErrorBoundary>
       <Router>
         <Screen />
+        {/* {
+          customerStatus == 0
+          ? <Loading />
+          : (customerStatus ? <Screen /> : <Login />)
+        } */}
       </Router>
     </ErrorBoundary>
   );

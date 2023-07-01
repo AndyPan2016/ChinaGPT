@@ -26,9 +26,11 @@ export interface UserInfoStore {
   registerType: string;
   // 注册类型文本
   registerTypeText: string;
+  // 保存数据
+  save?: (data: any) => void;
 }
 
-export const useUserInfo = create<any>(
+export const useUserInfoStore = create<any>(
   persist(
     (set, get) => ({
       // 用户编号
@@ -47,6 +49,13 @@ export const useUserInfo = create<any>(
       registerType: null,
       // 注册类型文本
       registerTypeText: null,
+      // 保存数据
+      save: (data: any) => {
+        console.info(data)
+        if (data) {
+          set({ ...data })
+        }
+      }
     }),
     {
       name: InfoKey.UserInfo,

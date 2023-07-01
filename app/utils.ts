@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { showToast, showToastGPT } from "./components/ui-lib";
+import { showToast, showToastGPT, toastFail } from "./components/ui-lib";
+import { Path } from "./constant";
 import Locale from "./locales";
 
 export function trimTopic(topic: string) {
@@ -291,3 +292,95 @@ export const stringEncryption = (options: any) => {
 
   return result;
 };
+
+/**
+ * 通过url获取url上携带的参数
+ * @param {String|Object} options 参数选项
+ * @returns 获取到的参数或参数集合
+ */
+export const querys = (options: any) => {
+  options = options || {};
+  var querys: any = {}
+  let key: any
+  let search = window.location.search
+  if (typeof (options) === 'string') {
+    key = options
+  } else {
+    key = options.key
+    let url = options.url
+    if (url) {
+      search = url.substring(url.indexOf('?'), url.length)
+    }
+  }
+  if (search) {
+    search = search.substring(1, search.length + 1)
+  }
+  let searchAry = search.split('&')
+  var i = 0
+  var length = searchAry.length
+  var strArrayItem
+  var firstSplit = ''
+  for (; i < length; i++) {
+    strArrayItem = searchAry[i].split('=')
+    // 避免strArrayItem[1]中存在'='，以strArrayItem[0]作为split
+    firstSplit = strArrayItem[0]
+    strArrayItem = searchAry[i].split(firstSplit + '=')
+    querys[firstSplit] = unescape(strArrayItem[1])
+  }
+
+  // 参数字符串 | 指定参数的值 | 参数整体对象
+  return options.queryStr ? search : (key ? querys[key] : querys)
+}
+
+/**
+ * 组装URL参数
+ * @param options <any> 组装参数集合
+ * @returns 组装后的URL
+ */
+export const assembleUrlParams = (options: any) => {
+  options = options || {};
+  // 需要拼接参数的URL
+  let url = options.url || window.location.href
+  // 被组装的参数对象
+  let params = (options.params || {}).params || {}
+  // 判断原url中是否已经存在参数
+  let hasParams = url.indexOf('?')
+  if (hasParams) {
+    let urlParams = querys({ url })
+    url = url.split('?')[0]
+    for (let key in params) {
+      urlParams[key] = params[key]
+    }
+    params = urlParams
+    hasParams = -1
+  }
+  let i = 0
+  // 连接符
+  let connector
+  // 参数字符串
+  let paramsString = ''
+  for (let key in params) {
+    connector = (i === 0 ? (hasParams > -1 ? '&' : '?') : '&')
+    paramsString += connector + key + '=' + params[key]
+    i++
+  }
+
+  return (url + paramsString)
+}
+
+export const hasLoginRedirect = (options: any) => {
+  options = options || {};
+  let useUserInfo = options.useUserInfo
+  let navigate = options.navigate
+  if (useUserInfo?.customerNo) {
+    if (useUserInfo?.customerStatus === 'enable') {
+      return true
+    } else {
+      toastFail({ content: '账号异常' })
+      navigate(Path.Login)
+    }
+  } else {
+    navigate(Path.Login)
+  }
+  return false
+}

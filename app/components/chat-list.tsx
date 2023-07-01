@@ -27,6 +27,7 @@ import { MaskAvatar } from "./mask";
 import { Mask } from "../store/mask";
 import { useRef, useEffect, useState, use } from "react";
 import { GPTModal } from "./gpt-modal";
+import { Empty } from "antd";
 
 // a little function to help us with reordering the result
 function reorder<TItem>(
@@ -352,44 +353,51 @@ export function ChatList() {
 
   return (
     <>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="board" type="COLUMN" direction="vertical">
-          {(provided) => (
-            <div
-              className={listStyles["drop-container"]}
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-            >
-              {groupChats.map((oit: any, index: number) => (
-                <Groups
-                  key={oit.id}
-                  folderIndex={index}
-                  folder={oit}
-                  quotes={groups[oit.id]}
-                  onModifyModel={(folderIdx: number) => {
-                    setFormData([
-                      {
-                        value: folder[folderIdx].name,
-                        placeholder: "请输入类型名称",
-                        label: (
-                          <Icon
-                            name="icon-folder-primary.png"
-                            transTheme={true}
-                          />
-                        ),
-                        formItemType: "input",
-                      },
-                    ]);
-                    setModifyIdx(folderIdx);
-                    setModifyOpen(true);
-                  }}
-                />
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+      {
+        folder?.length ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="board" type="COLUMN" direction="vertical">
+              {(provided) => (
+                <div
+                  className={listStyles["drop-container"]}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
+                  {groupChats.map((oit: any, index: number) => (
+                    <Groups
+                      key={oit.id}
+                      folderIndex={index}
+                      folder={oit}
+                      quotes={groups[oit.id]}
+                      onModifyModel={(folderIdx: number) => {
+                        setFormData([
+                          {
+                            value: folder[folderIdx].name,
+                            placeholder: "请输入类型名称",
+                            label: (
+                              <Icon
+                                name="icon-folder-primary.png"
+                                transTheme={true}
+                              />
+                            ),
+                            formItemType: "input",
+                          },
+                        ]);
+                        setModifyIdx(folderIdx);
+                        setModifyOpen(true);
+                      }}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="暂无会话" />
+      }
+      
       {/* 修改分类弹窗 */}
       <GPTModal
         title="修改分类名称"

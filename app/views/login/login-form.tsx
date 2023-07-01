@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Radio, Checkbox } from "antd";
 import { Path } from "../../constant";
 import { useMobileScreen, countDown } from "../../utils";
-import { useAppConfig, Theme, useUserInfo } from "../../store";
+import { useAppConfig, Theme, useUserInfoStore } from "../../store";
 import { Icon } from "../../components/tools";
 import { toastSuccess, toastFail } from "../../components/ui-lib";
 import { GPTWindowHeader } from "../../components/home";
@@ -26,6 +26,7 @@ export const LoginForm = ({
   currentLoginType,
   onForgetPassword,
 }: ILoginForm) => {
+  const useUserInfo = useUserInfoStore();
   const navigate = useNavigate();
   const config = useAppConfig();
   const theme = config.theme;
@@ -88,8 +89,9 @@ export const LoginForm = ({
         if (res.success) {
           // 查询用户信息
           let entity = res.entity || {};
+          console.info(entity)
           // 保存用户信息
-          useUserInfo.set({ ...entity });
+          useUserInfo.save(entity);
           // 进入聊天界面
           navigate(Path.Chat);
           // 查询当前用户所有会话列表
@@ -99,7 +101,8 @@ export const LoginForm = ({
           setLoginStatus(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.info(err)
         setLoginStatus(false);
       });
   };

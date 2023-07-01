@@ -10,7 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Form, Input, Button, Radio, Checkbox } from "antd";
 import { Path } from "../../constant";
 import { useMobileScreen, countDown } from "../../utils";
-import { useAppConfig, Theme, useUserInfo } from "../../store";
+import { useAppConfig, Theme, useUserInfoStore } from "../../store";
 import { Icon } from "../../components/tools";
 import { toastSuccess, toastFail } from "../../components/ui-lib";
 import { GPTWindowHeader } from "../../components/home";
@@ -21,6 +21,7 @@ import { LoginForm } from "./login-form";
 
 export const Login = () => {
   const isMobileScreen = useMobileScreen();
+  const useUserInfo = useUserInfoStore();
   const config = useAppConfig();
   const navigate = useNavigate();
   const theme = config.theme;
