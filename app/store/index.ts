@@ -4,3 +4,4 @@ export * from "./update";
 export * from "./access";
 export * from "./config";
 export * from "./user-info";
+export * from "./mask";

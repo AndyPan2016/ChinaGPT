@@ -19,7 +19,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { hasLoginRedirect, useMobileScreen } from "../utils";
 import dynamic from "next/dynamic";
-import { showToast } from "./ui-lib";
+import { showToast, toastSuccess } from "./ui-lib";
 import { Loading } from "./home";
 import { GPTModal } from "./gpt-modal";
 import { apiFetch } from "../api/api.fetch";
@@ -110,7 +110,7 @@ export function SideBar(props: { className?: string }) {
   // 会话列表加载中
   const [loadChat, setLoadChat] = useState<boolean>(true)
   // 会话接口返回的列表
-  // const [chatApiList, setChatApiList] = useState<Array<any>>([])
+  const [chatApiList, setChatApiList] = useState<Array<any>>([])
   // 面具列表
   const [defaultMask, setDefaultMask] = useState<Array<any>>([])
 
@@ -136,29 +136,30 @@ export function SideBar(props: { className?: string }) {
   const newChat = (res: any) => {
     console.info(res)
     let topic = res[0].value
-    chatStore.newChat({ name: topic });
-    navigate(Path.Chat);
-    setNewChatOpen(false);
-    // apiFetch({
-    //   url: '/portal/session/create',
-    //   params: {
-    //     // 主题
-    //     topic,
-    //     // 频率惩罚
-    //     frequencyPenalty: userConfig.frequencyPenalty,
-    //     maxTokens: userConfig.maxTokens
-    //   }
-    // }).then(res => {
-    //   if (res.success) {
-    //     getChatSession()
-    //     setNewChatOpen(false);
-    //   }
-    // })
+    // chatStore.newChat({ name: topic });
+    // navigate(Path.Chat);
+    // setNewChatOpen(false);
+    apiFetch({
+      url: '/portal/session/create',
+      params: {
+        // 主题
+        topic,
+        // 频率惩罚
+        frequencyPenalty: userConfig.frequencyPenalty,
+        maxTokens: userConfig.maxTokens
+      }
+    }).then(res => {
+      if (res.success) {
+        getChatSession()
+        setNewChatOpen(false);
+      }
+    })
   }
 
   // 获取会话列表
   const getChatSession = () => {
     setLoadChat(true)
+    let chatSessionNo = chatStore.chatSessionNo
     apiFetch({
       url: '/portal/session/list',
       params: { pageNo: 1, pageSize: 50 }
@@ -166,10 +167,35 @@ export function SideBar(props: { className?: string }) {
       setLoadChat(false)
       if (res.success) {
         let rows = res.rows || []
+        let folder = chatStore.initFolder()
+        folder = {...folder, ...{ type: "static", name: '', chat: [] }}
+        rows.map((it: any, idx: number) => {
+          if (chatSessionNo && it.sessionNo == chatSessionNo) {
+            chatStore.selectChat(0, idx, it.sessionNo)
+          }
+          folder.chat.push(it)
+        })
+        if (!chatStore.chatSessionNo) {
+          chatStore.selectChat(0, 0, folder.chat[0].sessionNo)
+        }
+        chatStore.resetFolder([folder])
         // setChatApiList(rows)
       }
     }).catch(() => {
       setLoadChat(false)
+    })
+  }
+
+  // 删除会话
+  const onDeleteChat = (sessionNo: any) => {
+    apiFetch({
+      url: '/portal/session/delete',
+      params: { sessionNo }
+    }).then(res => {
+      if (res.success) {
+        toastSuccess({ content: '删除成功' })
+        getChatSession()
+      }
     })
   }
 
@@ -414,7 +440,7 @@ export function SideBar(props: { className?: string }) {
             >
               {/* <ChatList narrow={shouldNarrow} /> */}
               {
-                loadChat ? <Loading noLogo /> : <ChatList />
+                loadChat ? <Loading noLogo /> : <ChatList onDeleteChat={onDeleteChat} />
               }
             </div>
 

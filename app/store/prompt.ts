@@ -136,39 +136,39 @@ export const usePromptStore = create<PromptStore>()(
       name: StoreKey.Prompt,
       version: 1,
       onRehydrateStorage(state) {
-        const PROMPT_URL = "./prompts.json";
+        // const PROMPT_URL = "./prompts.json";
 
-        type PromptList = Array<[string, string]>;
+        // type PromptList = Array<[string, string]>;
 
-        fetch(PROMPT_URL)
-          .then((res) => res.json())
-          .then((res) => {
-            let fetchPrompts = [res.en, res.cn];
-            if (getLang() === "cn") {
-              fetchPrompts = fetchPrompts.reverse();
-            }
-            const builtinPrompts = fetchPrompts.map(
-              (promptList: PromptList) => {
-                return promptList.map(
-                  ([title, content]) =>
-                    ({
-                      id: Math.random(),
-                      title,
-                      content,
-                    } as Prompt),
-                );
-              },
-            );
+        // fetch(PROMPT_URL)
+        //   .then((res) => res.json())
+        //   .then((res) => {
+        //     let fetchPrompts = [res.en, res.cn];
+        //     if (getLang() === "cn") {
+        //       fetchPrompts = fetchPrompts.reverse();
+        //     }
+        //     const builtinPrompts = fetchPrompts.map(
+        //       (promptList: PromptList) => {
+        //         return promptList.map(
+        //           ([title, content]) =>
+        //             ({
+        //               id: Math.random(),
+        //               title,
+        //               content,
+        //             } as Prompt),
+        //         );
+        //       },
+        //     );
 
-            const userPrompts =
-              usePromptStore.getState().getUserPrompts() ?? [];
+        //     const userPrompts =
+        //       usePromptStore.getState().getUserPrompts() ?? [];
 
-            const allPromptsForSearch = builtinPrompts
-              .reduce((pre, cur) => pre.concat(cur), [])
-              .filter((v) => !!v.title && !!v.content);
-            SearchService.count.builtin = res.en.length + res.cn.length;
-            SearchService.init(allPromptsForSearch, userPrompts);
-          });
+        //     const allPromptsForSearch = builtinPrompts
+        //       .reduce((pre, cur) => pre.concat(cur), [])
+        //       .filter((v) => !!v.title && !!v.content);
+        //     SearchService.count.builtin = res.en.length + res.cn.length;
+        //     SearchService.init(allPromptsForSearch, userPrompts);
+        //   });
       },
     },
   ),

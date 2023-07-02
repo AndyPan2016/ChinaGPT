@@ -65,6 +65,9 @@ export const apiFetch = (options: IAPI) => {
     .then((res: any) => res.json())
     .then((res: any) => {
       if (!res.success) {
+        if (res.code === "LOGIN_TIMEOUT") {
+          window.location.href = '/#/login'
+        }
         toastFail({
           content: res.message || "请求失败",
         });
@@ -94,7 +97,16 @@ export const apiSocket = (options: any) => {
     }
     // 接收消息
     TheSocket.onmessage = function (msg: any) {
-      options.onMessage && options.onMessage(msg)
+      let msgData = msg.data
+      let res: any = {}
+      if (msgData.indexOf('[ERROR]') > -1) {
+        res.error = msgData
+      } else if (msgData === '[DONE]') {
+
+      } else {
+        res.message = JSON.parse(msgData)
+      }
+      options.onMessage && options.onMessage(res)
     };
     // 连接关闭
     TheSocket.onclose = function () {

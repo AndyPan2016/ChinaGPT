@@ -35,8 +35,7 @@ import {
   Theme,
   useAppConfig,
   DEFAULT_TOPIC,
-  useUserInfoStore,
-  createEmptyMask
+  useUserInfoStore
 } from "../store";
 
 import {
@@ -706,7 +705,7 @@ export function ChatActions(props: {
 }
 
 export function Chat() {
-  // type RenderMessage = ChatMessage & { preview?: boolean };
+  type RenderMessage = ChatMessage & { preview?: boolean };
 
   // const chatStore = useChatStore();
   // const [session, sessionIndex] = useChatStore((state) => [
@@ -722,7 +721,6 @@ export function Chat() {
     state.currentChat(),
     state.currentIndex,
   ]);
-  const currentMask = createEmptyMask()
 
   const config = useAppConfig();
   const fontSize = config.fontSize;
@@ -751,16 +749,13 @@ export function Chat() {
   let [socketStatus, setSocketStatus] = useState<string>('')
   // 停止显示回复消息
   let [socketStop, setSocketStop] = useState<boolean>(false)
-  // 当前chat的message
-  let [chatMessage, setChatMessage] = useState<Array<any>>([])
 
   // 初始化socket
   const installSocket = () => {
-    if (currentChat && currentChat.sessionNo) {
+    if (currentChat) {
       let theSocket = apiSocket({
-        sessionNo: currentChat.sessionNo,
+        sessionNo: currentChat.sessionNo || '230701223741001E0001',
         onMessage: (res: any) => {
-          stopMessageLoading()
           if (res.error) {
             // 错误
             renderChatMessage(res.error)
@@ -790,46 +785,18 @@ export function Chat() {
 
   // 读取当前会话下的消息
   const readChatMessage = () => {
-    // apiFetch({
-    //   url: '/portal/chat/listMessage',
-    //   params: { sessionId: currentChat.sessionNo }
-    // }).then(res => {
-    //   if (res.success) {
-    //   }
-    // })
-    let theMessage = [
-      {
-        role: "assistant",
-        content: "有什么可以帮你的吗",
-        id: 0
-        // preview: true
+    apiFetch({
+      url: '/portal/chat/listMessage',
+      params: { sessionId: '230701223741001E0001' }
+    }).then(res => {
+      if (res.success) {
       }
-    ]
-    chatFolderStore.updateCurrentChat((chat: any) => {
-      chat.messages = theMessage
     })
-    setChatMessage(theMessage)
-  }
-
-  // 停止消息的loading状态
-  const stopMessageLoading = () => {
-    let chat = chatFolderStore.currentChat()
-    let messages = chat.messages
-    let len = messages.length
-    let assMessage = messages[len - 1]
-    if (assMessage.role == 'assistant' && assMessage.loading) {
-      messages[len - 1].preview = false
-      messages[len - 1].loading = false
-      messages[len - 1].date = Date.now()
-      chatFolderStore.updateCurrentChat((chat: any) => {
-        chat.mesages = messages
-      })
-    }
   }
 
   useEffect(() => {
     installSocket()
-    readChatMessage()
+    // readChatMessage()
   }, [currentChat])
 
   // 显示当前回复消息内容
@@ -837,13 +804,7 @@ export function Chat() {
     if (!socketStop) {
       let chat = chatFolderStore.currentChat()
       let messages = chat.messages
-      let len = messages.length
-      if (messages[len - 1].role == 'assistant') {
-        messages[len - 1].content += content
-        chatFolderStore.updateCurrentChat((chat: any) => {
-          chat.mesages = messages
-        })
-      }
+      messages[messages.length - 1].content += content
     }
   }
 
@@ -913,26 +874,12 @@ export function Chat() {
     // 设置隐藏刷新按钮、显示停止按钮
     setSocketStatus('stop')
     setIsLoading(true);
-    
-    chatFolderStore.updateCurrentChat((chat: any) => {
-      let messages = chat.messages
-      let lastMessage = messages[messages.length - 1] || { id: 0 }
-      chat.messages.push({
-        id: lastMessage.id + 1,
-        role: "user",
-        content: userInput,
-        preview: false,
-        date: Date.now()
-      })
-      chat.messages.push({
-        id: lastMessage.id + 2,
-        role: "assistant",
-        content: '',
-        preview: true,
-        loading: true
-      })
-    })
     socket.send(userInput)
+    // chatFolderStore.onUserInput(userInput, () => {
+    //   socket.send(userInput)
+    // })
+    // chatFolderStore.onUserInput(userInput).then(() => setIsLoading(false));
+    // localStorage.setItem(LAST_INPUT_KEY, userInput);
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -997,17 +944,15 @@ export function Chat() {
     }
   };
 
-  // 查找当前会话指定角色的最后一条消息的index
-  const findLastRoleIndex = (role?: any, msgId?: any) => {
+  const findLastUserIndex = (messageId: number) => {
     // find last user input message and resend
     let lastUserMessageIndex: number | null = null;
-    for (let i = 0; i < chatMessage.length; i += 1) {
-      const message = chatMessage[i];
-      if (msgId && message.id == msgId) {
-        lastUserMessageIndex = i;
+    for (let i = 0; i < currentChat.messages.length; i += 1) {
+      const message = currentChat.messages[i];
+      if (message.id === messageId) {
         break;
       }
-      if (role && message.role === role) {
+      if (message.role === "user") {
         lastUserMessageIndex = i;
       }
     }
@@ -1015,7 +960,6 @@ export function Chat() {
     return lastUserMessageIndex;
   };
 
-  // 删除最后聊天记录，以便重新刷新最后一次提交的问题
   const deleteMessage = (userIndex: number) => {
     chatFolderStore.updateCurrentChat((chat: ChatSession) =>
       chat.messages.splice(userIndex, 2),
@@ -1023,27 +967,30 @@ export function Chat() {
   };
 
   const onDelete = (botMessageId: number) => {
-    const userIndex = findLastRoleIndex(null, botMessageId);
+    const userIndex = findLastUserIndex(botMessageId);
     if (userIndex === null) return;
     deleteMessage(userIndex);
   };
 
   // 刷新，重新发送最后一条
   const onResend = (botMessageId?: number) => {
-    // let messages = currentChat.messages;
-    let len = chatMessage.length;
+    let messages = currentChat.messages;
+    let len = messages.length;
     if (len) {
-      // let msgId = botMessageId ?? chatMessage[len - 1].id;
+      let msgId = botMessageId ?? messages[len - 1].id;
       // find last user input message and resend
-      const userIndex = findLastRoleIndex('user');
+      const userIndex = findLastUserIndex(msgId);
       if (userIndex === null) return;
       // 设置隐藏刷新、停止按钮
       setSocketStatus('')
       setIsLoading(true);
-      const content = chatMessage[userIndex].content;
+      const content = messages[userIndex].content;
       deleteMessage(userIndex);
-      // 重新提交内容
-      doSubmit(content)
+      // chatFolderStore.onUserInput(content).then(() => setIsLoading(false));
+      chatFolderStore.onUserInput(content, () => {
+        socket.send(content)
+      })
+      inputRef.current?.focus();
     }
   };
   
@@ -1057,27 +1004,64 @@ export function Chat() {
     }, 200)
   }
 
-  useEffect(() => {
-    let currentMessage = currentChat?.messages
-    if (userInput.length > 0 && config.sendPreviewBubble) {
-      let tmepChatMessage = currentMessage.slice()
-      tmepChatMessage.push({
-        role: "user",
-        content: userInput,
-        preview: true
-      })
-      setChatMessage(tmepChatMessage)
-    } else {
-      setChatMessage(currentMessage)
+  const context: RenderMessage[] = currentChat?.mask?.hideContext
+    ? []
+    : currentChat?.mask?.context?.slice();
+
+  const accessStore = useAccessStore();
+
+  if (
+    context?.length === 0 &&
+    currentChat?.messages?.at(0)?.content !== BOT_HELLO.content
+  ) {
+    const copiedHello = Object.assign({}, BOT_HELLO);
+    if (!accessStore.isAuthorized()) {
+      copiedHello.content = Locale.Error.Unauthorized;
     }
-  }, [userInput])
-  
+    context.push(copiedHello);
+  }
+
+  // clear context index = context length + index in messages
+  const clearContextIndex =
+    (currentChat?.clearContextIndex ?? -1) >= 0
+      ? currentChat?.clearContextIndex! + context?.length
+      : -1;
+
+  // preview messages
+  const messages = context
+    ?.concat(currentChat?.messages as RenderMessage[])
+    .concat(
+      isLoading
+        ? [
+            {
+              ...createMessage({
+                role: "assistant",
+                content: "……",
+              }),
+              preview: true,
+            },
+          ]
+        : [],
+    )
+    .concat(
+      userInput.length > 0 && config.sendPreviewBubble
+        ? [
+            {
+              ...createMessage({
+                role: "user",
+                content: userInput,
+              }),
+              preview: true,
+            },
+          ]
+        : [],
+    );
   // 找到最后一条用户信息index，设置可重新编辑
   let lastUserMsgIdx: number | null = null;
-  for (let i = 0; i < chatMessage?.length; i += 1) {
-    const message = chatMessage[i];
+  for (let i = 0; i < currentChat?.messages?.length; i += 1) {
+    const message = currentChat.messages[i];
     if (message.role === "user") {
-      lastUserMsgIdx = i;
+      lastUserMsgIdx = i + 1;
     }
   }
 
@@ -1096,15 +1080,9 @@ export function Chat() {
   const sureModify = (data: any) => {
     chatFolderStore.updateCurrentChat((chat: ChatSession) => {
       chat.topic = data[0].value;
+      // chat.mask?.name = data?.name
     });
     setModifyOpen(false);
-    apiFetch({
-      url: '/portal/session/modify',
-      params: {
-        sessionNo: currentChat.sessionNo,
-        topic: data[0].value
-      }
-    })
   };
 
   // 确认修改会话内容
@@ -1288,156 +1266,192 @@ export function Chat() {
               setAutoScroll(false);
             }}
           >
-            {
-              chatMessage?.map((message, i) => {
-                const isUser = message.role === "user";
-                const showActions =
-                  i > 0 && !(message.preview || message.content.length === 0);
-                // const showTyping = message.preview || message.streaming;
+            {messages?.map((message, i) => {
+              const isUser = message.role === "user";
+              const showActions =
+                i > 0 && !(message.preview || message.content.length === 0);
+              const showTyping = message.preview || message.streaming;
 
-                // const shouldShowClearContextDivider = i === clearContextIndex - 1;
+              const shouldShowClearContextDivider = i === clearContextIndex - 1;
 
-                return (
-                  <>
-                    <div
-                      key={i}
-                      className={
-                        isUser
-                          ? styles["chat-message-user"]
-                          : styles["chat-message"]
-                      }
-                    >
-                      <div className={styles["chat-message-container"]}>
-                        <div className={chatStyle["chat-message-wrap"]}>
-                          <div className={styles["chat-message-avatar"]}>
-                            {message.role === "user" ? null : ( // <Avatar avatar={config.avatar} />
-                              <MaskAvatar mask={currentMask} />
-                            )}
-                          </div>
-                          <div
-                            className={
-                              styles["chat-message-item"] +
-                              (isUser &&
-                              mdUserState &&
-                              showActions &&
-                              lastUserMsgIdx == i
-                                ? " " + styles["user-edit"]
-                                : "") +
-                              (!isUser && mdState && showActions
-                                ? " " + styles["system-copy"]
-                                : "")
-                            }
-                          >
-                            {isUser ? (
-                              <MarkdownUser
-                                className="chat-message-md-user"
-                                fontSize="16"
-                                followParent={true}
-                                followColor="rgba(183, 189, 203, 1)"
-                                content={message.content}
-                                loading={
-                                  (message.preview ||
-                                    message.content.length === 0) &&
-                                  !isUser
-                                }
-                                renderBack={() => {
-                                  if (!mdUserState) {
-                                    setMDUserState(true);
-                                  }
-                                }}
-                                onContextMenu={(e) => onRightClick(e, message)}
-                                onDoubleClickCapture={() => {
-                                  if (!isMobileScreen) return;
-                                  setUserInput(message.content);
-                                }}
-                                parentRef={scrollRef}
-                                defaultShow={i >= chatMessage.length - 10}
-                              />
-                            ) : (
-                              <Markdown
-                                className="chat-message-md"
-                                fontSize="16"
-                                followParent={true}
-                                followColor="#FFF"
-                                content={message.content}
-                                loading={message.loading && !isUser}
-                                renderBack={() => {
-                                  if (!mdState) {
-                                    setMDState(true);
-                                  }
-                                }}
-                                onContextMenu={(e) => onRightClick(e, message)}
-                                onDoubleClickCapture={() => {
-                                  if (!isMobileScreen) return;
-                                  setUserInput(message.content);
-                                }}
-                                parentRef={scrollRef}
-                                defaultShow={i >= chatMessage.length - 10}
-                              />
-                            )}
-                            {/* 复制 */}
-                            {showActions && mdState && !isUser ? (
-                              <span className={styles["chat-message-handle"]}>
-                                <Icon
-                                  name="icon-copy-white.png"
-                                  onClick={() =>
-                                    copyToClipboard(
-                                      message.content,
-                                      // "对话复制成功！",
-                                    )
-                                  }
-                                />
-                              </span>
-                            ) : null}
-                            {/* 用户消息编辑 */}
-                            {showActions &&
-                              mdUserState &&
-                              isUser &&
-                              lastUserMsgIdx == i ? (
-                                <span
-                                  className={styles["chat-message-handle"]}
-                                  onClick={() => {
-                                    setFormDataCont([
-                                      {
-                                        value: message.content,
-                                        index: i - 1,
-                                        placeholder: "请输入会话内容",
-                                        label: (
-                                          <Icon
-                                            name="icon-edit-folder-primary.png"
-                                            transTheme={true}
-                                          />
-                                        ),
-                                        formItemType: "textarea",
-                                      },
-                                    ]);
-                                    setModifyContOpen(true);
-                                  }}
+              return (
+                <>
+                  <div
+                    key={i}
+                    className={
+                      isUser
+                        ? styles["chat-message-user"]
+                        : styles["chat-message"]
+                    }
+                  >
+                    <div className={styles["chat-message-container"]}>
+                      <div className={chatStyle["chat-message-wrap"]}>
+                        <div className={styles["chat-message-avatar"]}>
+                          {message.role === "user" ? null : ( // <Avatar avatar={config.avatar} />
+                            <MaskAvatar mask={currentChat.mask} />
+                          )}
+                        </div>
+                        {mdState}
+                        <div
+                          className={
+                            styles["chat-message-item"] +
+                            (isUser &&
+                            mdUserState &&
+                            showActions &&
+                            lastUserMsgIdx == i
+                              ? " " + styles["user-edit"]
+                              : "") +
+                            (!isUser && mdState && showActions
+                              ? " " + styles["system-copy"]
+                              : "")
+                          }
+                        >
+                          {/* {showActions && (
+                              <div className={styles["chat-message-top-actions"]}>
+                                {message.streaming ? (
+                                  <div
+                                    className={styles["chat-message-top-action"]}
+                                    onClick={() => onUserStop(message.id ?? i)}
+                                  >
+                                    {Locale.Chat.Actions.Stop}
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div
+                                      className={styles["chat-message-top-action"]}
+                                      onClick={() => onDelete(message.id ?? i)}
+                                    >
+                                      {Locale.Chat.Actions.Delete}
+                                    </div>
+                                    <div
+                                      className={styles["chat-message-top-action"]}
+                                      onClick={() => onResend(message.id ?? i)}
+                                    >
+                                      {Locale.Chat.Actions.Retry}
+                                    </div>
+                                  </>
+                                )}
+
+                                <div
+                                  className={styles["chat-message-top-action"]}
+                                  onClick={() => copyToClipboard(message.content)}
                                 >
-                                  <Icon name="icon-edit-folder-primary.png" />
-                                </span>
-                              ) : null}
+                                  {Locale.Chat.Actions.Copy}
+                                </div>
+                              </div>
+                            )} */}
+
+                          {isUser ? (
+                            <MarkdownUser
+                              className="chat-message-md-user"
+                              fontSize="16"
+                              followParent={true}
+                              followColor="rgba(183, 189, 203, 1)"
+                              content={message.content}
+                              loading={
+                                (message.preview ||
+                                  message.content.length === 0) &&
+                                !isUser
+                              }
+                              renderBack={() => {
+                                if (!mdUserState) {
+                                  setMDUserState(true);
+                                }
+                              }}
+                              onContextMenu={(e) => onRightClick(e, message)}
+                              onDoubleClickCapture={() => {
+                                if (!isMobileScreen) return;
+                                setUserInput(message.content);
+                              }}
+                              parentRef={scrollRef}
+                              defaultShow={i >= messages.length - 10}
+                            />
+                          ) : (
+                            <Markdown
+                              className="chat-message-md"
+                              fontSize="16"
+                              followParent={true}
+                              followColor="#FFF"
+                              content={message.content}
+                              loading={
+                                (message.preview ||
+                                  message.content.length === 0) &&
+                                !isUser
+                              }
+                              renderBack={() => {
+                                if (!mdState) {
+                                  setMDState(true);
+                                }
+                              }}
+                              onContextMenu={(e) => onRightClick(e, message)}
+                              onDoubleClickCapture={() => {
+                                if (!isMobileScreen) return;
+                                setUserInput(message.content);
+                              }}
+                              parentRef={scrollRef}
+                              defaultShow={i >= messages.length - 10}
+                            />
+                          )}
+                          {showActions && mdState && !isUser ? (
+                            <span className={styles["chat-message-handle"]}>
+                              <Icon
+                                name="icon-copy-white.png"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    message.content,
+                                    // "对话复制成功！",
+                                  )
+                                }
+                              />
+                            </span>
+                          ) : null}
+                          {showActions &&
+                          mdUserState &&
+                          isUser &&
+                          lastUserMsgIdx == i ? (
+                            <span
+                              className={styles["chat-message-handle"]}
+                              onClick={() => {
+                                setFormDataCont([
+                                  {
+                                    value: message.content,
+                                    index: i - 1,
+                                    placeholder: "请输入会话内容",
+                                    label: (
+                                      <Icon
+                                        name="icon-edit-folder-primary.png"
+                                        transTheme={true}
+                                      />
+                                    ),
+                                    formItemType: "textarea",
+                                  },
+                                ]);
+                                setModifyContOpen(true);
+                              }}
+                            >
+                              <Icon name="icon-edit-folder-primary.png" />
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {!message.preview || isLoading && (
+                        <div className={styles["chat-message-status"]}>
+                          {Locale.Chat.Typing}
+                        </div>
+                      )}
+                      {!message.preview && (
+                        <div className={styles["chat-message-actions"]}>
+                          <div className={styles["chat-message-action-date"]}>
+                            {message.date.toLocaleString()}
                           </div>
                         </div>
-                        {message.preview && (
-                          <div className={styles["chat-message-status"]}>
-                            {Locale.Chat.Typing}
-                          </div>
-                        )}
-                        {!message.preview && (
-                          <div className={styles["chat-message-actions"]}>
-                            <div className={styles["chat-message-action-date"]}>
-                              {message?.date ? (new Date(message?.date)).toLocaleString() : ''}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
-                    {/* {shouldShowClearContextDivider && <ClearContextDivider />} */}
-                  </>
-                );
-              })
-            }
+                  </div>
+                  {shouldShowClearContextDivider && <ClearContextDivider />}
+                </>
+              );
+            })}
           </div>
 
           <div

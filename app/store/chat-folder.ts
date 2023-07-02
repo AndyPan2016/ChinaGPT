@@ -684,6 +684,7 @@ export const useChatFolderStore = create<any>()(
       currentId: ["folder1", "chat1"],
       globalFolderId: 0,
       globalChatId: 0,
+      chatSessionNo: '',
       folder: [
         // createEmptyFolder({
         //   name: "",
@@ -738,9 +739,10 @@ export const useChatFolderStore = create<any>()(
         });
       },
       // 选中chat项
-      selectChat(folderIdx: number, chatIdx: number) {
+      selectChat(folderIdx: number, chatIdx: number, chatSessionNo: any) {
         set({
           currentIndex: [folderIdx, chatIdx],
+          chatSessionNo
         });
       },
       // 移动chat项
@@ -840,7 +842,7 @@ export const useChatFolderStore = create<any>()(
         get().updateStat(message);
         get().summarizeChat();
       },
-      async onUserInput(content: any) {
+      async onUserInput(content: any, selfSend: any) {
         const chat = get().currentChat();
         const modelConfig = chat.mask.modelConfig;
 
@@ -883,60 +885,60 @@ export const useChatFolderStore = create<any>()(
           chat.messages.push(userMessage);
           chat.messages.push(botMessage);
         });
+        selfSend && selfSend()
+        // // make request
+        // console.log("[User Input] ", sendMessages);
+        // api.llm.chat({
+        //   messages: sendMessages,
+        //   config: { ...modelConfig, stream: true },
+        //   onUpdate(message) {
+        //     botMessage.streaming = true;
+        //     if (message) {
+        //       botMessage.content = message;
+        //     }
+        //     set(() => ({}));
+        //   },
+        //   onFinish(message) {
+        //     botMessage.streaming = false;
+        //     if (message) {
+        //       botMessage.content = message;
+        //       get().onNewMessage(botMessage);
+        //     }
+        //     ChatControllerPool.remove(
+        //       currentIndex,
+        //       botMessage.id ?? messageIndex,
+        //     );
+        //     set(() => ({}));
+        //   },
+        //   onError(error) {
+        //     const isAborted = error.message.includes("aborted");
+        //     botMessage.content =
+        //       "\n\n" +
+        //       prettyObject({
+        //         error: true,
+        //         message: error.message,
+        //       });
+        //     botMessage.streaming = false;
+        //     userMessage.isError = !isAborted;
+        //     botMessage.isError = !isAborted;
 
-        // make request
-        console.log("[User Input] ", sendMessages);
-        api.llm.chat({
-          messages: sendMessages,
-          config: { ...modelConfig, stream: true },
-          onUpdate(message) {
-            botMessage.streaming = true;
-            if (message) {
-              botMessage.content = message;
-            }
-            set(() => ({}));
-          },
-          onFinish(message) {
-            botMessage.streaming = false;
-            if (message) {
-              botMessage.content = message;
-              get().onNewMessage(botMessage);
-            }
-            ChatControllerPool.remove(
-              currentIndex,
-              botMessage.id ?? messageIndex,
-            );
-            set(() => ({}));
-          },
-          onError(error) {
-            const isAborted = error.message.includes("aborted");
-            botMessage.content =
-              "\n\n" +
-              prettyObject({
-                error: true,
-                message: error.message,
-              });
-            botMessage.streaming = false;
-            userMessage.isError = !isAborted;
-            botMessage.isError = !isAborted;
+        //     set(() => ({}));
+        //     ChatControllerPool.remove(
+        //       currentIndex,
+        //       botMessage.id ?? messageIndex,
+        //     );
 
-            set(() => ({}));
-            ChatControllerPool.remove(
-              currentIndex,
-              botMessage.id ?? messageIndex,
-            );
-
-            console.error("[Chat] failed ", error);
-          },
-          onController(controller) {
-            // collect controller for stop/retry
-            ChatControllerPool.addController(
-              currentIndex,
-              botMessage.id ?? messageIndex,
-              controller,
-            );
-          },
-        });
+        //     console.error("[Chat] failed ", error);
+        //   },
+        //   onController(controller) {
+        //     // collect controller for stop/retry
+        //     ChatControllerPool.addController(
+        //       currentIndex,
+        //       botMessage.id ?? messageIndex,
+        //       controller,
+        //     );
+        //   },
+        // });
       },
       getMemoryPrompt() {
         const chat = get().currentChat();

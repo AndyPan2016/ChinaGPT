@@ -268,12 +268,12 @@ export function Settings() {
     });
   }
 
-  const accessStore = useAccessStore();
-  const enabledAccessControl = useMemo(
-    () => accessStore.enabledAccessControl(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+  // const accessStore = useAccessStore();
+  // const enabledAccessControl = useMemo(
+  //   () => accessStore.enabledAccessControl(),
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [],
+  // );
 
   const promptStore = usePromptStore();
   const builtinCount = SearchService.count.builtin;
@@ -316,7 +316,7 @@ export function Settings() {
   //   }
   // }, [userInfo]);
 
-  const showUsage = accessStore.isAuthorized();
+  // const showUsage = accessStore.isAuthorized();
   useEffect(() => {
     // checks per minutes
     // checkUpdate();
@@ -573,6 +573,45 @@ export function Settings() {
     okText: "确认",
   });
   const [mobileTokenSecond, setMobileTokenSecond] = useState<any>();
+  const [tokenPhone, setTokenPhone] = useState<any>();
+  const [bindPhone, setBindPhone] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "新手机",
+        value: "",
+        // fieldName: 'phone',
+        formItemType: "input",
+        placeholder: "请输入新手机号",
+        rules: [
+          (forms: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(/^1\d{10}$/).test(value);
+                if (status) {
+                  return Promise.resolve();
+                }
+                return Promise.reject("手机格式不正确");
+              }
+              return Promise.reject("请输入新手机号");
+            },
+          }),
+        ],
+      },
+      {
+        label: "验证码",
+        value: "",
+        // fieldName: 'phoneCode',
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+        association: 0,
+      },
+    ],
+    cancelText: "取消",
+    okText: "确认",
+  });
   // 绑定修改手机号 - 第一步
   const closeBindPhoneFirst = () => {
     setBindPhoneFirst({ ...bindPhoneFirst, ...{ open: false } });
@@ -675,6 +714,50 @@ export function Settings() {
         setBindPhoneSecond({ ...bindPhoneSecond, ...{ loading: false } });
       });
   };
+  // 新绑定手机
+  const closeBindPhone = () => {
+    setBindPhone({ ...bindPhone, ...{ open: false } });
+  }
+  const sendCodeBindPhone = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "NEW_EMAIL",
+        sendType: "EMAIL",
+        sendTo: bindPhone.formData[0].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setTokenPhone(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
+  }
+  const sureBindPhone = () => {
+    setBindPhone({ ...bindPhone, ...{ loading: true } });
+    apiFetch({
+      url: "/portal/customer/modifyInfo",
+      params: {
+        modifyType: "NEW_EMAIL",
+        captchaToken: tokenPhone,
+        modifyValue: bindPhone.formData[0].value,
+        captchaValue: bindPhone.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        toastSuccess({ content: "绑定成功" });
+        setBindPhone({
+          ...bindPhone,
+          ...{ loading: false, open: false },
+        });
+      } else {
+        setBindPhone({ ...bindPhone, ...{ loading: false } });
+      }
+    })
+    .catch(() => {
+      setBindPhone({ ...bindPhone, ...{ loading: false } });
+    });
+  }
 
   const [bindEMailFirst, setBindEMailFirst] = useState<any>({
     open: false,
@@ -736,6 +819,45 @@ export function Settings() {
     okText: "确认",
   });
   const [tokenEMailSecond, setTokenEMailSecond] = useState<any>();
+  const [tokenEMail, setTokenEMail] = useState<any>();
+  const [bindEMail, setBindEMail] = useState<any>({
+    open: false,
+    loading: false,
+    formData: [
+      {
+        label: "新邮箱",
+        value: "",
+        formItemType: "input",
+        placeholder: "请输入新邮箱",
+        rules: [
+          (forms: any) => ({
+            validator: (_: any, value: any) => {
+              if (value) {
+                let status = new RegExp(
+                  /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/,
+                ).test(value);
+                if (status) {
+                  return Promise.resolve();
+                }
+                return Promise.reject("邮箱格式不正确");
+              }
+              return Promise.reject("请输入新邮箱");
+            },
+          }),
+        ],
+      },
+      {
+        label: "验证码",
+        value: "",
+        formItemType: "input",
+        placeholder: "请输入验证码",
+        sendCode: true,
+        association: 0,
+      },
+    ],
+    cancelText: "取消",
+    okText: "确认",
+  })
   // 绑定修改邮箱 - 第一步
   const closeBindEMailFirst = () => {
     setBindEMailFirst({ ...bindEMailFirst, ...{ open: false } });
@@ -838,6 +960,50 @@ export function Settings() {
         setBindPhoneSecond({ ...bindEMailSecond, ...{ loading: false } });
       });
   };
+  // 新绑定邮箱
+  const closeBindEMail = () => {
+    setBindEMail({ ...bindEMail, ...{ open: false } });
+  }
+  const sendCodeBindEMail = (callBack?: any) => {
+    apiFetch({
+      url: "/portal/customer/captchaSend",
+      params: {
+        businessType: "NEW_EMAIL",
+        sendType: "EMAIL",
+        sendTo: bindEMail.formData[0].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        setTokenEMail(res?.entity?.captchaToken);
+        callBack && callBack();
+      }
+    });
+  }
+  const sureBindEMail = () => {
+    setBindEMail({ ...bindEMail, ...{ loading: true } });
+    apiFetch({
+      url: "/portal/customer/modifyInfo",
+      params: {
+        modifyType: "NEW_EMAIL",
+        captchaToken: tokenEMail,
+        modifyValue: bindEMail.formData[0].value,
+        captchaValue: bindEMail.formData[1].value,
+      },
+    }).then((res) => {
+      if (res.success) {
+        toastSuccess({ content: "绑定成功" });
+        setBindEMail({
+          ...bindEMail,
+          ...{ loading: false, open: false },
+        });
+      } else {
+        setBindEMail({ ...bindEMail, ...{ loading: false } });
+      }
+    })
+    .catch(() => {
+      setBindEMail({ ...bindEMail, ...{ loading: false } });
+    });
+  }
 
   return (
     <ErrorBoundary>
@@ -943,6 +1109,22 @@ export function Settings() {
           onCancel={cancelModifyPasswordSecond}
           onOk={sureModifyPasswordSecond}
         ></GPTModal>
+        {/* 绑定手机号 */}
+        <GPTModal
+          title="绑定手机号"
+          className="text-form"
+          open={bindPhone.open}
+          formData={bindPhone.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindPhone.loading}
+          okText={bindPhone.okText}
+          cancelText={bindPhone.cancelText}
+          onClose={closeBindPhone}
+          onCancel={closeBindPhone}
+          onOk={sureBindPhone}
+          onSend={sendCodeBindPhone}
+        ></GPTModal>
         {/* 修改绑定手机号 - 第一步 */}
         <GPTModal
           title="修改绑定手机号"
@@ -974,6 +1156,22 @@ export function Settings() {
           onCancel={cancelBindPhoneSecond}
           onOk={sureBindPhoneSecond}
           onSend={sendPhoneCodeNew}
+        ></GPTModal>
+        {/* 绑定邮箱号 */}
+        <GPTModal
+          title="绑定邮箱号"
+          className="text-form"
+          open={bindEMail.open}
+          formData={bindEMail.formData}
+          btnSwitch={true}
+          hasFeedback
+          loading={bindEMail.loading}
+          okText={bindEMail.okText}
+          cancelText={bindEMail.cancelText}
+          onClose={closeBindEMail}
+          onCancel={closeBindEMail}
+          onOk={sureBindEMail}
+          onSend={sendCodeBindEMail}
         ></GPTModal>
         {/* 修改绑定邮箱 - 第一步 */}
         <GPTModal
@@ -1035,16 +1233,27 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userInfo.mobile}
+              {userInfo.mobile || '-'}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
-                  let tempBindPhoneFirst = JSON.parse(
-                    JSON.stringify(bindPhoneFirst),
-                  );
-                  tempBindPhoneFirst.open = true;
-                  tempBindPhoneFirst.formData[0].value = userInfo.mobile;
-                  setBindPhoneFirst(tempBindPhoneFirst);
+                  console.info(userInfo)
+                  if (userInfo.mobile) {
+                    let tempBindPhoneFirst = JSON.parse(
+                      JSON.stringify(bindPhoneFirst),
+                    );
+                    tempBindPhoneFirst.open = true;
+                    tempBindPhoneFirst.formData[0].value = userInfo.mobile;
+                    setBindPhoneFirst(tempBindPhoneFirst);
+                  } else {
+                    // let tempBindPhone = JSON.parse(
+                    //   JSON.stringify(bindPhone),
+                    // );
+                    // tempBindPhone.open = true;
+                    // console.info(tempBindPhone)
+                    // setBindPhone(tempBindPhone);
+                    setBindPhone({ ...bindPhone, ...{ open: true } })
+                  }
                 }}
               >
                 <Icon
@@ -1070,16 +1279,25 @@ export function Settings() {
             }
           >
             <span className={styles["setting-list-item-text"]}>
-              {userInfo.email}
+              {userInfo.email || '-'}
               <span
                 className={styles["item-text-icon"]}
                 onClick={() => {
-                  let tempBindEMailFirst = JSON.parse(
-                    JSON.stringify(bindEMailFirst),
-                  );
-                  tempBindEMailFirst.open = true;
-                  tempBindEMailFirst.formData[0].value = userInfo.email;
-                  setBindEMailFirst(tempBindEMailFirst);
+                  if (userInfo.email) {
+                    let tempBindEMailFirst = JSON.parse(
+                      JSON.stringify(bindEMailFirst),
+                    );
+                    tempBindEMailFirst.open = true;
+                    tempBindEMailFirst.formData[0].value = userInfo.email;
+                    setBindEMailFirst(tempBindEMailFirst);
+                  } else {
+                    // let tempBindEMail = JSON.parse(
+                    //   JSON.stringify(bindEMail),
+                    // );
+                    // tempBindEMail.open = true;
+                    // setBindEMail(tempBindEMail);
+                    setBindEMail({ ...bindEMail, ...{ open: true } })
+                  }
                 }}
               >
                 <Icon
