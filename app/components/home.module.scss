@@ -282,6 +282,13 @@
   flex: 1;
   overflow: auto;
   overflow-x: hidden;
+  position: relative;
+  // padding-bottom: 30px;
+  .sidebar-body-loadmore {
+    height: 30px;
+    margin-bottom: -30px;
+    color: var(--primary-light);
+  }
 }
 
 .chat-item {

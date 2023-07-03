@@ -211,7 +211,9 @@
 .scroll-container {
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: 150px;
+    // 文件夹相关
+    // max-height: 150px;
+    // 文件夹相关
 }
 .drop-zone {
     /* stop the list collapsing when empty */
@@ -236,13 +238,15 @@
     min-height: 100%;
 }
 .drag-container {
-    margin: 8px;
     display: flex;
     flex-direction: column;
     border-radius: 6px;
     overflow: hidden;
-    background: var(--folder-content-bg);
-    box-shadow: var(--folder-box-shadow);
+    // 文件夹相关
+    // margin: 8px;
+    // background: var(--folder-content-bg);
+    // box-shadow: var(--folder-box-shadow);
+    // 文件夹相关
     // position: relative;
     // z-index: 2;
     &.chat-folder {

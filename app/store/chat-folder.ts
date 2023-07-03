@@ -702,6 +702,9 @@ export const useChatFolderStore = create<any>()(
           folderId: "folder-" + id,
         });
       },
+      getFolder () {
+        return get().folder
+      },
       // folderCount: 0,
       // 重置Folder
       resetFolder(newFolder: ChatFolder[]) {

@@ -326,12 +326,30 @@ function useScrollToBottom() {
   // for auto-scroll
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  // const [topEnable, setTopEnable] = useState<boolean>(false)
   const scrollToBottom = () => {
     const dom = scrollRef.current;
     if (dom) {
       setTimeout(() => (dom.scrollTop = dom.scrollHeight), 1);
     }
   };
+
+  let topEnable = false
+  const onScrollTop = (callBack?: any) => {
+    const dom = scrollRef.current;
+    if (dom) {
+      dom.onscroll = function (e) {
+        let scrollTop = e?.srcElement?.scrollTop;
+        if (scrollTop < 10 && !topEnable) {
+          topEnable = true
+          callBack && callBack(() => {
+            e.srcElement.scrollTop = 20;
+            topEnable = false;
+          })
+        }
+      }
+    }
+  }
 
   // auto scroll
   useLayoutEffect(() => {
@@ -343,6 +361,7 @@ function useScrollToBottom() {
     autoScroll,
     setAutoScroll,
     scrollToBottom,
+    onScrollTop
   };
 }
 
@@ -365,12 +384,15 @@ export function ChatActions(props: {
   ]);
   const isMobileScreen = useMobileScreen();
   let [dataList, setDataList] = useState<Array<ISelectItem>>([
-    { text: "GPT-4.0（0次）", value: 1, active: true },
-    { text: "GPT-3.5（20次）", value: 2 },
-    { text: "GPT-3.0（无限制）", value: 3 },
+    { text: "GPT-3.5", value: 1, active: true }
+    // { text: "GPT-4.0（0次）", value: 1 },
+    // { text: "GPT-3.5（20次）", value: 2 },
+    // { text: "GPT-3.0（无限制）", value: 3 },
   ]);
   let [gptVersionP, setGPTVersionP] = useState<boolean>(false);
-  let [currentGPT, setCurrentGPT] = useState<any>(dataList[0]);
+  let [currentGPT, setCurrentGPT] = useState<any>({
+    text: currentChat.mode || 'GPT-3.5'
+  });
 
   let [roleList, setRoleList] = useState<Array<ISelectItem>>([
     // { text: "大学生", value: 1, active: true },
@@ -378,7 +400,9 @@ export function ChatActions(props: {
     // { text: "证券分析师", value: 3 },
   ]);
   let [roleP, setRoleP] = useState<boolean>(false);
-  let [currentRole, setCurrentRole] = useState<any>({});
+  let [currentRole, setCurrentRole] = useState<any>({
+    text: currentChat.role || '默认'
+  });
   // 刷新纪录最后一条message，停止时还原
   let [lastMessage, setLastMessage] = useState<any>()
 
@@ -429,7 +453,7 @@ export function ChatActions(props: {
           rows.map((it: any) => {
             roleList.push({ text: it.title, value: it.id, role: it.role, active: false })
           })
-          setCurrentRole(roleList[0])
+          // setCurrentRole(roleList[0])
           setRoleList(roleList)
         }
       }
@@ -590,117 +614,6 @@ export function ChatActions(props: {
           </div>
         ) : null
       }
-      {/* {couldStop ? (
-        // 停止
-        <div className={chatStyle["chat-input-action"]} onClick={() => {
-          // let currentIndex = chatFolderStore.currentIndex.slice()
-          // let lastMessageIdx = currentChat?.messages.length - 1
-          // if (lastMessage) {
-          //   chatFolderStore.updateMessage(currentIndex, (messages: any) => {
-          //     messages[lastMessageIdx] = lastMessage
-          //   })
-          //   setLastMessage(null)
-          // } else {
-          //   chatFolderStore.updateMessage(currentIndex, (messages: any) => {
-          //     // console.info(messages)
-          //     let last = messages[lastMessageIdx]
-          //     // if (last.role !== 'user') {
-          //     //   messages.splice(lastMessageIdx, 1)
-          //     // }
-          //     console.info(last)
-          //   })
-          // }
-          stopAll()
-        }}>
-          <Icon name="icon-message-stop-default.png" />
-          <span className={chatStyle["chat-action-text"]}>停止</span>
-        </div>
-      ) : // 刷新
-      currentChat?.messages && currentChat?.messages.length ? (
-        <div
-          className={chatStyle["chat-input-action"]}
-          onClick={() => {
-            let lastMsg = currentChat?.messages[currentChat?.messages.length - 1]
-            if (lastMsg && lastMsg.role !== 'user') {
-              setLastMessage(lastMsg)
-            }
-            props.onResend && props.onResend();
-          }}
-        >
-          <Icon name="icon-refresh-default.png" />
-          <span className={chatStyle["chat-action-text"]}>刷新</span>
-        </div>
-      ) : null} */}
-
-      {/* {couldStop && (
-        <div
-          className={`${chatStyle["chat-input-action"]} clickable`}
-          onClick={stopAll}
-        >
-          <StopIcon />
-        </div>
-      )}
-      {!props.hitBottom && (
-        <div
-          className={`${chatStyle["chat-input-action"]} clickable`}
-          onClick={props.scrollToBottom}
-        >
-          <BottomIcon />
-        </div>
-      )}
-      {props.hitBottom && (
-        <div
-          className={`${chatStyle["chat-input-action"]} clickable`}
-          onClick={props.showPromptModal}
-        >
-          <SettingsIcon />
-        </div>
-      )}
-
-      <div
-        className={`${chatStyle["chat-input-action"]} clickable`}
-        onClick={nextTheme}
-      >
-        {theme === Theme.Auto ? (
-          <AutoIcon />
-        ) : theme === Theme.Light ? (
-          <LightIcon />
-        ) : theme === Theme.Dark ? (
-          <DarkIcon />
-        ) : null}
-      </div>
-
-      <div
-        className={`${chatStyle["chat-input-action"]} clickable`}
-        onClick={props.showPromptHints}
-      >
-        <PromptIcon />
-      </div>
-
-      <div
-        className={`${chatStyle["chat-input-action"]} clickable`}
-        onClick={() => {
-          navigate(Path.Masks);
-        }}
-      >
-        <MaskIcon />
-      </div>
-
-      <div
-        className={`${chatStyle["chat-input-action"]} clickable`}
-        onClick={() => {
-          chatFolderStore.updateCurrentChat((chat: ChatSession) => {
-            if (chat.clearContextIndex === chat.messages.length) {
-              chat.clearContextIndex = undefined;
-            } else {
-              chat.clearContextIndex = chat.messages.length;
-              chat.memoryPrompt = ""; // will clear memory
-            }
-          });
-        }}
-      >
-        <BreakIcon />
-      </div> */}
     </div>
   );
 }
@@ -718,7 +631,7 @@ export function Chat() {
   hasLoginRedirect({ useUserInfo, navigate })
 
   const chatFolderStore = useChatFolderStore();
-  const [currentChat, currentIndex] = useChatFolderStore((state) => [
+  const [currentChat, currentIndex] = useChatFolderStore((state: any) => [
     state.currentChat(),
     state.currentIndex,
   ]);
@@ -733,7 +646,7 @@ export function Chat() {
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { submitKey, shouldSubmit } = useSubmitHandler();
-  const { scrollRef, setAutoScroll, scrollToBottom } = useScrollToBottom();
+  const { scrollRef, setAutoScroll, scrollToBottom, onScrollTop } = useScrollToBottom();
   const [hitBottom, setHitBottom] = useState(true);
   const [modifyOpen, setModifyOpen] = useState<boolean>(false);
   const [formData, setFormData] = useState<any>([]);
@@ -753,12 +666,17 @@ export function Chat() {
   let [socketStop, setSocketStop] = useState<boolean>(false)
   // 当前chat的message
   let [chatMessage, setChatMessage] = useState<Array<any>>([])
+  // message当前页码
+  let [messagePageNo, setMessagePageNo] = useState<number>(1)
 
   // 初始化socket
-  const installSocket = () => {
+  const installSocket = (callBack?: any) => {
     if (currentChat && currentChat.sessionNo) {
       let theSocket = apiSocket({
         sessionNo: currentChat.sessionNo,
+        onOpen: () => {
+          callBack && callBack(theSocket)
+        },
         onMessage: (res: any) => {
           stopMessageLoading()
           if (res.error) {
@@ -773,6 +691,8 @@ export function Chat() {
             }
             let content = res.message.content || ''
             renderChatMessage(content)
+            // 设置滚动到最底部
+            scrollToBottom()
             // 设置显示停止按钮
             setSocketStatus('stop')
           } else {
@@ -789,25 +709,36 @@ export function Chat() {
   }
 
   // 读取当前会话下的消息
-  const readChatMessage = () => {
+  const readChatMessage = (callBack?: any) => {
     apiFetch({
       url: '/portal/chat/listMessage?sessionNo=' + currentChat.sessionNo,
-      params: { pageNo: 1, pageSize: 20 }
+      params: { pageNo: messagePageNo, pageSize: 50 }
     }).then(res => {
       if (res.success) {
         let messageRows = res.rows || []
-        if (!messageRows.length) {
+        let currentMessages = (currentChat.messages || []).slice()
+        if (!messageRows.length && !currentMessages.length) {
           // 会话消息为空时，默认添加问候语
-          messageRows.push({
+          currentMessages.push({
             role: "assistant",
             content: "有什么可以帮你的吗？",
             id: 0
           })
+        } else if (messageRows.length) {
+          if (messagePageNo == 1) {
+            currentMessages = [...messageRows]
+          } else {
+            currentMessages = [...messageRows, ...currentMessages]
+          }
+          setMessagePageNo(messagePageNo++)
         }
         chatFolderStore.updateCurrentChat((chat: any) => {
-          chat.messages = messageRows
+          chat.messages = currentMessages
         })
-        setChatMessage(messageRows)
+        setChatMessage(currentMessages)
+        if (messageRows.length) {
+          callBack && callBack()
+        }
       }
     })
   }
@@ -818,7 +749,7 @@ export function Chat() {
     let messages = chat.messages
     let len = messages.length
     let assMessage = messages[len - 1]
-    if (assMessage.role == 'assistant' && assMessage.loading) {
+    if (assMessage.role !== 'user' && assMessage.loading) {
       messages[len - 1].preview = false
       messages[len - 1].loading = false
       messages[len - 1].date = Date.now()
@@ -831,18 +762,24 @@ export function Chat() {
   useEffect(() => {
     installSocket()
     readChatMessage()
+    onScrollTop((callBack: any) => {
+      readChatMessage(callBack)
+    })
   }, [currentChat])
 
   // 显示当前回复消息内容
   const renderChatMessage = (content: string, isFinish?: boolean) => {
     if (!socketStop) {
       let chat = chatFolderStore.currentChat()
-      let messages = chat.messages
+      let messages = chat.messages.slice()
       let len = messages.length
-      if (messages[len - 1].role == 'assistant') {
+      if (messages[len - 1].role !== 'user') {
+        if (!messages[len - 1].createTime) {
+          messages[len - 1].createTime = Date.now()
+        }
         messages[len - 1].content += content
         chatFolderStore.updateCurrentChat((chat: any) => {
-          chat.mesages = messages
+          chat.messages = messages
         })
       }
     }
@@ -912,7 +849,7 @@ export function Chat() {
   const doSubmit = (userInput: string) => {
     if (userInput.trim() === "" || couldStop) return;
     // 设置隐藏刷新按钮、显示停止按钮
-    setSocketStatus('stop')
+    // setSocketStatus('stop')
     setIsLoading(true);
     
     chatFolderStore.updateCurrentChat((chat: any) => {
@@ -923,7 +860,7 @@ export function Chat() {
         role: "user",
         content: userInput,
         preview: false,
-        date: Date.now()
+        createTime: Date.now()
       })
       chat.messages.push({
         id: lastMessage.id + 2,
@@ -933,7 +870,16 @@ export function Chat() {
         loading: true
       })
     })
-    socket.send(userInput)
+    if (socket.readyState == 1) {
+      // 连接成功，可以通信
+      socket.send(userInput)
+    } else {
+      // 状态异常，重新连接，成功后再发送
+      installSocket((socket: any) => {
+        console.info('重新发送.')
+        socket.send(userInput)
+      })
+    }
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -1223,25 +1169,13 @@ export function Chat() {
                 <Icon classNames={["icon-customer", "icon-edit"]} />
               </div>
               {/* 导出 */}
-              <div
+              {/* <div
                 className="window-action-button clickable"
                 onClick={() => {
                   setShowExport(true);
-                }}
-              >
-                {/* <IconButton
-                    icon={<ExportIcon />}
-                    bordered
-                    title={Locale.Chat.Actions.Export}
-                    onClick={() => {
-                      setShowExport(true);
-                    }}
-                  /> */}
-                {/* <IconWrap className="icon-wrap-52">
-                    <Icon name="icon-export-primary.png" />
-                  </IconWrap> */}
+                }}>
                 <Icon classNames={["icon-customer", "icon-export"]} />
-              </div>
+              </div> */}
               {/* PC端放大缩小Chat */}
               {!isMobileScreen && (
                 <div
@@ -1290,14 +1224,14 @@ export function Chat() {
             }}
           >
             {
-              chatMessage?.map((message, i) => {
+              chatMessage?.map((message: any, i: number) => {
                 const isUser = message.role === "user";
                 const showActions =
                   i > 0 && !(message.preview || message.content.length === 0);
                 // const showTyping = message.preview || message.streaming;
 
                 // const shouldShowClearContextDivider = i === clearContextIndex - 1;
-
+                
                 return (
                   <>
                     <div
@@ -1428,7 +1362,7 @@ export function Chat() {
                         {!message.preview && (
                           <div className={styles["chat-message-actions"]}>
                             <div className={styles["chat-message-action-date"]}>
-                              {message?.date ? (new Date(message?.date)).toLocaleString() : ''}
+                              {message?.createTime ? (new Date(message?.createTime)).toLocaleString() : ''}
                             </div>
                           </div>
                         )}

@@ -93,7 +93,8 @@ export function ChatList(props: any) {
                       (fit.type == "chat" ? " " + listStyles["chat-folder"] : "") +
                       (fit.expand ? " " + listStyles["folder-expand"] : "")
                     }>
-                    <div className={listStyles["drag-header"]}>
+                    {/* 文件夹，暂时不用 */}
+                    {/* <div className={listStyles["drag-header"]}>
                       <h4 className={listStyles["list-title"]}>
                         <div className={listStyles["title-text-wrap"]}>
                           <span className={listStyles["title-text"]}>
@@ -112,7 +113,6 @@ export function ChatList(props: any) {
                         <span className={listStyles["title-handle"]}>
                           {fit.type !== "static" ? (
                             <>
-                              {/* 编辑Folder */}
                               <Icon
                                 name="icon-edit-folder-white.png"
                                 className={listStyles["icon-title-handle"]}
@@ -133,7 +133,6 @@ export function ChatList(props: any) {
                                   setModifyOpen(true);
                                 }}
                               />
-                              {/* 删除Folder */}
                               <Icon
                                 name="icon-delete-white.png"
                                 className={listStyles["icon-title-handle"]}
@@ -169,7 +168,6 @@ export function ChatList(props: any) {
                               />
                             </>
                           ) : null}
-                          {/* 折叠Folder */}
                           {fit.expand ? (
                             <Icon
                               name="icon-arrow-up-white.png"
@@ -189,9 +187,9 @@ export function ChatList(props: any) {
                           )}
                         </span>
                       </h4>
-                    </div>
+                    </div> */}
                     {/* 列表 */}
-                    <div className={listStyles["div-wrapper"]}>
+                    {/* <div className={listStyles["div-wrapper"]}> */}
                       <div className={listStyles["scroll-container"]}>
                         {
                           fit?.chat?.map((cit: any, cidx: number) => {
@@ -215,7 +213,7 @@ export function ChatList(props: any) {
                                       {cit.charCount || 0}条会话
                                     </div>
                                     <div className={listStyles["chat-item-date"]}>
-                                      {cit.lastUpdate ? (new Date(cit.lastUpdate).toLocaleString()) : ''}
+                                      {cit.createTime ? (new Date(cit.createTime).toLocaleString()) : ''}
                                     </div>
                                   </div>
                                 </div>
@@ -262,7 +260,7 @@ export function ChatList(props: any) {
                           })
                         }
                       </div>
-                    </div>
+                    {/* </div> */}
                   </div>
                 )
               })

@@ -90,10 +90,11 @@ export const apiSocket = (options: any) => {
     // console.info(baseUrl)
     // // 创建socket
     // TheSocket = new WebSocket(baseUrl)
-    TheSocket = new WebSocket('ws://119.13.101.192:8680/portal/chatSocket/' + options.sessionNo)
+    TheSocket = new WebSocket(serverConfig.baseUrlSocket  +'/portal/chatSocket/' + options.sessionNo)
     // 建立连接
     TheSocket.onopen = function () {
       console.info('socket 已建立连接')
+      options.onOpen && options.onOpen()
     }
     // 接收消息
     TheSocket.onmessage = function (msg: any) {
@@ -115,6 +116,7 @@ export const apiSocket = (options: any) => {
     //发生了错误事件
     TheSocket.onerror = function (err: any) {
       console.info(err)
+      options.onMessage && options.onMessage({ message: '当前发生错误，请稍后重试' })
     }
     // 关闭连接
     window.unload = function () {

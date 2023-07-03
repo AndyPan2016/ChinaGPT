@@ -100,6 +100,7 @@ export function SideBar(props: { className?: string }) {
   const useUserInfo = useUserInfoStore()
   const navigate = useNavigate();
 
+  // const [chatListRef] = useRef<HTMLDivElement>(null)
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [formData, setFormData] = useState<Array<any>>([]);
   const [newChatOpen, setNewChatOpen] = useState<boolean>(false);
@@ -113,11 +114,30 @@ export function SideBar(props: { className?: string }) {
   const [chatApiList, setChatApiList] = useState<Array<any>>([])
   // 面具列表
   const [defaultMask, setDefaultMask] = useState<Array<any>>([])
+  // 会话列表当前页码
+  const [chatPageNo, setChatPageNo] = useState<number>(1)
+  // 加载中
+  const [chatLoading, setChatLoading] = useState<boolean>(false)
+  // let chatLoading = false
 
   // drag side bar
   const { onDragMouseDown, shouldNarrow } = useDragSideBar();
   const config = useAppConfig();
   const isMobileScreen = useMobileScreen();
+
+  const chatListScroll = (e: any) => {
+    let target = e.currentTarget
+    let offsetHeight = target.offsetHeight
+    let scrollTop = target.scrollTop
+    let scrollHeight = target.scrollHeight
+    if ((offsetHeight + scrollTop) > (scrollHeight - 30) && !chatLoading) {
+      setChatLoading(true)
+      // console.info(offsetHeight + ',' + scrollTop + ',' + scrollHeight + ','+chatLoading)
+      getChatSession(() => {
+        setChatLoading(false)
+      })
+    }
+  }
 
   // useHotKey();
   // 确认新增分类
@@ -157,18 +177,25 @@ export function SideBar(props: { className?: string }) {
   }
 
   // 获取会话列表
-  const getChatSession = () => {
-    setLoadChat(true)
+  const getChatSession = (callBack?: any) => {
+    if (chatPageNo == 1) {
+      setLoadChat(true)
+    }
     let chatSessionNo = chatStore.chatSessionNo
     apiFetch({
       url: '/portal/session/list',
-      params: { pageNo: 1, pageSize: 50 }
+      params: { pageNo: chatPageNo, pageSize: 100 }
     }).then(res => {
       setLoadChat(false)
       if (res.success) {
         let rows = res.rows || []
-        let folder = chatStore.initFolder()
-        folder = {...folder, ...{ type: "static", name: '', chat: [] }}
+        let folder: any;
+        if (chatPageNo == 1) {
+          folder = chatStore.initFolder()
+          folder = {...folder, ...{ type: "static", name: '', chat: [] }}
+        } else {
+          folder = chatStore.getFolder().slice()[0]
+        }
         rows.map((it: any, idx: number) => {
           if (chatSessionNo && it.sessionNo == chatSessionNo) {
             chatStore.selectChat(0, idx, it.sessionNo)
@@ -179,6 +206,11 @@ export function SideBar(props: { className?: string }) {
           chatStore.selectChat(0, 0, folder.chat[0].sessionNo)
         }
         chatStore.resetFolder([folder])
+        if (rows.length) {
+          let nextPageNo = chatPageNo + 1
+          setChatPageNo(nextPageNo)
+          callBack && callBack()
+        }
         // setChatApiList(rows)
       }
     }).catch(() => {
@@ -193,6 +225,7 @@ export function SideBar(props: { className?: string }) {
       params: { sessionNo }
     }).then(res => {
       if (res.success) {
+        setChatPageNo(1)
         toastSuccess({ content: '删除成功' })
         getChatSession()
       }
@@ -290,15 +323,9 @@ export function SideBar(props: { className?: string }) {
                         <Icon name="icon-set-white.png" />
                       </Link>
                       {/* 清空 */}
-                      <span
+                      {/* <span
                         className={styles["tools-item"]}
                         onClick={() => {
-                          // if (confirm(Locale.Home.DeleteChat)) {
-                          //   chatStore.deleteChat(
-                          //     chatStore.currentIndex[0],
-                          //     chatStore.currentIndex[1],
-                          //   );
-                          // }
                           setFormDataClear([
                             {
                               value: "是否清空当前所有会话？清空后将不可恢复！",
@@ -312,13 +339,11 @@ export function SideBar(props: { className?: string }) {
                             },
                           ]);
                           setModalOpenClear(true);
-                        }}
-                      >
-                        {/* <IconDelWhite /> */}
+                        }}>
                         <Icon name="icon-delete-white.png" />
-                      </span>
+                      </span> */}
                       {/* 新建文件夹 */}
-                      <span
+                      {/* <span
                         className={styles["tools-item"]}
                         onClick={() => {
                           // chatStore.newFolder({ name: "新分类" });
@@ -336,13 +361,11 @@ export function SideBar(props: { className?: string }) {
                             },
                           ]);
                           setModalOpen(true);
-                        }}
-                      >
-                        {/* <IconAddWhite /> */}
+                        }}>
                         <Icon name="icon-add-white.png" />
-                      </span>
+                      </span> */}
                     </>
-                  ) : (
+                  ) : (null
                     // PC端
                     // <span className={styles['tools-item'] + ' ' + styles['tools-item-pc']}
                     //   onClick={() => {
@@ -350,27 +373,27 @@ export function SideBar(props: { className?: string }) {
                     //   }}>
                     //     <Icon name="icon-add-primary.png" />
                     // </span>
-                    <span
-                      onClick={() => {
-                        // chatStore.newFolder({ name: "新分类" });
-                        setFormData([
-                          {
-                            // value: folder[folderIdx].name,
-                            placeholder: "请输入新建分类目录名称",
-                            label: (
-                              <Icon
-                                name="icon-folder-primary.png"
-                                transTheme={true}
-                              />
-                            ),
-                            formItemType: "input",
-                          },
-                        ]);
-                        setModalOpen(true);
-                      }}
-                    >
-                      <Icon classNames={["icon-customer icon-add"]} />
-                    </span>
+                    // <span
+                    //   onClick={() => {
+                    //     // chatStore.newFolder({ name: "新分类" });
+                    //     setFormData([
+                    //       {
+                    //         // value: folder[folderIdx].name,
+                    //         placeholder: "请输入新建分类目录名称",
+                    //         label: (
+                    //           <Icon
+                    //             name="icon-folder-primary.png"
+                    //             transTheme={true}
+                    //           />
+                    //         ),
+                    //         formItemType: "input",
+                    //       },
+                    //     ]);
+                    //     setModalOpen(true);
+                    //   }}
+                    // >
+                    //   <Icon classNames={["icon-customer icon-add"]} />
+                    // </span>
                   )}
                 </div>
               </div>
@@ -432,16 +455,24 @@ export function SideBar(props: { className?: string }) {
 
             <div
               className={styles["sidebar-body"]}
+              onScroll={chatListScroll}
               onClick={(e) => {
                 // if (e.target === e.currentTarget) {
                 //   navigate(Path.Home);
                 // }
-              }}
-            >
+              }}>
               {/* <ChatList narrow={shouldNarrow} /> */}
               {
                 loadChat ? <Loading noLogo /> : <ChatList onDeleteChat={onDeleteChat} />
               }
+              {/* 加载更多 */}
+              {/* {
+                chatLoading ? (
+                  <div className={styles['sidebar-body-loadmore']}>
+                    <Loading noLogo />
+                  </div>
+                ) : null
+              } */}
             </div>
 
             {/* PC才显示 */}
@@ -458,15 +489,9 @@ export function SideBar(props: { className?: string }) {
                     <Icon name="icon-set-white.png" />
                   </Link>
                   {/* 清空 */}
-                  <span
+                  {/* <span
                     className={styles["tools-item"]}
                     onClick={() => {
-                      // if (confirm(Locale.Home.DeleteChat)) {
-                      //   chatStore.deleteChat(
-                      //     chatStore.currentIndex[0],
-                      //     chatStore.currentIndex[1],
-                      //   );
-                      // }
                       setFormDataClear([
                         {
                           value: "是否清空当前所有会话？清空后将不可恢复！",
@@ -477,11 +502,9 @@ export function SideBar(props: { className?: string }) {
                         },
                       ]);
                       setModalOpenClear(true);
-                    }}
-                  >
-                    {/* <IconDelWhite /> */}
+                    }}>
                     <Icon name="icon-delete-white.png" />
-                  </span>
+                  </span> */}
                 </div>
               </div>
             ) : null}
