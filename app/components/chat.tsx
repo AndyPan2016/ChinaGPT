@@ -790,25 +790,26 @@ export function Chat() {
 
   // 读取当前会话下的消息
   const readChatMessage = () => {
-    // apiFetch({
-    //   url: '/portal/chat/listMessage',
-    //   params: { sessionId: currentChat.sessionNo }
-    // }).then(res => {
-    //   if (res.success) {
-    //   }
-    // })
-    let theMessage = [
-      {
-        role: "assistant",
-        content: "有什么可以帮你的吗",
-        id: 0
-        // preview: true
+    apiFetch({
+      url: '/portal/chat/listMessage?sessionNo=' + currentChat.sessionNo,
+      params: { pageNo: 1, pageSize: 20 }
+    }).then(res => {
+      if (res.success) {
+        let messageRows = res.rows || []
+        if (!messageRows.length) {
+          // 会话消息为空时，默认添加问候语
+          messageRows.push({
+            role: "assistant",
+            content: "有什么可以帮你的吗？",
+            id: 0
+          })
+        }
+        chatFolderStore.updateCurrentChat((chat: any) => {
+          chat.messages = messageRows
+        })
+        setChatMessage(messageRows)
       }
-    ]
-    chatFolderStore.updateCurrentChat((chat: any) => {
-      chat.messages = theMessage
     })
-    setChatMessage(theMessage)
   }
 
   // 停止消息的loading状态
