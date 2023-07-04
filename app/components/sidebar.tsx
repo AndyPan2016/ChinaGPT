@@ -260,7 +260,7 @@ export function SideBar(props: { className?: string }) {
   useEffect(() => {
     queryConfig()
     getChatSession()
-    getMask()
+    // getMask()
   }, [])
 
   return (

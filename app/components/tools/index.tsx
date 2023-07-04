@@ -17,6 +17,7 @@ import styles from "./tools.module.scss";
 import "./tools.scss";
 import { useMobileScreen } from "../../utils";
 import { useAppConfig, Theme } from "../../store";
+import { Empty } from "antd";
 
 // 图标
 export const Icon = ({
@@ -183,7 +184,9 @@ export function ActionSelectList({
             );
           })}
         </div>
-      ) : null}
+      ) : <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="暂无数据" />}
       {children}
     </div>
   );

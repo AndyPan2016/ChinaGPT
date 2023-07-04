@@ -384,14 +384,14 @@ export function ChatActions(props: {
   ]);
   const isMobileScreen = useMobileScreen();
   let [dataList, setDataList] = useState<Array<ISelectItem>>([
-    { text: "GPT-3.5", value: 1, active: true }
+    // { text: "GPT-3.5", value: 1, active: true }
     // { text: "GPT-4.0（0次）", value: 1 },
     // { text: "GPT-3.5（20次）", value: 2 },
     // { text: "GPT-3.0（无限制）", value: 3 },
   ]);
   let [gptVersionP, setGPTVersionP] = useState<boolean>(false);
   let [currentGPT, setCurrentGPT] = useState<any>({
-    text: currentChat.mode || 'GPT-3.5'
+    text: currentChat.model || '默认'
   });
 
   let [roleList, setRoleList] = useState<Array<ISelectItem>>([
@@ -459,9 +459,51 @@ export function ChatActions(props: {
       }
     })
   }
+  
+  // 获取面具
+  const getMask = () => {
+    apiFetch({
+      url: '/portal/session/listDefault',
+      params: { pageNo: 1, pageSize: 10 }
+    }).then(res => {
+      if (res.success) {
+        let rows = res.rows || []
+        let mask: any = []
+        rows.map((it: any) => {
+          it.text = it.model
+          it.active = it.model == currentChat.model
+          mask.push(it)
+        })
+        if (mask.length) {
+          setDataList(mask)
+        }
+      }
+    })
+  }
+
+  // 更新配置
+  const modifyConfig = (item: any, callBack: any) => {
+    apiFetch({
+      url: '/portal/customer/modifyConfig',
+      params: {
+        "model": item[0].model,
+        "temperature": item[0].temperature,
+        "presencePenalty": item[0].presencePenalty,
+        "frequencyPenalty": item[0].frequencyPenalty,
+        "maxTokens": item[0].maxTokens
+      }
+    }).then(res => {
+      if (res.success) {
+        setCurrentGPT(item[0]);
+        setGPTVersionP(false);
+        callBack && callBack();
+      }
+    })
+  }
 
   useEffect(() => {
     getRoleList()
+    getMask()
   }, [])
 
   return (
@@ -469,8 +511,7 @@ export function ChatActions(props: {
       className={
         chatStyle["chat-input-actions"] +
         (isMobileScreen ? " " + chatStyle["chat-input-actions-mobile"] : "")
-      }
-    >
+      }>
       <GPTModal
         open={lackOpen}
         title="配额不足"
@@ -490,14 +531,15 @@ export function ChatActions(props: {
           <ActionSelectList
             data={dataList}
             onSelect={(item: ISelectItem[], callBack: any) => {
-              if (item[0].value == 1) {
-                setGPTVersionP(false);
-                setLackOpen(true);
-              } else {
-                setCurrentGPT(item[0]);
-                setGPTVersionP(false);
-                callBack && callBack();
-              }
+              modifyConfig(item, callBack)
+              // if (item[0].value == 1) {
+              //   setGPTVersionP(false);
+              //   setLackOpen(true);
+              // } else {
+              //   setCurrentGPT(item[0]);
+              //   setGPTVersionP(false);
+              //   callBack && callBack();
+              // }
             }}
           />
         }
@@ -701,7 +743,6 @@ export function Chat() {
             setSocketStatus('stop')
           } else {
             if (!isReSend) {
-              console.info(messageTotal)
               let total = messageTotal + 2
               setMessageTotal(total)
             }
@@ -895,6 +936,8 @@ export function Chat() {
         socket.send(userInput)
       })
     }
+    // 设置滚动到最底部
+    scrollToBottom()
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -992,7 +1035,6 @@ export function Chat() {
 
   // 刷新，重新发送最后一条
   const onResend = (botMessageId?: number) => {
-    console.info('resend')
     // let messages = currentChat.messages;
     let len = chatMessage.length;
     if (len) {
