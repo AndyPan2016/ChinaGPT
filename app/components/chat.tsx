@@ -338,8 +338,8 @@ function useScrollToBottom() {
   const onScrollTop = (callBack?: any) => {
     const dom = scrollRef.current;
     if (dom) {
-      dom.onscroll = function (e) {
-        let scrollTop = e?.srcElement?.scrollTop;
+      dom.onscroll = function (e: any) {
+        let scrollTop = e.srcElement.scrollTop;
         if (scrollTop < 10 && !topEnable) {
           topEnable = true
           callBack && callBack(() => {
@@ -414,7 +414,7 @@ export function ChatActions(props: {
     const themeIndex = themes.indexOf(theme);
     const nextIndex = (themeIndex + 1) % themes.length;
     const nextTheme = themes[nextIndex];
-    config.update((config) => (config.theme = nextTheme));
+    config.update((config: any) => (config.theme = nextTheme));
   }
 
   // stop all responses
@@ -755,6 +755,10 @@ export function Chat() {
           }
         }
       })
+      // // 关闭连接
+      // window?.unload = function () {
+      //   theSocket.close();
+      // };
       setSocket(theSocket)
     }
   }

@@ -118,10 +118,10 @@ export const apiSocket = (options: any) => {
       console.info(err)
       options.onMessage && options.onMessage({ message: '当前发生错误，请稍后重试' })
     }
-    // 关闭连接
-    window.unload = function () {
-      TheSocket.close();
-    };
+    // // 关闭连接
+    // window?.unload = function () {
+    //   TheSocket.close();
+    // };
   }
   return TheSocket
 }

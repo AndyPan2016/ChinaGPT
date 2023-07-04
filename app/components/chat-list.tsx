@@ -88,6 +88,7 @@ export function ChatList(props: any) {
               folder.map((fit: any, fidx: number) => {
                 return (
                   <div
+                    key={fidx}
                     className={
                       listStyles["drag-container"] +
                       (fit.type == "chat" ? " " + listStyles["chat-folder"] : "") +
@@ -194,7 +195,9 @@ export function ChatList(props: any) {
                         {
                           fit?.chat?.map((cit: any, cidx: number) => {
                             return (
-                              <a className={
+                              <a
+                                key={cidx}
+                                className={
                                   listStyles["chat-item-wrap"] +
                                   (fidx == currentIndex[0] && cidx == currentIndex[1]
                                     ? " " + listStyles["current"]
