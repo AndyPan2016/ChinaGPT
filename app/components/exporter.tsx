@@ -1,4 +1,4 @@
-import { ChatMessage, useAppConfig, useChatStore } from "../store";
+import { ChatMessage, useAppConfig, useChatStore, useChatFolderStore } from "../store";
 import Locale from "../locales";
 import styles from "./exporter.module.scss";
 import { List, ListItem, Modal, Select, showToast } from "./ui-lib";
@@ -130,21 +130,22 @@ export function MessageExporter() {
     updater(config);
     setExportConfig(config);
   }
-
-  const chatStore = useChatStore();
-  const session = chatStore.currentSession();
+  const chatFolderStore = useChatFolderStore();
+  const session = chatFolderStore.currentChat();
+  // const chatStore = useChatStore();
+  // const session = chatStore.currentSession();
   const { selection, updateSelection } = useMessageSelector();
   const selectedMessages = useMemo(() => {
     const ret: ChatMessage[] = [];
-    if (exportConfig.includeContext) {
-      ret.push(...session.mask.context);
-    }
+    // if (exportConfig.includeContext) {
+    //   ret.push(...session.mask.context);
+    // }
     ret.push(...session.messages.filter((m, i) => selection.has(m.id ?? i)));
     return ret;
   }, [
     exportConfig.includeContext,
     session.messages,
-    session.mask.context,
+    // session.mask.context,
     selection,
   ]);
 
@@ -235,7 +236,7 @@ export function RenderExport(props: {
     }
 
     const renderMsgs = messages.map((v) => {
-      const [_, role] = v.id.split(":");
+      const [_, role] = v.sessionNo.split(":");
       return {
         role: role as any,
         content: v.innerHTML,
@@ -315,13 +316,13 @@ export function PreviewActions(props: {
           icon={<DownloadIcon />}
           onClick={props.download}
         ></IconButton>
-        <IconButton
+        {/* <IconButton
           text={Locale.Export.Share}
           bordered
           shadow
           icon={loading ? <LoadingIcon /> : <ShareIcon />}
           onClick={share}
-        ></IconButton>
+        ></IconButton> */}
       </div>
       <div
         style={{
@@ -361,9 +362,11 @@ export function ImagePreviewer(props: {
   messages: ChatMessage[];
   topic: string;
 }) {
-  const chatStore = useChatStore();
-  const session = chatStore.currentSession();
-  const mask = session.mask;
+  const chatFolderStore = useChatFolderStore();
+  const session = chatFolderStore.currentChat();
+  // const chatStore = useChatStore();
+  // const session = chatStore.currentSession();
+  // const mask = session.mask;
   const config = useAppConfig();
 
   const previewRef = useRef<HTMLDivElement>(null);
@@ -437,19 +440,20 @@ export function ImagePreviewer(props: {
           </div>
 
           <div>
-            <div className={styles["main-title"]}>ChatGPT Next Web</div>
-            <div className={styles["sub-title"]}>
+            <div className={styles["main-title"]}>China GPT</div>
+            {/* <div className={styles["sub-title"]}>
               github.com/Yidadaa/ChatGPT-Next-Web
-            </div>
+            </div> */}
             <div className={styles["icons"]}>
               <ExportAvatar avatar={config.avatar} />
               <span className={styles["icon-space"]}>&</span>
-              <ExportAvatar avatar={mask.avatar} />
+              {/* <ExportAvatar avatar={mask.avatar} /> */}
+              <ExportAvatar avatar={'gpt-bot'} />
             </div>
           </div>
           <div>
             <div className={styles["chat-info-item"]}>
-              Model: {mask.modelConfig.model}
+              {/* Model: {mask.modelConfig.model} */}
             </div>
             <div className={styles["chat-info-item"]}>
               Messages: {props.messages.length}
@@ -460,7 +464,7 @@ export function ImagePreviewer(props: {
             <div className={styles["chat-info-item"]}>
               Time:{" "}
               {new Date(
-                props.messages.at(-1)?.date ?? Date.now(),
+                props.messages.at(-1)?.createTime ?? Date.now(),
               ).toLocaleString()}
             </div>
           </div>
@@ -473,7 +477,7 @@ export function ImagePreviewer(props: {
             >
               <div className={styles["avatar"]}>
                 <ExportAvatar
-                  avatar={m.role === "user" ? config.avatar : mask.avatar}
+                  avatar={m.role === "user" ? config.avatar : 'gpt-bot'}
                 />
               </div>
 

@@ -178,8 +178,10 @@
 
 .markdown-body a {
   background-color: transparent;
-  color: var(--color-accent-fg);
-  text-decoration: none;
+  // color: var(--color-accent-fg);
+  // text-decoration: none;
+  color: #FFF;
+  text-decoration: underline;
 }
 
 .markdown-body abbr[title] {

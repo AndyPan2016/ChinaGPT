@@ -351,10 +351,10 @@ function useScrollToBottom() {
     }
   }
 
-  // auto scroll
-  useLayoutEffect(() => {
-    autoScroll && scrollToBottom();
-  });
+  // // auto scroll
+  // useLayoutEffect(() => {
+  //   autoScroll && scrollToBottom();
+  // });
 
   return {
     scrollRef,
@@ -668,6 +668,10 @@ export function Chat() {
   let [chatMessage, setChatMessage] = useState<Array<any>>([])
   // message当前页码
   let [messagePageNo, setMessagePageNo] = useState<number>(1)
+  // message总的消息数
+  let [messageTotal, setMessageTotal] = useState<number>(0)
+  // 是否是重新发送(或刷新)，重新发送不计消息数
+  const [isReSend, setIsReSend] = useState<boolean>(false)
 
   // 初始化socket
   const installSocket = (callBack?: any) => {
@@ -696,6 +700,12 @@ export function Chat() {
             // 设置显示停止按钮
             setSocketStatus('stop')
           } else {
+            if (!isReSend) {
+              console.info(messageTotal)
+              let total = messageTotal + 2
+              setMessageTotal(total)
+            }
+            setIsReSend(false)
             // 结束
             setIsLoading(false);
             // 设置显示刷新按钮
@@ -712,10 +722,13 @@ export function Chat() {
   const readChatMessage = (callBack?: any) => {
     apiFetch({
       url: '/portal/chat/listMessage?sessionNo=' + currentChat.sessionNo,
-      params: { pageNo: messagePageNo, pageSize: 50 }
+      params: { pageNo: messagePageNo, pageSize: 100 }
     }).then(res => {
       if (res.success) {
         let messageRows = res.rows || []
+        // 总记录数
+        let total = res.total || 0
+        setMessageTotal(total)
         let currentMessages = (currentChat.messages || []).slice()
         if (!messageRows.length && !currentMessages.length) {
           // 会话消息为空时，默认添加问候语
@@ -726,6 +739,8 @@ export function Chat() {
           })
         } else if (messageRows.length) {
           if (messagePageNo == 1) {
+            // 设置滚动到最底部
+            scrollToBottom()
             currentMessages = [...messageRows]
           } else {
             currentMessages = [...messageRows, ...currentMessages]
@@ -977,6 +992,7 @@ export function Chat() {
 
   // 刷新，重新发送最后一条
   const onResend = (botMessageId?: number) => {
+    console.info('resend')
     // let messages = currentChat.messages;
     let len = chatMessage.length;
     if (len) {
@@ -989,6 +1005,8 @@ export function Chat() {
       setIsLoading(true);
       const content = chatMessage[userIndex].content;
       deleteMessage(userIndex);
+      // 设置是重新发送
+      setIsReSend(true)
       // 重新提交内容
       doSubmit(content)
     }
@@ -1089,7 +1107,7 @@ export function Chat() {
                 {!currentChat?.topic ? DEFAULT_TOPIC : currentChat?.topic}
               </div>
               <div className="window-header-sub-title">
-                {Locale.Chat.SubTitle(currentChat?.charCount || 0)}
+                {Locale.Chat.SubTitle(messageTotal)}
               </div>
             </div>
             <div className="window-actions">
@@ -1169,13 +1187,13 @@ export function Chat() {
                 <Icon classNames={["icon-customer", "icon-edit"]} />
               </div>
               {/* 导出 */}
-              {/* <div
+              <div
                 className="window-action-button clickable"
                 onClick={() => {
                   setShowExport(true);
                 }}>
                 <Icon classNames={["icon-customer", "icon-export"]} />
-              </div> */}
+              </div>
               {/* PC端放大缩小Chat */}
               {!isMobileScreen && (
                 <div
@@ -1215,13 +1233,13 @@ export function Chat() {
           <div
             className={styles["chat-body"]}
             ref={scrollRef}
-            onScroll={(e) => onChatBodyScroll(e.currentTarget)}
-            onMouseDown={() => inputRef.current?.blur()}
-            onWheel={(e) => setAutoScroll(hitBottom && e.deltaY > 0)}
-            onTouchStart={() => {
-              inputRef.current?.blur();
-              setAutoScroll(false);
-            }}
+            // onScroll={(e) => onChatBodyScroll(e.currentTarget)}
+            // onMouseDown={() => inputRef.current?.blur()}
+            // onWheel={(e) => setAutoScroll(hitBottom && e.deltaY > 0)}
+            // onTouchStart={() => {
+            //   inputRef.current?.blur();
+            //   setAutoScroll(false);
+            // }}
           >
             {
               chatMessage?.map((message: any, i: number) => {
@@ -1231,7 +1249,6 @@ export function Chat() {
                 // const showTyping = message.preview || message.streaming;
 
                 // const shouldShowClearContextDivider = i === clearContextIndex - 1;
-                
                 return (
                   <>
                     <div
@@ -1264,6 +1281,8 @@ export function Chat() {
                             }
                           >
                             {isUser ? (
+                              // <span
+                              //   style={{color: 'rgba(183, 189, 203, 1)'}}>{message.content}</span>
                               <MarkdownUser
                                 className="chat-message-md-user"
                                 fontSize="16"
@@ -1289,6 +1308,9 @@ export function Chat() {
                                 defaultShow={i >= chatMessage.length - 10}
                               />
                             ) : (
+                              // <span dangerouslySetInnerHTML={
+                              //   {__html: message.content}
+                              // }></span>
                               <Markdown
                                 className="chat-message-md"
                                 fontSize="16"

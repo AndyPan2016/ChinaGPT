@@ -148,6 +148,12 @@ export function Markdown(
       const isOverlap =
         Math.max(parentTop, mdBounds.top) <=
         Math.min(parentBottom, mdBounds.bottom);
+      // if (!isOverlap) {
+      //   console.info(isOverlap)
+      //   console.info(parentBounds)
+      //   console.info(mdBounds)
+      //   console.info(parentTop + ',' + mdBounds.top + '--' + parentBottom + ',' + mdBounds.bottom)
+      // }
       inView.current = isOverlap;
     }
 
@@ -159,8 +165,12 @@ export function Markdown(
     }
     props.renderBack && props.renderBack();
   };
+  // useEffect(() => {
+  //   checkInView()
+  // }, [])
 
   setTimeout(() => checkInView(), 1);
+  // checkInView()
 
   return (
     <div
@@ -176,14 +186,15 @@ export function Markdown(
       onContextMenu={props.onContextMenu}
       onDoubleClickCapture={props.onDoubleClickCapture}
     >
-      {inView.current &&
+      {
         (props.loading ? (
           <span style={{ color: props.followColor }}>
             {props.followParent ? <LoadingParentIcon /> : <LoadingIcon />}
           </span>
         ) : (
           <MarkdownContent content={props.content} />
-        ))}
+        ))
+      }
     </div>
   );
 }

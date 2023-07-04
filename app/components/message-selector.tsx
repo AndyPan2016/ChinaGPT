@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChatMessage, useAppConfig, useChatStore } from "../store";
+import { ChatMessage, useAppConfig, useChatStore, useChatFolderStore } from "../store";
 import { Updater } from "../typing";
 import { IconButton } from "./button";
 import { Avatar } from "./emoji";
@@ -70,15 +70,18 @@ export function MessageSelector(props: {
   defaultSelectAll?: boolean;
   onSelected?: (messages: ChatMessage[]) => void;
 }) {
-  const chatStore = useChatStore();
-  const session = chatStore.currentSession();
+  // const chatStore = useChatStore();
+  // const session = chatStore.currentSession();
+  const chatFolderStore = useChatFolderStore();
+  const session = chatFolderStore.currentChat();
   const isValid = (m: ChatMessage) => m.content && !m.isError && !m.streaming;
-  const messages = session.messages.filter(
-    (m, i) =>
-      m.id && // message must have id
-      isValid(m) &&
-      (i >= session.messages.length - 1 || isValid(session.messages[i + 1])),
-  );
+  // const messages = session.messages.filter(
+  //   (m, i) =>
+  //     m.sessionNo && // message must have id
+  //     isValid(m) &&
+  //     (i >= session.messages.length - 1 || isValid(session.messages[i + 1])),
+  // );
+  const messages = session.messages
   const messageCount = messages.length;
   const config = useAppConfig();
 
@@ -195,12 +198,13 @@ export function MessageSelector(props: {
                 {m.role === "user" ? (
                   <Avatar avatar={config.avatar}></Avatar>
                 ) : (
-                  <MaskAvatar mask={session.mask} />
+                  // <MaskAvatar mask={session.mask || { avatar: 'gpt-bot' }} />
+                  <Avatar model="gpt-3.5-turbo" />
                 )}
               </div>
               <div className={styles["body"]}>
                 <div className={styles["date"]}>
-                  {new Date(m.date).toLocaleString()}
+                  {new Date(m.createTime).toLocaleString()}
                 </div>
                 <div className={`${styles["content"]} one-line`}>
                   {m.content}
