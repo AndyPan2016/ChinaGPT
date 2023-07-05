@@ -3,7 +3,7 @@ export const ChatControllerPool = {
   controllers: {} as Record<string, AbortController>,
 
   addController(
-    currentIndex: Array<any>,
+    currentIndex: any,
     messageId: number,
     controller: AbortController,
   ) {
@@ -12,7 +12,7 @@ export const ChatControllerPool = {
     return key;
   },
 
-  stop(currentIndex: Array<any>, messageId: number) {
+  stop(currentIndex: any, messageId: number) {
     const key = this.key(currentIndex, messageId);
     const controller = this.controllers[key];
     controller?.abort();
@@ -26,12 +26,12 @@ export const ChatControllerPool = {
     return Object.values(this.controllers).length > 0;
   },
 
-  remove(currentIndex: Array<any>, messageId: number) {
+  remove(currentIndex: any, messageId: number) {
     const key = this.key(currentIndex, messageId);
     delete this.controllers[key];
   },
 
-  key(currentIndex: Array<any>, messageIndex: number) {
+  key(currentIndex: any, messageIndex: number) {
     return `${currentIndex[0]},${currentIndex[1]},${messageIndex}`;
   },
 };

@@ -8,7 +8,7 @@ import DownIcon from "../icons/down.svg";
 import { createRoot } from "react-dom/client";
 import React, { HTMLProps, useEffect, useState } from "react";
 import { IconButton } from "./button";
-import { useMobileScreen } from "../utils";
+// import { useMobileScreen } from "../utils";
 
 export function Popover(props: {
   children: JSX.Element;
@@ -248,11 +248,23 @@ export function showToastGPT(options: any) {
   let type = options.type;
   const div = document.createElement("div");
   div.className = styles.show;
-  const isMobileScreen = useMobileScreen();
-  if (isMobileScreen) {
-    div.classList.add(styles.toastmobile);
-  }
+  // const { width } = useWindowSize();
+  // if (width < 600) {
+  //   div.classList.add(styles.toastmobile);
+  // }
   document.body.appendChild(div);
+  if (window.innerWidth < 600) {
+    div.classList.add(styles.toastmobile);
+  } else {
+    div.classList.remove(styles.toastmobile);
+  }
+  window.onresize = () => {
+    if (window.innerWidth < 600) {
+      div.classList.add(styles.toastmobile);
+    } else {
+      div.classList.remove(styles.toastmobile);
+    }
+  }
 
   const root = createRoot(div);
   const close = () => {

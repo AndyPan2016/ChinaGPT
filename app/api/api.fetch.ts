@@ -13,8 +13,9 @@ export interface IAPI {
 const renderBaseUrl = (options: any) => {
   let url = options?.url
   let query = options?.query
+  // production还是得用代理
   const baseUrl =
-    serverConfig.nodeEnv === "development"
+    (serverConfig.nodeEnv === "development" || serverConfig.nodeEnv === "production")
     ? (options.socket ? '/socket/' : "/acooly/")
     : (options.socket ? serverConfig.baseUrlSocket : serverConfig.baseUrl);
   // baseUrl最后是否是/

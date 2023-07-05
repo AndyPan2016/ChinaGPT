@@ -307,36 +307,36 @@ export const Login = () => {
         onCancel={cancelModifyPasswordFirst}
         onOk={sureModifyPasswordFirst}
         onSend={sendModifyPasswordFirst}
-        children={{
-          formFirst: (
-            <div className={styles["customer-form-item"]}>
-              <span className={styles["form-item-label"]}>验证方式</span>
-              <Radio.Group
-                className="regist-radio"
-                onChange={(e: any) => {
-                  let value = e.target.value;
-                  setVerifyTypeReset(value);
-                  if (value === "MOBILE") {
-                    setModifyPasswordFirst({
-                      ...modifyPasswordFirst,
-                      ...{ formData: formDataMobile },
-                    });
-                  } else if (value === "EMAIL") {
-                    setModifyPasswordFirst({
-                      ...modifyPasswordFirst,
-                      ...{ formData: formDataEMail },
-                    });
-                  }
-                }}
-                disabled={radioStatus}
-                value={verifyTypeReset}
-              >
-                <Radio value="MOBILE">手机号</Radio>
-                <Radio value="EMAIL">电子邮箱</Radio>
-              </Radio.Group>
-            </div>
-          ),
-        }}
+        // children={{
+        //   formFirst: (
+        //     <div className={styles["customer-form-item"]}>
+        //       <span className={styles["form-item-label"]}>验证方式</span>
+        //       <Radio.Group
+        //         className="regist-radio"
+        //         onChange={(e: any) => {
+        //           let value = e.target.value;
+        //           setVerifyTypeReset(value);
+        //           if (value === "MOBILE") {
+        //             setModifyPasswordFirst({
+        //               ...modifyPasswordFirst,
+        //               ...{ formData: formDataMobile },
+        //             });
+        //           } else if (value === "EMAIL") {
+        //             setModifyPasswordFirst({
+        //               ...modifyPasswordFirst,
+        //               ...{ formData: formDataEMail },
+        //             });
+        //           }
+        //         }}
+        //         disabled={radioStatus}
+        //         value={verifyTypeReset}
+        //       >
+        //         <Radio value="MOBILE">手机号</Radio>
+        //         <Radio value="EMAIL">电子邮箱</Radio>
+        //       </Radio.Group>
+        //     </div>
+        //   ),
+        // }}
       />
       {/* 忘记密码 - 第二步 */}
       <GPTModal

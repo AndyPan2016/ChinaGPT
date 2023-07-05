@@ -75,20 +75,20 @@ export function useWindowSize() {
       height: window.innerHeight,
     });
 
-    useEffect(() => {
+    // useEffect(() => {
       const onResize = () => {
         setSize({
           width: window.innerWidth,
           height: window.innerHeight,
         });
       };
+      window.onresize = onResize
+      // window.addEventListener("resize", onResize);
 
-      window.addEventListener("resize", onResize);
-
-      return () => {
-        window.removeEventListener("resize", onResize);
-      };
-    }, []);
+    //   return () => {
+    //     window.removeEventListener("resize", onResize);
+    //   };
+    // }, []);
 
     return size;
   } catch (e: any) {

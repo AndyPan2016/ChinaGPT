@@ -93,7 +93,7 @@ export function MessageSelector(props: {
   const doSearch = (text: string) => {
     const searchResults = new Set<number>();
     if (text.length > 0) {
-      messages.forEach((m) =>
+      messages.forEach((m: any) =>
         m.content.includes(text) ? searchResults.add(m.id!) : null,
       );
     }
@@ -105,7 +105,7 @@ export function MessageSelector(props: {
 
   const selectAll = () => {
     props.updateSelection((selection) =>
-      messages.forEach((m) => selection.add(m.id!)),
+      messages.forEach((m: any) => selection.add(m.id!)),
     );
   };
 
@@ -161,7 +161,7 @@ export function MessageSelector(props: {
                 selection.clear();
                 messages
                   .slice(messageCount - LATEST_COUNT)
-                  .forEach((m) => selection.add(m.id!));
+                  .forEach((m: any) => selection.add(m.id!));
               })
             }
           />
@@ -177,7 +177,7 @@ export function MessageSelector(props: {
       </div>
 
       <div className={styles["messages"]}>
-        {messages.map((m, i) => {
+        {messages.map((m: any, i: number) => {
           if (!isInSearchResult(m.id!)) return null;
 
           return (

@@ -212,14 +212,14 @@ export const useChatStore = create<ChatStore>()(
 
       currentSession() {
         let index = get().currentSessionIndex;
-        const sessions = get().sessions;
+        const sessions: any = get().sessions;
 
         if (index < 0 || index >= sessions.length) {
           index = Math.min(sessions.length - 1, Math.max(0, index));
           set(() => ({ currentSessionIndex: index }));
         }
 
-        const session = sessions[index];
+        const session: any = sessions[index];
 
         return session;
       },

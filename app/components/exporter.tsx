@@ -140,7 +140,7 @@ export function MessageExporter() {
     // if (exportConfig.includeContext) {
     //   ret.push(...session.mask.context);
     // }
-    ret.push(...session.messages.filter((m, i) => selection.has(m.id ?? i)));
+    ret.push(...session.messages.filter((m: any, i: number) => selection.has(m.id ?? i)));
     return ret;
   }, [
     exportConfig.includeContext,
@@ -235,7 +235,7 @@ export function RenderExport(props: {
       return;
     }
 
-    const renderMsgs = messages.map((v) => {
+    const renderMsgs = messages.map((v: any) => {
       const [_, role] = v.sessionNo.split(":");
       return {
         role: role as any,
@@ -359,7 +359,7 @@ function ExportAvatar(props: { avatar: string }) {
 }
 
 export function ImagePreviewer(props: {
-  messages: ChatMessage[];
+  messages: any;
   topic: string;
 }) {
   const chatFolderStore = useChatFolderStore();
@@ -469,7 +469,7 @@ export function ImagePreviewer(props: {
             </div>
           </div>
         </div>
-        {props.messages.map((m, i) => {
+        {props.messages.map((m: any, i: number) => {
           return (
             <div
               className={styles["message"] + " " + styles["message-" + m.role]}
@@ -497,13 +497,13 @@ export function ImagePreviewer(props: {
 }
 
 export function MarkdownPreviewer(props: {
-  messages: ChatMessage[];
+  messages: any;
   topic: string;
 }) {
   const mdText =
     `# ${props.topic}\n\n` +
     props.messages
-      .map((m) => {
+      .map((m: any) => {
         return m.role === "user"
           ? `## ${Locale.Export.MessageFromYou}:\n${m.content}`
           : `## ${Locale.Export.MessageFromChatGPT}:\n${m.content.trim()}`;
